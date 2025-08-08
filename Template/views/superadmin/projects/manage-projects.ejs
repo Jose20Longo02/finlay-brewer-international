@@ -1,0 +1,58 @@
+<!-- views/admin/projects/manage-projects.ejs -->
+<% title = 'Manage Projects' %>
+<link rel="stylesheet" href="/css/superadmin/manage-projects.css" />
+
+<div class="admin-panel">
+  <div class="admin-body">
+    <!-- Sidebar -->
+    <%- include('../../partials/superadmin-sidebar', {
+      activePage: 'projects',     // or 'projects', 'properties', etc.
+      pendingCount: pendingCount   // make sure you pass this in your controller
+    }) %>
+
+    <!-- Main content -->
+    <main class="admin-content">
+      <section class="projects-container">
+        <h1>All Projects by Country</h1>
+
+        <% Object.keys(grouped).forEach(country => { %>
+          <div class="project-area">
+            <h2><%= country %></h2>
+            <% const list = grouped[country]; %>
+            <% if (!list.length) { %>
+              <p class="empty">No projects in <%= country %>.</p>
+            <% } else { %>
+              <div class="projects-grid">
+                <% list.forEach(project => { %>
+                  <div class="project-card">
+                    <img
+                      src="<%= project.photos?.[0] || '/img/project-placeholder.png' %>"
+                      alt="<%= project.title %>"
+                      class="thumb"
+                    />
+                    <h3><%= project.title %></h3>
+                    <p class="location">
+                      <%= project.city %>, <%= project.neighborhood %>
+                    </p>
+
+                    <div class="actions">
+                      <form action="/admin/projects/<%= project.id %>/delete" method="post">
+                        <button type="submit" class="btn btn-danger">
+                          Delete Project
+                        </button>
+                      </form>
+                      <a
+                        href="/admin/projects/<%= project.id %>/edit"
+                        class="btn btn-secondary"
+                      >View Project</a>
+                    </div>
+                  </div>
+                <% }); %>
+              </div>
+            <% } %>
+          </div>
+        <% }); %>
+      </section>
+    </main>
+  </div>
+</div>

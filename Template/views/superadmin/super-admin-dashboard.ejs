@@ -1,0 +1,91 @@
+<head>
+  <link rel="stylesheet" href="/css/superadmin/super-admin-dashboard.css" />
+</head>
+
+<% title = 'Super Admin Dashboard' %>
+
+<div class="admin-panel">
+  <div class="admin-body">
+    <!-- Sidebar -->
+    <%- include('../partials/superadmin-sidebar', {
+      activePage: 'dashboard',     // or 'projects', 'properties', etc.
+      pendingCount: pendingCount   // make sure you pass this in your controller
+    }) %>
+
+    <!-- Main Content -->
+    <main class="admin-content">
+      <h1>Welcome to Admin Dashboard</h1>
+      <p class="subtitle">
+        Manage your platform with real-time insights and quick actions.
+      </p>
+
+      <!-- Stats Grid -->
+      <div class="stats-grid">
+        <div class="stat-card"><h2>Total Team Members</h2><p><%= totalTeamMembers %></p></div>
+        <div class="stat-card"><h2>Pending Team Members</h2><p><%= pendingCount %></p></div>
+        <div class="stat-card"><h2>Total Properties</h2><p><%= totalProperties %></p></div>
+        <div class="stat-card"><h2>Total Projects</h2><p><%= totalProjects %></p></div>
+        <div class="stat-card"><h2>New Listings (7d)</h2><p><%= newListings %></p></div>
+      </div>
+
+      <!-- Top 5 Properties by Views -->
+      <section class="carousel-section">
+        <h2>🏆 Top 5 Properties</h2>
+        <% if (topProperties.length < 1) { %>
+          <p class="empty">No enough properties yet.</p>
+        <% } else { %>
+          <div class="carousel">
+            <% topProperties.forEach(prop => { %>
+              <a href="/properties/<%= prop.slug %>" class="card">
+                <img src="<%= prop.photos[0] || '/img/property-placeholder.png' %>" alt="" />
+                <div class="card-info">
+                  <h3><%= prop.title %></h3>
+                  <p><%= prop.views %> views</p>
+                </div>
+              </a>
+            <% }) %>
+          </div>
+        <% } %>
+      </section>
+
+      <!-- Top 5 Agents by Listings -->
+      <section class="carousel-section">
+        <h2>🌟 Top 5 Agents</h2>
+        <% if (topAgents.length < 1) { %>
+          <p class="empty">No enough data yet.</p>
+        <% } else { %>
+          <div class="carousel">
+            <% topAgents.forEach(agent => { %>
+              <div class="card">
+                <img src="<%= agent.profile_picture || '/img/default-avatar.png' %>" alt="" class="avatar" />
+                <div class="card-info">
+                  <h3><%= agent.name %></h3>
+                  <p><%= agent.propertyCount %> listings</p>
+                </div>
+              </div>
+            <% }) %>
+          </div>
+        <% } %>
+      </section>
+
+      <!-- Top Places by Aggregated Views -->
+      <section class="carousel-section">
+        <h2>📍 Top 5 Places</h2>
+        <% if (topPlaces.length < 1) { %>
+          <p class="empty">No enough data yet.</p>
+        <% } else { %>
+          <div class="carousel">
+            <% topPlaces.forEach(place => { %>
+              <div class="card">
+                <div class="card-info">
+                  <h3><%= place.name %></h3>
+                  <p><%= place.totalViews %> views</p>
+                </div>
+              </div>
+            <% }) %>
+          </div>
+        <% } %>
+      </section>
+    </main>
+  </div>
+</div>

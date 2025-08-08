@@ -1,0 +1,138 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+html, body {
+  height: 100%;
+  font-family: var(--font-sans);
+  background: #f5f7fa;
+  color: var(--color-secondary);
+}
+/* 2. Panel & layout containers */
+.admin-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;       /* full viewport height */
+}
+.admin-body {
+  display: flex;
+  flex: 1;             /* take remaining height */
+  min-height: 0;       /* allow children to scroll */
+}
+
+
+/* 4. Main content: center the form */
+.admin-content {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  overflow-y: auto;
+}
+
+/* 5. Form container */
+.form-container {
+  max-width: 500px;
+  margin: 0;               /* centered by flex parent */
+  background: #fff;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+/* 6. Headings */
+.form-container h1 {
+  margin-bottom: 1.5rem;
+  color: var(--color-primary);
+}
+
+/* 7. Alerts */
+.alert {
+  padding: 0.75rem 1rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+.alert-error {
+  background: #ffe5e5;
+  color: #b00020;
+  border: 1px solid #f5c2c7;
+}
+.alert-success {
+  background: #e6ffed;
+  color: #027a48;
+  border: 1px solid #c6f6d5;
+}
+.admin-sidebar .badge {
+  background: var(--color-primary);
+  color: #fff;
+  border-radius: 999px;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.75rem;
+  margin-left: 0.5rem;
+  vertical-align: middle;
+}
+
+/* 8. Form groups */
+.form-group {
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+}
+.form-group label {
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+.form-group input,
+.form-group textarea {
+  padding: 0.5rem;
+  border: 1px solid var(--color-secondary);
+  border-radius: 4px;
+  font-size: 1rem;
+  font-family: inherit;
+}
+
+/* 9. Thumbnail and preview */
+.thumb-wrapper {
+  margin-bottom: 0.5rem;
+}
+.thumb {
+  display: block;
+  max-width: 120px;
+  max-height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+/* 10. Password‐error text */
+.error-text {
+  margin-top: 0.25rem;
+  font-size: 0.875rem;
+  color: #b00020;
+  min-height: 1em; /* reserve space */
+}
+
+/* 11. Button */
+.btn-primary {
+  background: var(--color-primary);
+  color: #fff;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.btn-primary:hover {
+  background: var(--color-tertiary);
+}
+
+/* 12. Responsive adjustments */
+@media (max-width: 768px) {
+  .admin-body {
+    flex-direction: column;
+  }
+
+  .admin-content {
+    padding: 1rem;
+  }
+}

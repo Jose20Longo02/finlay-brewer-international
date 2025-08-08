@@ -1,0 +1,45 @@
+
+<% title = 'Mi Panel' %>
+<link rel="stylesheet" href="/css/admin/admin-dashboard.css" />
+
+<div class="admin-panel">
+  <div class="admin-body">
+
+    <main class="admin-content">
+      <!-- Top bar -->
+      <div class="admin-header">
+        <div>
+          <h1>Hi <%= user.name %> 👋🏻</h1>
+          <p class="subtitle">Welcome to your personal area</p>
+        </div>
+        <a href="/" class="back-home">← Return to home page</a>
+      </div>
+
+      <!-- Dashboard cards -->
+      <div class="cards-grid">
+        <a href="/admin/dashboard/profile" class="card">
+          <div class="icon">👤</div>
+          <h2>Edit profile information</h2>
+          <p>Manage your personal data & password</p>
+        </a>
+
+        <a href="/admin/dashboard/my-properties" class="card">
+          <div class="icon">🏠</div>
+          <h2>My properties</h2>
+          <p>View and manage my posts</p>
+        </a>
+
+        <a href="/admin/dashboard/projects" class="card">
+          <div class="icon">📁</div>
+          <h2>Projects</h2>
+          <p>Edit & manage projects</p>
+        </a>
+      </div>
+
+      <!-- Logout -->
+      <form action="/auth/logout" method="post" class="logout-form">
+        <button type="submit" class="btn-logout">Log out</button>
+      </form>
+    </main>
+  </div>
+</div>

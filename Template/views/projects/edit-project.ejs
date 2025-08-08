@@ -1,0 +1,11 @@
+<% title = 'Edit Project' %>
+<form action="/admin/projects/<%= project.id %>" method="post" enctype="multipart/form-data" class="form">
+  <h1>Edit Project</h1>
+  <label for="title">Title</label>
+  <input id="title" name="title" type="text" value="<%= project.title %>" required />
+
+  <!-- repeat fields as in new, pre-filled -->
+  <!-- omitted for brevity -->
+
+  <button type="submit">Update Project</button>
+</form>

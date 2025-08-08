@@ -1,0 +1,128 @@
+<% title = 'My Properties' %>
+<link rel="stylesheet" href="/css/admin/my-properties.css" />
+
+<script>
+  window.LOCATIONS = <%- JSON.stringify(locations) %>;
+</script>
+
+<div class="page-wrap">
+  <header class="section-header">
+    <h1>My Properties</h1>
+    <div class="header-actions">
+      <a href="/admin/dashboard" class="link-home">← Return to dashboard</a>
+      <a href="/admin/properties/new" class="btn btn-primary">New Property</a>
+    </div>
+  </header>
+
+  <!-- Filters -->
+  <form id="filters" class="filters" method="get">
+    <select id="countrySelect" name="country" onchange="this.form.submit()">
+      <option value="">All Countries</option>
+      <% countryOptions.forEach(c => { %>
+        <option value="<%= c %>" <%= filters.country===c?'selected':'' %>><%= c %></option>
+      <% }) %>
+    </select>
+
+    <select id="citySelect" name="city" <%= !filters.country?'disabled':'' %> onchange="this.form.submit()">
+      <option value="">All Cities</option>
+      <% (cityOptions || []).forEach(ct => { %>
+        <option value="<%= ct %>" <%= filters.city===ct?'selected':'' %>><%= ct %></option>
+      <% }) %>
+    </select>
+
+    <select name="type" onchange="this.form.submit()">
+      <option value="">All Types</option>
+      <% typeOptions.forEach(t => { %>
+        <option value="<%= t %>" <%= filters.type===t?'selected':'' %>><%= t %></option>
+      <% }) %>
+    </select>
+
+    <select name="status" onchange="this.form.submit()">
+      <option value="">All Statuses</option>
+      <% statusOptions.forEach(s => { %>
+        <option value="<%= s %>" <%= filters.status===s?'selected':'' %>><%= s %></option>
+      <% }) %>
+    </select>
+
+    <input type="number" name="minPrice" placeholder="Min Price"
+           value="<%= filters.minPrice||'' %>"
+           onblur="this.form.submit()" />
+
+    <input type="number" name="maxPrice" placeholder="Max Price"
+           value="<%= filters.maxPrice||'' %>"
+           onblur="this.form.submit()" />
+
+    <% if (Object.values(filters).some(v => v)) { %>
+      <a class="link-reset" href="/admin/my-properties">Reset</a>
+    <% } %>
+  </form>
+
+  <% if (!properties.length) { %>
+    <div class="empty-state">
+      <p>You don’t have any properties yet. Click <a href="/admin/properties/new">New Property</a> to get started.</p>
+    </div>
+  <% } else { %>
+    <div class="cards-grid">
+      <% properties.forEach(p => { %>
+        <article class="prop-card">
+          <div class="flip">
+            <div class="front">
+              <img class="thumb" src="<%= p.photos?.[0] || '/img/property-placeholder.png' %>" alt="<%= p.title %>">
+              <h3 class="title"><%= p.title %></h3>
+              <p class="meta"><%= p.city %>, <%= p.neighborhood %></p>
+              <p class="price"><%= p.price ? `$${Number(p.price).toLocaleString()}` : 'Price on request' %></p>
+            </div>
+            <div class="back">
+              <div class="stat">
+                <span class="stat-num"><%= p.views_count || 0 %></span>
+                <span class="stat-label">Views</span>
+              </div>
+              <div class="stat">
+                <span class="stat-num"><%= p.inquiry_count || 0 %></span>
+                <span class="stat-label">Contact forms</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="actions">
+            <form action="/properties/<%= p.id %>/delete?page=<%= currentPage %>" method="post" onsubmit="return confirm('Delete “<%= p.title %>”?');">
+              <button type="submit" class="btn btn-danger">Delete</button>
+            </form>
+            <a class="btn btn-secondary" href="/properties/<%= p.id %>/edit">Edit</a>
+          </div>
+        </article>
+      <% }) %>
+    </div>
+
+    <!-- Pagination -->
+    <nav class="pagination">
+      <% if (currentPage > 1) { %>
+        <a class="page-link" href="?<%= new URLSearchParams({ ...filters, page: currentPage-1 }).toString() %>">« Prev</a>
+      <% } %>
+      <span class="page-info">Page <%= currentPage %> of <%= totalPages %></span>
+      <% if (currentPage < totalPages) { %>
+        <a class="page-link" href="?<%= new URLSearchParams({ ...filters, page: currentPage+1 }).toString() %>">Next »</a>
+      <% } %>
+    </nav>
+  <% } %>
+</div>
+
+<script>
+  // keep cities in sync with selected country
+  const countrySel = document.getElementById('countrySelect');
+  const citySel    = document.getElementById('citySelect');
+  const form       = document.getElementById('filters');
+
+  countrySel.addEventListener('change', () => {
+    const cities = Object.keys(LOCATIONS[countrySel.value] || {});
+    citySel.innerHTML = '<option value="">All Cities</option>';
+    cities.forEach(ct => {
+      const opt = document.createElement('option');
+      opt.value = ct;
+      opt.textContent = ct;
+      citySel.appendChild(opt);
+    });
+    citySel.disabled = cities.length === 0;
+    form.submit();
+  });
+</script>

@@ -1,0 +1,47 @@
+<% title = 'New Project' %>
+<form action="/admin/projects" method="post" enctype="multipart/form-data" class="form">
+  <h1>Create Project</h1>
+  <label for="title">Title</label>
+  <input id="title" name="title" type="text" required />
+
+  <label for="country">Country</label>
+  <input id="country" name="country" type="text" required />
+
+  <label for="city">City</label>
+  <input id="city" name="city" type="text" required />
+
+  <label for="description">Description</label>
+  <textarea id="description" name="description" required></textarea>
+
+  <label for="min_unit_size">Min Unit Size (sqm)</label>
+  <input id="min_unit_size" name="min_unit_size" type="number" step="0.01" />
+
+  <label for="max_unit_size">Max Unit Size (sqm)</label>
+  <input id="max_unit_size" name="max_unit_size" type="number" step="0.01" />
+
+  <label for="min_price">Min Price</label>
+  <input id="min_price" name="min_price" type="number" step="0.01" />
+
+  <label for="max_price">Max Price</label>
+  <input id="max_price" name="max_price" type="number" step="0.01" />
+
+  <label for="min_bedrooms">Min Bedrooms</label>
+  <input id="min_bedrooms" name="min_bedrooms" type="number" />
+
+  <label for="max_bedrooms">Max Bedrooms</label>
+  <input id="max_bedrooms" name="max_bedrooms" type="number" />
+
+  <label for="amenities">Amenities (comma-separated)</label>
+  <input id="amenities" name="amenities" type="text" />
+
+  <label>Brochure</label>
+  <input name="brochure" type="file" accept="application/pdf" />
+
+  <label>Photos</label>
+  <input name="photos" type="file" accept="image/*" multiple />
+
+  <label>Video</label>
+  <input name="video" type="file" accept="video/*" />
+
+  <button type="submit">Save Project</button>
+</form>

@@ -1,0 +1,92 @@
+/* public/css/sidebar.css */
+
+/* Helper variable for sidebar width (import this from your variables file or redefine) */
+:root {
+  --sidebar-width: 220px;
+}
+
+/* Ensure the body flex container is ready for sidebar + content */
+.admin-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* Sidebar styling */
+.admin-sidebar {
+  width: var(--sidebar-width);
+  background: linear-gradient(180deg, var(--color-secondary) 0%, var(--color-tertiary) 100%);
+  padding: var(--spacing) 0;
+  flex-shrink: 0;
+}
+.admin-sidebar ul {
+  list-style: none;
+}
+.admin-sidebar li + li {
+  margin-top: 0.5rem;
+}
+.admin-sidebar a {
+  display: block;
+  padding: calc(var(--spacing) * 1.5) var(--spacing);
+  font-size: 1rem;
+  color: #fff;
+  text-decoration: none;
+  transition: background 0.3s;
+  border-left: 4px solid transparent;
+}
+.admin-sidebar li.active a,
+.admin-sidebar a:hover {
+  background: rgba(255,255,255,0.1);
+  border-left-color: #fff;
+}
+
+/* Request badge */
+.admin-sidebar .badge {
+  background: #ff4d4f;
+  color: #fff;
+  border-radius: 999px;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.75rem;
+  margin-left: 0.5rem;
+  vertical-align: middle;
+}
+/* logout button in sidebar */
+.admin-sidebar .logout-btn {
+  display: block;
+  width: 100%;
+
+  padding: calc(var(--spacing) * 1.5) var(--spacing);
+  background: transparent;
+  color: #fff;
+  border: none;
+    border-left: 4px solid transparent;
+  text-align: left;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.admin-sidebar .logout-btn:hover {
+  background: rgba(255,255,255,0.1);
+}
+/* Sidebar responsiveness */
+@media (max-width: 768px) {
+  .admin-body {
+    flex-direction: column;
+  }
+  .admin-sidebar {
+    width: 100%;
+    padding: 0;
+  }
+  .admin-sidebar ul {
+    display: flex;
+    justify-content: space-around;
+  }
+  .admin-sidebar li {
+    flex: 1;
+    margin: 0;
+  }
+  .admin-sidebar a {
+    padding: var(--spacing) 0;
+    text-align: center;
+  }
+}

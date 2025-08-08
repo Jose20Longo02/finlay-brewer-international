@@ -1,0 +1,175 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+html, body {
+  height: 100%;
+  font-family: var(--font-sans);
+  background: #f5f7fa;
+  color: var(--color-secondary);
+}
+/* 1) Make the overall admin panel fill the viewport */
+.admin-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* 2) Body: sidebar + content */
+.admin-body {
+  display: flex;
+  flex: 1;
+  min-height: 0; /* for proper scrolling */
+}
+
+
+/* 4) Main content: normal flow, scrollable */
+.admin-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 2rem;
+  display: block; /* prevent unwanted centering */
+}
+
+/* 5) Projects container: align left, no horizontal centering */
+.projects-container {
+  width: 100%;
+  /* remove margin: 0 auto; to avoid centering */
+  margin: 0;
+  padding: 0;
+}
+.projects-container h1 {
+  color: var(--color-primary);
+  margin-bottom: 1.5rem;
+}
+.projects-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+.projects-header .btn {
+  padding: 1rem 2rem;
+  font-size: 0.9rem;
+  background-color: var(--color-primary);
+  color: white;
+  text-decoration: none;
+  border-radius: 5rem;
+}
+/* 6) Area section */
+.project-area {
+  margin-bottom: 2.5rem;
+}
+.project-area h2 {
+  font-size: 1.5rem;
+  color: var(--color-secondary);
+  margin-bottom: 1rem;
+}
+.project-area .empty {
+  font-style: italic;
+  color: var(--color-secondary);
+}
+
+/* 7) Grid of cards */
+.projects-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+/* 8) Individual card */
+.project-card {
+  position: relative;
+  background: #fff;
+  border: 1px solid var(--color-secondary);
+  border-radius: 8px;
+  padding: 1.5rem 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 260px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.project-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+/* uploader avatar */
+.uploader-thumb {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+}
+
+/* main cover photo */
+.project-card .thumb {
+  width: 100%;
+  height: 140px;
+  object-fit: cover;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+.project-card h3 {
+  font-size: 1.125rem;
+  color: var(--color-primary);
+  margin: 0 0 0.5rem;
+  text-align: center;
+}
+.project-card .location {
+  font-size: 0.9rem;
+  color: var(--color-secondary);
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+/* 9) Action buttons */
+.actions {
+  margin-top: auto;
+  display: flex;
+  gap: 0.5rem;
+  width: 100%;
+}
+.actions .btn {
+  flex: 1;
+  padding: 0.6rem;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  text-decoration: none;
+  text-align: center;
+  cursor: pointer;
+}
+.btn-danger {
+  background: #dc3545;
+  color: #fff;
+}
+.btn-danger:hover {
+  background: #c82333;
+}
+.btn-secondary {
+  background: var(--color-secondary);
+  color: #fff;
+}
+.btn-secondary:hover {
+  background: var(--color-primary);
+}
+
+/* 12. Responsive adjustments */
+@media (max-width: 768px) {
+  .admin-body {
+    flex-direction: column;
+  }
+  .admin-content {
+    padding: 1rem;
+  }
+}

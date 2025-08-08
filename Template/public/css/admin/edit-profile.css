@@ -1,0 +1,136 @@
+/* public/css/admin/edit-profile.css */
+
+/* 1. Base reset + full-height */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+html, body {
+  height: 100%;
+}
+
+/* 2. Center the page as a column */
+.form-page {
+  display: flex;
+  flex-direction: column;      /* stack back‐link above form */
+  align-items: center;         /* center horizontally */
+  justify-content: center;     /* center vertically */
+  min-height: 100vh;
+  padding: 1rem;               /* small gutter on mobile */
+  background: var(--color-light);
+}
+
+/* 3. Back-link wrapper */
+.back-wrapper {
+  width: 100%;
+  max-width: 500px;
+  margin-bottom: 1rem;         /* space between link & form */
+  text-align: right;
+}
+.back-dashboard {
+  text-decoration: none;
+  color: var(--color-secondary);
+  font-size: 0.9rem;
+  transition: color 0.2s;
+}
+.back-dashboard:hover {
+  color: var(--color-primary);
+}
+
+/* 4. Form container */
+.form-container {
+  width: 100%;
+  max-width: 500px;
+  background: #fff;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+}
+
+/* 5. Heading */
+.form-container h1 {
+  margin-bottom: 1.5rem;
+  color: var(--color-primary);
+  text-align: center;
+}
+
+/* 6. Alerts */
+.alert {
+  padding: 0.75rem 1rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+.alert-error {
+  background: #fdecea;
+  color: #b71c1c;
+}
+.alert-success {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+/* 7. Form groups */
+.form-group {
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+}
+.form-group label {
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+.form-group input,
+.form-group select {
+  padding: 0.5rem;
+  border: 1px solid var(--color-secondary);
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+/* 8. Thumbnail preview */
+.thumb-wrapper {
+  margin-bottom: 0.5rem;
+  text-align: center;
+}
+.thumb {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+/* 9. Password-error text */
+.error-text {
+  margin-top: 0.25rem;
+  font-size: 0.875rem;
+  color: #b71c1c;
+  min-height: 1em;
+}
+
+/* 10. Primary button */
+.btn-primary {
+  width: 100%;
+  padding: 0.75rem;
+  background: var(--color-primary);
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-top: 1rem;
+  transition: background 0.2s;
+}
+.btn-primary:hover {
+  background: var(--color-tertiary);
+}
+
+/* 11. Mobile tweaks */
+@media (max-width: 480px) {
+  .form-container {
+    padding: 1.5rem;
+  }
+  .back-dashboard {
+    font-size: 0.85rem;
+  }
+}

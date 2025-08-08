@@ -1,0 +1,199 @@
+/* Page wrapper constrains width and centers content */
+.page-wrap {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1rem; /* keeps margin on both sides */
+}
+
+/* Header: spaced layout (title left, actions right) */
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 4rem;
+}
+.section-header h1 {
+  margin: 0;
+  color: var(--color-primary);
+}
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem; /* more space between link & button */
+}
+.link-home {
+  text-decoration: none;
+  color: var(--color-tertiary);
+  font-size: .95rem;
+}
+.link-home:hover { color: var(--color-primary); }
+.btn.btn-primary {
+  background: var(--color-primary);
+  color: #fff;
+  padding: .6rem 1rem;
+  border-radius: .5rem;
+  border: 0;
+  text-decoration: none;
+}
+
+/* Filters row (auto-wrap, no Apply button) */
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+  margin: 0 0 1.25rem 0;
+  justify-content: center; /* center the whole group */
+}
+.filters select,
+.filters input[type="number"] {
+  padding: .5rem .65rem;
+  border: 1px solid var(--color-secondary);
+  border-radius: .5rem;
+  font-size: .95rem;
+}
+.link-reset {
+  align-self: center;
+  margin-left: .25rem;
+  color: var(--color-tertiary);
+  text-decoration: none;
+}
+.link-reset:hover { text-decoration: underline; }
+
+/* Empty state centered */
+.empty-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40vh;
+  text-align: center;
+  color: var(--color-secondary);
+}
+.empty-state a { color: var(--color-primary); }
+
+/* Cards grid */
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+/* Property card with flip */
+.prop-card {
+  perspective: 1000px;
+  background: #fff;
+  border: 1px solid var(--color-secondary);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 14px rgba(0,0,0,.06);
+  display: flex;
+  flex-direction: column;
+}
+.flip {
+  position: relative;
+  height: 260px;
+  transform-style: preserve-3d;
+  transition: transform .6s;
+}
+.prop-card:hover .flip { transform: rotateY(180deg); }
+
+.front, .back {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  display: grid;
+  grid-template-rows: 150px auto auto auto;
+  padding: .75rem;
+}
+.front .thumb {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+.front .title {
+  margin: .5rem 0 0;
+  font-size: 1.05rem;
+  color: var(--color-primary);
+}
+.front .meta {
+  color: var(--color-secondary);
+  font-size: .9rem;
+}
+.front .price {
+  color: var(--color-primary);
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.back {
+  background: linear-gradient(180deg, var(--color-light), #fff);
+  transform: rotateY(180deg);
+  display: grid;
+  place-items: center;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+.stat { text-align: center; }
+.stat-num {
+  display: block;
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--color-primary);
+}
+.stat-label {
+  color: var(--color-secondary);
+  font-size: .85rem;
+}
+
+/* Actions */
+.actions {
+  display: flex;
+  gap: .5rem;
+  padding: .75rem;
+  border-top: 1px solid #eee;
+  margin-top: auto;
+}
+.btn {
+  flex: 1;
+  padding: .6rem .8rem;
+  border-radius: .5rem;
+  text-align: center;
+  font-size: .95rem;
+  text-decoration: none;
+  cursor: pointer;
+}
+.btn-danger {
+  background: #dc3545;
+  color: #fff;
+  border: 0;
+}
+.btn-danger:hover { background: #c82333; }
+.btn-secondary {
+  background: var(--color-secondary);
+  color: #fff;
+  border: 0;
+}
+.btn-secondary:hover { background: var(--color-primary); }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .section-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: .5rem;
+  }
+  .header-actions {
+    justify-content: space-between;
+  }
+
+  /* stack filters vertically on mobile */
+  .filters {
+    flex-direction: column;
+    align-items: stretch; /* make controls full width */
+  }
+  .filters select,
+  .filters input[type="number"] {
+    width: 100%;
+  }
+}

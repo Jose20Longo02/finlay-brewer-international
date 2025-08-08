@@ -1,0 +1,132 @@
+<% title = 'Register' %>
+<link rel="stylesheet" href="/css/register.css" />
+
+<form
+  action="/auth/register"
+  method="post"
+  enctype="multipart/form-data"
+  class="auth-form"
+>
+  <h1>Create Account</h1>
+
+  <% if (error) { %>
+    <div class="alert alert-error"><%= error %></div>
+  <% } %>
+
+  <label for="name">Full Name</label>
+  <input id="name" name="name" type="text" required />
+
+  <label for="email">Email</label>
+  <input id="email" name="email" type="email" required />
+  <div id="emailError" class="error-text"></div>
+
+  <label for="password">Password</label>
+  <input id="password" name="password" type="password" required />
+
+  <label for="passwordConfirm">Confirm Password</label>
+  <input id="passwordConfirm" name="passwordConfirm" type="password" required />
+  <div id="passwordError" class="error-text"></div>
+
+  <label for="areaSelect">Area</label>
+  <select id="areaSelect" name="area" required>
+    <option value="">-- Select Area --</option>
+    <% Object.keys(areaRoles).forEach(area => { %>
+      <option value="<%= area %>"><%= area %></option>
+    <% }) %>
+  </select>
+
+  <label for="positionSelect">Position</label>
+  <select id="positionSelect" name="position" disabled required>
+    <option>Choose an area first</option>
+  </select>
+
+  <label for="profile_picture">Profile Picture (optional)</label>
+  <input
+    id="profile_picture"
+    name="profile_picture"
+    type="file"
+    accept="image/*"
+  />
+  <div class="thumb-wrapper">
+    <img id="profilePreview" class="thumb" style="display:none;" />
+  </div>
+
+  <button type="submit">Register</button>
+
+  <p>
+    Already have an account? <a href="/auth/login">Log in here</a>
+  </p>
+</form>
+
+<script>
+  const areaRoles = <%- JSON.stringify(areaRoles) %>;
+  const areaSelect  = document.getElementById('areaSelect');
+  const posSelect   = document.getElementById('positionSelect');
+  const picInput    = document.getElementById('profile_picture');
+  const picPreview  = document.getElementById('profilePreview');
+  const emailInput  = document.getElementById('email');
+  const emailError  = document.getElementById('emailError');
+  const pw1         = document.getElementById('password');
+  const pw2         = document.getElementById('passwordConfirm');
+  const pwError     = document.getElementById('passwordError');
+  const form        = document.querySelector('.auth-form');
+
+  // Area → Position
+  areaSelect.addEventListener('change', () => {
+    const opts = areaRoles[areaSelect.value] || [];
+    posSelect.innerHTML = '';
+    if (opts.length) {
+      posSelect.disabled = false;
+      posSelect.appendChild(new Option('-- Select Position --',''));
+      opts.forEach(role => posSelect.appendChild(new Option(role,role)));
+    } else {
+      posSelect.disabled = true;
+      posSelect.innerHTML = '<option>Choose an area first</option>';
+    }
+  });
+
+  // Profile pic live preview
+  picInput.addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return picPreview.style.display = 'none';
+    const reader = new FileReader();
+    reader.onload = ev => {
+      picPreview.src = ev.target.result;
+      picPreview.style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  });
+
+  // Password match on blur
+  pw2.addEventListener('blur', () => {
+    pwError.textContent = (pw1.value && pw1.value !== pw2.value)
+      ? 'Passwords do not match'
+      : '';
+  });
+
+  // Email uniqueness on blur
+  emailInput.addEventListener('blur', async () => {
+    const email = emailInput.value.trim();
+    if (!email) return emailError.textContent = '';
+    try {
+      const resp = await fetch(`/auth/check-email?email=${encodeURIComponent(email)}`);
+      if (resp.ok) {
+        const { exists } = await resp.json();
+        emailError.textContent = exists ? 'Email already in use' : '';
+      }
+    } catch (_) {
+      /* optional: network error */
+    }
+  });
+
+  // Final guard on submit
+  form.addEventListener('submit', e => {
+    let ok = true;
+    if (pw1.value && pw1.value !== pw2.value) {
+      pwError.textContent = 'Passwords do not match';
+      ok = false;
+    }
+    if (emailError.textContent) ok = false;
+    if (!ok) e.preventDefault();
+  });
+</script>

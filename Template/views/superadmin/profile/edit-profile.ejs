@@ -1,0 +1,232 @@
+<!-- views/admin/profile/edit-profile.ejs -->
+<% title = 'Edit Profile' %>
+
+<!-- Load page-specific CSS -->
+<head>
+  <link rel="stylesheet" href="/css/superadmin/edit-profile.css" />
+</head>
+
+<div class="admin-panel">
+  <div class="admin-body">
+    <!-- Sidebar -->
+    <%- include('../../partials/superadmin-sidebar', {
+      activePage: 'profile',     // or 'projects', 'properties', etc.
+      pendingCount: pendingCount   // make sure you pass this in your controller
+    }) %>
+
+    <!-- Main content -->
+    <main class="admin-content">
+      <section class="form-container">
+        <h1>Edit Profile</h1>
+
+        <% if (error) { %>
+          <div class="alert alert-error"><%= error %></div>
+        <% } %>
+        <% if (success) { %>
+          <div class="alert alert-success"><%= success %></div>
+        <% } %>
+
+        <form
+          id="editProfileForm"
+          action="/superadmin/dashboard/profile"
+          method="post"
+          enctype="multipart/form-data"
+          class="form"
+        >
+          <!-- Name -->
+          <div class="form-group">
+            <label for="name">Full Name</label>
+            <input
+              id="name"
+              name="name"
+              type="text"
+              value="<%= user.name %>"
+              required
+            />
+          </div>
+
+          <!-- Email -->
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              value="<%= user.email %>"
+              required
+            />
+          </div>
+
+          <!-- Profile Picture -->
+          <div class="form-group">
+            <label for="profile_picture">Profile Picture</label>
+            <div class="thumb-wrapper">
+              <% if (user.profile_picture) { %>
+                <img
+                  id="profilePreview"
+                  src="<%= user.profile_picture %>"
+                  alt="Profile Picture"
+                  class="thumb"
+                />
+              <% } else { %>
+                <img
+                  id="profilePreview"
+                  style="display:none;"
+                  alt="Profile Preview"
+                  class="thumb"
+                />
+              <% } %>
+            </div>
+            <input
+              id="profile_picture"
+              name="profile_picture"
+              type="file"
+              accept="image/*"
+            />
+          </div>
+
+          <hr />
+
+          <!-- Area & Position (dependent dropdown) -->
+          <div class="form-group">
+            <label for="areaSelect">Area</label>
+            <select
+              id="areaSelect"
+              name="area"
+              required
+            >
+              <option value="">-- Select Area --</option>
+              <% Object.keys(areaRoles).forEach(area => { %>
+                <option
+                  value="<%= area %>"
+                  <%= user.area === area ? 'selected' : '' %>
+                ><%= area %></option>
+              <% }); %>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="positionSelect">Position</label>
+            <select
+              id="positionSelect"
+              name="position"
+              required
+            >
+              <!-- options populated by JS -->
+            </select>
+          </div>
+
+          <hr />
+
+          <!-- Password -->
+          <div class="form-group">
+            <label for="password">New Password</label>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              placeholder="••••••••"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="passwordConfirm">Confirm New Password</label>
+            <input
+              id="passwordConfirm"
+              name="passwordConfirm"
+              type="password"
+              placeholder="••••••••"
+            />
+            <div id="passwordError" class="error-text"></div>
+          </div>
+
+          <button type="submit" class="btn btn-primary">
+            Save Changes
+          </button>
+        </form>
+      </section>
+    </main>
+  </div>
+</div>
+
+<script>
+  // Roles config passed from server
+  const areaRoles = <%- JSON.stringify(areaRoles) %>;
+
+  // Profile picture live preview
+  const picInput   = document.getElementById('profile_picture');
+  const picPreview = document.getElementById('profilePreview');
+  picInput.addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      picPreview.src = ev.target.result;
+      picPreview.style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  });
+
+  // Dependent dropdown: Area → Position
+  const areaSelect = document.getElementById('areaSelect');
+  const posSelect  = document.getElementById('positionSelect');
+
+  function populatePositions() {
+    const area = areaSelect.value;
+    posSelect.innerHTML = '';
+    if (areaRoles[area]) {
+      const placeholder = document.createElement('option');
+      placeholder.value = '';
+      placeholder.textContent = '-- Select Position --';
+      posSelect.appendChild(placeholder);
+
+      areaRoles[area].forEach(role => {
+        const opt = document.createElement('option');
+        opt.value = role;
+        opt.textContent = role;
+        if (role === '<%= user.position %>') {
+          opt.selected = true;
+        }
+        posSelect.appendChild(opt);
+      });
+      posSelect.disabled = false;
+    } else {
+      const opt = document.createElement('option');
+      opt.value = '';
+      opt.textContent = 'Choose an area first';
+      posSelect.appendChild(opt);
+      posSelect.disabled = true;
+    }
+  }
+
+  // Initialize on load
+  populatePositions();
+  areaSelect.addEventListener('change', populatePositions);
+
+  // Live password‐match validation
+  const pw1 = document.getElementById('password');
+  const pw2 = document.getElementById('passwordConfirm');
+  const errEl = document.getElementById('passwordError');
+  const form  = document.getElementById('editProfileForm');
+
+  function validatePasswords() {
+    if (pw1.value || pw2.value) {
+      if (pw1.value !== pw2.value) {
+        errEl.textContent = 'Passwords do not match';
+        return false;
+      }
+    }
+    errEl.textContent = '';
+    return true;
+  }
+
+  pw1.addEventListener('input', validatePasswords);
+  pw2.addEventListener('input', validatePasswords);
+
+  form.addEventListener('submit', e => {
+    if (!validatePasswords()) {
+      e.preventDefault();
+      pw2.focus();
+    }
+  });
+</script>

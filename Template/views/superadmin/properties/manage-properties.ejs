@@ -1,0 +1,182 @@
+<% title = 'Manage Properties' %>
+<link rel="stylesheet" href="/css/superadmin/manage-properties.css" />
+
+<script>
+  // Make locations available for client‐side filtering
+  window.LOCATIONS = <%- JSON.stringify(locations) %>;
+</script>
+
+<div class="admin-panel">
+  <div class="admin-body">
+    <!-- Sidebar -->
+    <%- include('../../partials/superadmin-sidebar', {
+      activePage: 'properties',     // or 'projects', 'properties', etc.
+      pendingCount: pendingCount   // make sure you pass this in your controller
+    }) %>
+
+    <!-- Main Content -->
+    <main class="admin-content">
+      <section class="properties-container">
+
+        <!-- Header + New Property Button -->
+        <div class="properties-header">
+          <h1>All Properties</h1>
+          <a href="/admin/properties/new" class="btn btn-primary">New Property</a>
+        </div>
+
+        <!-- Filters -->
+        <form class="properties-filters" id="filterForm" method="get">
+          <select id="countrySelect" name="country">
+            <option value="">All Countries</option>
+            <% countryOptions.forEach(c => { %>
+              <option value="<%= c %>" <%= filters.country===c?'selected':'' %>><%= c %></option>
+            <% }) %>
+          </select>
+
+          <select id="citySelect" name="city" <%= !filters.country?'disabled':'' %>>
+            <option value="">All Cities</option>
+            <% cityOptions.forEach(ct => { %>
+              <option value="<%= ct %>" <%= filters.city===ct?'selected':'' %>><%= ct %></option>
+            <% }) %>
+          </select>
+
+          <select name="type" onchange="filterForm.submit()">
+            <option value="">All Types</option>
+            <% typeOptions.forEach(t => { %>
+              <option value="<%= t %>" <%= filters.type===t?'selected':'' %>><%= t %></option>
+            <% }) %>
+          </select>
+
+          <select name="status" onchange="filterForm.submit()">
+            <option value="">All Statuses</option>
+            <% statusOptions.forEach(s => { %>
+              <option value="<%= s %>" <%= filters.status===s?'selected':'' %>><%= s %></option>
+            <% }) %>
+          </select>
+
+          <input type="number"
+                 name="minPrice"
+                 placeholder="Min Price"
+                 value="<%= filters.minPrice||'' %>"
+                 onchange="filterForm.submit()" />
+
+          <input type="number"
+                 name="maxPrice"
+                 placeholder="Max Price"
+                 value="<%= filters.maxPrice||'' %>"
+                 onchange="filterForm.submit()" />
+        </form>
+
+        <!-- Properties Grid -->
+        <div class="properties-grid">
+          <% properties.forEach(prop => { %>
+            <div class="property-card">
+              <!-- UNASSIGNED WARNING -->
+              <% if (!prop.agent_id) { %>
+                <div class="unassigned-warning">
+                  ⚠️ Unassigned
+                </div>
+              <% } %>
+
+              <!-- Uploader avatar -->
+              <img
+                src="<%= prop.uploader_pic || '/img/default-avatar.png' %>"
+                class="uploader-thumb"
+              />
+
+              <!-- Property thumbnail -->
+              <img
+                src="<%= prop.photos?.[0] || '/img/property-placeholder.png' %>"
+                class="thumb"
+              />
+
+              <h3><%= prop.title %></h3>
+              <p><%= prop.city %>, <%= prop.neighborhood %></p>
+
+              <!-- Agent assignment dropdown -->
+              <div class="assign-agent">
+                <label for="agent-<%= prop.id %>">Agent in charge:</label>
+                <form
+                  action="/superadmin/dashboard/properties/<%= prop.id %>/reassign"
+                  method="post"
+                  class="reassign-form"
+                >
+                  <select
+                    id="agent-<%= prop.id %>"
+                    name="agent_id"
+                    onchange="this.form.submit()"
+                  >
+                    <option value="">— Unassigned —</option>
+                    <% allAgents.forEach(agent => { %>
+                      <option
+                        value="<%= agent.id %>"
+                        <%= prop.agent_id === agent.id ? 'selected' : '' %>
+                      ><%= agent.name %></option>
+                    <% }) %>
+                  </select>
+                </form>
+              </div>
+
+              <!-- Action buttons -->
+              <div class="actions">
+                <form
+                  action="/admin/properties/<%= prop.id %>/delete?page=<%= currentPage %>"
+                  method="post"
+                  onsubmit="return confirm('Delete “<%= prop.title %>”?');"
+                >
+                  <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+                <a
+                  href="/properties/<%= prop.slug %>"
+                  class="btn btn-secondary"
+                >View</a>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+
+        <!-- Pagination -->
+        <nav class="pagination">
+          <% if (currentPage > 1) { %>
+            <a href="?page=<%= currentPage - 1 %>" class="page-link">« Prev</a>
+          <% } %>
+          <span class="page-info">
+            Page <%= currentPage %> of <%= totalPages %>
+          </span>
+          <% if (currentPage < totalPages) { %>
+            <a href="?page=<%= currentPage + 1 %>" class="page-link">Next »</a>
+          <% } %>
+        </nav>
+      </section>
+    </main>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const countrySel = document.getElementById('countrySelect');
+    const citySel    = document.getElementById('citySelect');
+    const filterForm = document.getElementById('filterForm');
+
+    countrySel.addEventListener('change', () => {
+      const country = countrySel.value;
+      const cityObj = LOCATIONS[country] || {};
+      const cities  = Object.keys(cityObj);
+
+      citySel.innerHTML = '<option value="">All Cities</option>';
+      if (cities.length) {
+        cities.forEach(ct => {
+          const opt = document.createElement('option');
+          opt.value = ct;
+          opt.textContent = ct;
+          citySel.append(opt);
+        });
+        citySel.disabled = false;
+      } else {
+        citySel.disabled = true;
+      }
+
+      filterForm.submit();
+    });
+  });
+</script>

@@ -1,0 +1,31 @@
+:root {
+  /* Core colors */
+  --color-primary:   #000000; /* e.g. buttons, links */
+  --color-secondary: #4e4e4e; /* e.g. hover states, card borders */
+  --color-tertiary:  #999999; /* e.g. accents, success indicators */
+
+  /* Typography */
+  --font-family-base:    'Inter', sans-serif;
+  --font-size-base:      16px;
+  --font-size-lg:        1.25rem;
+  --font-size-xl:        2rem;
+
+  /* Spacing */
+  --spacing-xs: 0.5rem;
+  --spacing-sm: 1rem;
+  --spacing-md: 1.5rem;
+  --spacing-lg: 2rem;
+
+  /* Radii */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  
+  /* Dashboard Layout */
+  --dashboard-max-width: 960px;
+  --dashboard-gap:       var(--spacing-md);
+
+  --spacing: 1rem;
+  --card-radius: 0.75rem;
+  --card-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  --font-sans: 'Inter', sans-serif;
+}

@@ -1,0 +1,170 @@
+/* public/css/requests.css */
+
+/* 0. New helper variables */
+
+/* 1. Base reset */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+html, body {
+  height: 100%;
+  font-family: var(--font-sans);
+  background: #f5f7fa;
+  color: var(--color-secondary);
+}
+.admin-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+.admin-body {
+  display: flex;
+  flex: 1;
+  min-height: 0; /* allow scrolling of content */
+}
+
+/* 2. Main content area (flush left, no centering) */
+.admin-content {
+  flex: 1;
+  padding: 2rem;
+  overflow-y: auto;
+}
+
+/* 3. Requests container */
+.requests-container {
+  max-width: 1200px;
+  margin: 0;      /* flush left */
+  padding: 0 1rem;
+}
+.requests-container h1 {
+  font-size: var(--font-size-xl);
+  color: var(--color-primary);
+  margin-bottom: 1.5rem;
+}
+.requests-container .empty {
+  font-style: italic;
+  color: var(--color-secondary);
+}
+
+/* 4. Requests grid: fixed 260px cards, auto-wrap, left-aligned */
+.requests-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1rem;
+  justify-content: flex-start;
+}
+
+/* 5. Individual request card */
+.request-card {
+  position: relative;
+  background: #fff;
+  border: 1px solid var(--color-secondary);
+  border-radius: 8px;
+  padding: 1.5rem 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 260px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.request-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+/* 6. Modernize the role selector */
+.role-form {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+}
+.role-select {
+  padding: 0.4rem 0.6rem;
+  font-size: 0.875rem;
+  font-family: inherit;
+  color: var(--color-primary);
+  background-color: #fff;
+  border: 1px solid var(--color-primary);
+  border-radius: 6px;
+  appearance: none;
+  cursor: pointer;
+  /* custom arrow */
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--color-primary) 50%),
+    linear-gradient(135deg, var(--color-primary) 50%, transparent 50%);
+  background-position:
+    calc(100% - 1rem) calc(50% - 0.1em),
+    calc(100% - 0.6rem) calc(50% - 0.1em);
+  background-size: 0.4em 0.4em;
+  background-repeat: no-repeat;
+  padding-right: 2rem;
+}
+
+/* 7. Thumb & other card styles */
+.request-card .thumb {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 50%;
+  margin-bottom: 0.75rem;
+}
+.request-card h3 {
+  margin: 0.5rem 0 0.25rem;
+  font-size: var(--font-size-lg);
+  color: var(--color-primary);
+}
+.request-card .position {
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+  color: var(--color-secondary);
+}
+
+/* 8. Action buttons */
+.actions {
+  margin-top: auto;
+  display: flex;
+  gap: 0.5rem;
+  width: 100%;
+}
+.actions .btn {
+  flex: 1;
+  padding: 0.5rem;
+  border: none;
+  border-radius: 4px;
+  font-size: var(--font-size-base);
+  text-decoration: none;
+  text-align: center;
+  cursor: pointer;
+}
+.btn-primary {
+  background: var(--color-primary);
+  color: #fff;
+}
+.btn-primary:hover {
+  background: var(--color-tertiary);
+}
+.btn-danger {
+  background: #dc3545;
+  color: #fff;
+}
+.btn-danger:hover {
+  background: #c82333;
+}
+
+/* 9. Responsive adjustments */
+@media (max-width: 768px) {
+  .admin-body {
+    flex-direction: column;
+  }
+  .admin-content {
+    padding: 1rem;
+  }
+}
+@media (max-width: 600px) {
+  .requests-grid {
+    grid-template-columns: 1fr;
+  }
+}

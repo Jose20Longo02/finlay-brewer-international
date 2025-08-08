@@ -1,0 +1,38 @@
+<!-- views/partials/superadmin-sidebar.ejs -->
+<head>
+    <link rel="stylesheet" href="/css/superadmin/superadmin-sidebar.css" />
+</head>
+<aside class="admin-sidebar">
+  <ul>
+    <li class="<%= activePage==='dashboard' ? 'active' : '' %>">
+      <a href="/superadmin/dashboard">Dashboard</a>
+    </li>
+    <li class="<%= activePage==='profile' ? 'active' : '' %>">
+      <a href="/superadmin/dashboard/profile">Edit Profile</a>
+    </li>
+    <li class="<%= activePage==='projects' ? 'active' : '' %>">
+      <a href="/superadmin/dashboard/projects">Projects</a>
+    </li>
+    <li class="<%= activePage==='properties' ? 'active' : '' %>">
+      <a href="/superadmin/dashboard/properties">Properties</a>
+    </li>
+    <li class="<%= activePage==='team' ? 'active' : '' %>">
+      <a href="/superadmin/dashboard/team">Team</a>
+    </li>
+    <li class="<%= activePage==='requests' ? 'active' : '' %>">
+      <a href="/superadmin/dashboard/requests">
+        Requests
+        <% if (pendingCount > 0) { %>
+          <span class="badge"><%= pendingCount %></span>
+        <% } %>
+      </a>
+    </li>
+
+
+    <li class="logout">
+      <form action="/auth/logout" method="post">
+        <button type="submit" class="logout-btn">Log Out</button>
+      </form>
+    </li>
+  </ul>
+</aside>

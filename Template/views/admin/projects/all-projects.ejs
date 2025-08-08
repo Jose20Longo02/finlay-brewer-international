@@ -1,0 +1,119 @@
+<% title = 'Projects' %>
+<link rel="stylesheet" href="/css/admin/all-projects.css" />
+
+<script>
+  // make the locations map available to JS
+  window.LOCATIONS = <%- JSON.stringify(locations || {}) %>;
+</script>
+
+<div class="page-wrap">
+  <!-- Header -->
+  <div class="section-header">
+    <h1>All Projects</h1>
+    <div class="header-actions">
+      <a href="/admin/dashboard" class="link-home">← Return to dashboard</a>
+      <a href="/admin/dashboard/projects/new" class="btn btn-primary">New Project</a>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <form class="filters" id="filterForm" method="get">
+    <select id="countrySelect" name="country">
+      <option value="">All Countries</option>
+      <% (countryOptions || []).forEach(c => { %>
+        <option value="<%= c %>" <%= (filters && filters.country === c) ? 'selected' : '' %>><%= c %></option>
+      <% }) %>
+    </select>
+
+    <select id="citySelect" name="city" <%= !(filters && filters.country) ? 'disabled' : '' %>>
+      <option value="">All Cities</option>
+      <% (cityOptions || []).forEach(ct => { %>
+        <option value="<%= ct %>" <%= (filters && filters.city === ct) ? 'selected' : '' %>><%= ct %></option>
+      <% }) %>
+    </select>
+
+    <a class="link-reset" href="?">Reset</a>
+  </form>
+
+  <!-- Projects Grid -->
+  <% if (!projects || projects.length === 0) { %>
+    <div class="empty-state">
+      <p>No projects found.</p>
+    </div>
+  <% } else { %>
+    <div class="cards-grid">
+      <% projects.forEach(function(p) { %>
+        <article class="project-card">
+          <img
+            class="thumb"
+            src="<%= (p.photos && p.photos[0]) || '/img/project-placeholder.png' %>"
+            alt="<%= p.title %>"
+          />
+          <div class="card-body">
+            <h3 class="title"><%= p.title %></h3>
+            <p class="meta">
+              <%= p.country %><% if (p.city) { %> — <%= p.city %><% } %><% if (p.neighborhood) { %>, <%= p.neighborhood %><% } %>
+            </p>
+            <div class="actions">
+              <a class="btn btn-secondary" href="/admin/dashboard/projects/<%= p.id %>/edit">Edit</a>
+              <a class="btn btn-ghost" href="/projects/<%= p.slug || p.id %>">View</a>
+            </div>
+          </div>
+        </article>
+      <% }) %>
+    </div>
+  <% } %>
+
+  <!-- Pagination -->
+  <nav class="pagination">
+    <% 
+      const qs = (page) => {
+        const params = new URLSearchParams();
+        params.set('page', page);
+        if (filters && filters.country) params.set('country', filters.country);
+        if (filters && filters.city)    params.set('city', filters.city);
+        return '?' + params.toString();
+      };
+    %>
+    <% if (currentPage > 1) { %>
+      <a class="page-link" href="<%= qs(currentPage - 1) %>">« Prev</a>
+    <% } %>
+    <span class="page-info">Page <%= currentPage %> of <%= totalPages %></span>
+    <% if (currentPage < totalPages) { %>
+      <a class="page-link" href="<%= qs(currentPage + 1) %>">Next »</a>
+    <% } %>
+  </nav>
+</div>
+
+<script>
+  (function () {
+    const countrySel = document.getElementById('countrySelect');
+    const citySel    = document.getElementById('citySelect');
+    const form       = document.getElementById('filterForm');
+
+    if (!countrySel || !citySel) return;
+
+    countrySel.addEventListener('change', () => {
+      const country = countrySel.value;
+      const cityObj = (window.LOCATIONS && window.LOCATIONS[country]) || {};
+      const cities  = Object.keys(cityObj);
+
+      citySel.innerHTML = '<option value="">All Cities</option>';
+      if (cities.length) {
+        cities.forEach(ct => {
+          const opt = document.createElement('option');
+          opt.value = ct;
+          opt.textContent = ct;
+          citySel.appendChild(opt);
+        });
+        citySel.disabled = false;
+      } else {
+        citySel.disabled = true;
+      }
+
+      form.submit(); // auto-apply filter
+    });
+
+    citySel.addEventListener('change', () => form.submit());
+  })();
+</script>

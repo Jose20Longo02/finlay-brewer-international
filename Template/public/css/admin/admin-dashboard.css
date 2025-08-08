@@ -1,0 +1,159 @@
+/* public/css/admin/admin-dashboard.css */
+
+/* 1. Base reset */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+html, body {
+  height: 100%;
+  font-family: var(--font-sans);
+  background: var(--color-light);
+  color: var(--color-secondary);
+}
+
+/* 2. Panel & layout */
+.admin-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+.admin-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* 3. Main content area */
+.admin-content {
+  flex: 1;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;    /* center horizontally */
+  justify-content: center; /* center vertically */
+  overflow-y: auto;
+  background: #fff;
+}
+
+/* 4. Header */
+.admin-header {
+  max-width: 1000px;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 7rem;   /* extra spacing below header */
+}
+.admin-header h1 {
+  font-size: 2.25rem;
+  color: var(--color-primary);
+}
+.admin-header .subtitle {
+  margin-top: 0.25rem;
+  font-size: 1rem;
+  color: var(--color-secondary);
+}
+.admin-header .back-home {
+  font-size: 0.9rem;
+  color: var(--color-tertiary);
+  text-decoration: none;
+  transition: color .2s;
+}
+.admin-header .back-home:hover {
+  color: var(--color-primary);
+}
+
+/* 5. Cards grid */
+.cards-grid {
+  max-width: 1000px;
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  justify-content: center; /* center when few cards */
+  gap: 2.5rem;             /* increased gap between cards */
+  margin-bottom: 7rem;     /* spacing below cards */
+}
+.card {
+  background: #fafafa;
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  padding: 2rem 1.5rem;
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  align-items: center;   /* center icon/text */
+  transition: transform .2s, box-shadow .2s;
+}
+.card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+}
+.card .icon {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+.card h2 {
+  font-size: 1.3rem;
+  color: var(--color-primary);
+  margin-bottom: 0.5rem;
+  text-align: center;
+}
+.card p {
+  color: var(--color-secondary);
+  font-size: 0.95rem;
+  text-align: center;
+}
+
+/* 6. Logout button */
+.logout-form {
+  width: 100%;
+  max-width: 800px;
+  text-align: center;
+  margin-top: 2rem;       /* spacing above logout */
+}
+.btn-logout {
+  background: var(--color-secondary);
+  color: #fff;
+  border: none;
+  padding: 0.75rem 2rem;
+  border-radius: 2rem;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background .2s, transform .2s;
+}
+.btn-logout:hover {
+  background: var(--color-tertiary);
+  transform: translateY(-2px);
+}
+
+/* 7. Responsive tweaks */
+@media (max-width: 1024px) {
+  .cards-grid {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  }
+}
+@media (max-width: 768px) {
+  .admin-body {
+    flex-direction: column;
+  }
+  .admin-content {
+    padding: 1.5rem;
+  }
+  /* wrap the header link under the greeting */
+  .admin-header {
+    flex-direction: column;
+    align-items: flex-start;
+    margin-bottom: 2rem;
+  }
+  .admin-header .back-home {
+    margin-top: 1rem;
+  }
+  .cards-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+}

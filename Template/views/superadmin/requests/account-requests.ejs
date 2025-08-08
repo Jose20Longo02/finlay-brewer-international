@@ -1,0 +1,61 @@
+<!-- views/admin/requests/list.ejs -->
+<% title = 'Account Requests' %>
+<link rel="stylesheet" href="/css/superadmin/account-requests.css" />
+
+<div class="admin-panel">
+  <div class="admin-body">
+    <!-- Sidebar -->
+    <%- include('../../partials/superadmin-sidebar', {
+      activePage: 'requests',     // or 'projects', 'properties', etc.
+      pendingCount: pendingCount   // make sure you pass this in your controller
+    }) %>
+
+    <!-- Main content -->
+<main class="admin-content">
+      <section class="requests-container">
+        <h1>Pending Account Requests</h1>
+
+        <% if (pendingCount === 0) { %>
+          <p class="empty">No pending account requests.</p>
+        <% } else { %>
+          <div class="requests-grid">
+            <% requests.forEach(function(req) { %>
+              <div class="request-card">
+                <!-- Role selector -->
+                <form
+                  action="/superadmin/dashboard/requests/<%= req.id %>/role"
+                  method="post"
+                  class="role-form"
+                >
+                  <select name="role" class="role-select" onchange="this.form.submit()">
+                    <option value="Admin"      <%= req.role === 'Admin'      ? 'selected' : '' %>>Admin</option>
+                    <option value="SuperAdmin" <%= req.role === 'SuperAdmin' ? 'selected' : '' %>>SuperAdmin</option>
+                  </select>
+                </form>
+
+                <img
+                  src="<%= req.profile_picture || '/img/default-avatar.png' %>"
+                  alt="<%= req.name %>"
+                  class="thumb"
+                />
+                <h3><%= req.name %></h3>
+                <p class="position"><%= req.position %> — <%= req.area %></p>
+
+                <% if (req.id !== currentUser.id) { %>
+                  <div class="actions">
+                    <form action="/superadmin/dashboard/requests/<%= req.id %>/approve" method="post">
+                      <button type="submit" class="btn btn-primary">Approve</button>
+                    </form>
+                    <form action="/superadmin/dashboard/requests/<%= req.id %>/reject" method="post">
+                      <button type="submit" class="btn btn-danger">Reject</button>
+                    </form>
+                  </div>
+                <% } %>
+              </div>
+            <% }); %>
+          </div>
+        <% } %>
+      </section>
+    </main>
+  </div>
+</div>

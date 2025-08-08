@@ -1,0 +1,68 @@
+<head>
+  <link rel="stylesheet" href="/css/superadmin/manage-team.css" />
+</head>
+
+<!-- views/admin/team/list.ejs -->
+<% title = 'Team Management' %>
+
+<link rel="stylesheet" href="/css/team.css" />
+
+<div class="admin-panel">
+  <div class="admin-body">
+    <!-- Sidebar -->
+     <%- include('../../partials/superadmin-sidebar', {
+      activePage: 'team',     // or 'projects', 'properties', etc.
+      pendingCount: pendingCount   // make sure you pass this in your controller
+    }) %>
+
+    <!-- Main content -->
+    <main class="admin-content">
+      <section class="team-container">
+        <h1>Team Management</h1>
+
+        <% Object.keys(areaRoles).forEach(function(area) { %>
+          <div class="team-area">
+            <h2><%= area %></h2>
+            <% const areaMembers = members.filter(m => m.area === area); %>
+
+            <% if (areaMembers.length === 0) { %>
+              <p class="empty">No team members work in this area.</p>
+            <% } else { %>
+              <div class="members-grid">
+                <% areaMembers.forEach(function(member) { %>
+                  <div class="member-card">
+                    <img
+                      src="<%= member.profile_picture || '/img/default-avatar.png' %>"
+                      alt="<%= member.name %>"
+                      class="thumb"
+                    />
+                    <h3><%= member.name %></h3>
+                    <p class="position"><%= member.position %></p>
+
+                    <% if (member.id !== currentUser.id) { %>
+                      <div class="actions">
+                        <form 
+                          action="/superadmin/dashboard/team/<%= member.id %>/delete" 
+                          method="post"
+                          onsubmit="return confirm('Are you sure you want to delete <%= member.name %>?');"
+                        >
+                          <button type="submit" class="btn btn-danger">Delete</button>
+                        </form>
+                        <form action="/superadmin/dashboard/team/<%= member.id %>/message" method="post">
+                          <button type="submit" class="btn btn-secondary">Send Message</button>
+                        </form>
+                      </div>
+                    <% } %>
+                  </div>
+                <% }); %>
+              </div>
+            <% } %>
+          </div>
+        <% }); %>
+
+      </section>
+    </main>
+  </div>
+</div>
+
+

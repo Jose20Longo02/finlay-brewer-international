@@ -1,0 +1,50 @@
+/* Alert container */
+.alert {
+  margin: 1rem 0;
+  padding: 0.75rem 1rem;
+  border-radius: 4px;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+/* Error state */
+.alert-error {
+  background-color: #ffe5e5;
+  color: #b00020;
+  border: 1px solid #f5c2c7;
+}
+
+
+
+/* public/css/auth.css (or wherever your login styles live) */
+
+/* Modal overlay */
+.modal-overlay {
+  display: none; /* hidden by default */
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+.modal-content {
+  background: #fff;
+  padding: 2rem;
+  border-radius: 8px;
+  max-width: 90%;
+  width: 320px;
+  text-align: center;
+}
+.modal-content h2 {
+  margin-top: 0;
+}
+.modal-content button {
+  margin-top: 1rem;
+  padding: 0.5rem 1.5rem;
+  background: var(--color-primary);
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
