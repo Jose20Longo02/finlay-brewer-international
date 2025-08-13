@@ -1,0 +1,603 @@
+<% title = 'Property Search Results'; headPartial = '../partials/seo/property-list-head'; %>
+<link rel="stylesheet" href="/css/property-list.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+<!-- Locations data for JavaScript -->
+<div id="locations-data" data-locations='<%- JSON.stringify(locations).replace(/'/g, '&#39;') %>' style="display: none;"></div>
+
+<div class="property-search-page">
+  <!-- Search Header -->
+  <section class="search-header">
+    <div class="container">
+      <h1>Property Search Results</h1>
+      <p>Find your perfect property from our extensive collection</p>
+      
+      <!-- Quick Search Bar -->
+      <div class="quick-search">
+        <form action="/properties" method="GET" class="quick-search-form">
+          <div class="search-input-group">
+            <input type="text" name="q" placeholder="Search by location, property type, or keywords..." 
+                   value="<%= locals.query || '' %>" class="search-input">
+            <button type="submit" class="search-btn">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"></circle>
+                <path d="m21 21-4.35-4.35"></path>
+              </svg>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <div class="container-wide">
+    <div class="property-layout">
+      <!-- Filters Sidebar -->
+      <aside class="filters-sidebar">
+        <div class="filters-header">
+          <h3>Filters</h3>
+          <button class="clear-filters" onclick="clearAllFilters()">Clear All</button>
+        </div>
+        
+        <form id="filtersForm" class="filters-form">
+          <!-- Location Filters -->
+          <div class="filter-group">
+            <h4>Location</h4>
+            <div class="form-group">
+              <label for="filterCountry">Country</label>
+               <select id="filterCountry" name="country" class="form-select">
+                <option value="">Any Country</option>
+                <% Object.keys(locations).forEach(country => { %>
+                  <option value="<%= country %>" <%= locals.filters?.country === country ? 'selected' : '' %>><%= country %></option>
+                <% }); %>
+              </select>
+            </div>
+            
+            <div class="form-group">
+              <label for="filterCity">City</label>
+               <select id="filterCity" name="city" class="form-select">
+                <option value="">Any City</option>
+                <!-- Cities will be populated dynamically -->
+              </select>
+            </div>
+            
+            <div class="form-group">
+              <label for="filterNeighborhood">Neighborhood</label>
+              <select id="filterNeighborhood" name="neighborhood" class="form-select">
+                <option value="">Any Neighborhood</option>
+                <!-- Neighborhoods will be populated dynamically -->
+              </select>
+            </div>
+          </div>
+
+          <!-- Property Type -->
+          <div class="filter-group">
+            <h4>Property Type</h4>
+            <div class="checkbox-group">
+              <label class="checkbox-label">
+                <input type="checkbox" name="type" value="Apartment" <%= locals.filters?.type?.includes('Apartment') ? 'checked' : '' %>>
+                <span class="checkmark"></span>
+                Apartment
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" name="type" value="House" <%= locals.filters?.type?.includes('House') ? 'checked' : '' %>>
+                <span class="checkmark"></span>
+                House
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" name="type" value="Villa" <%= locals.filters?.type?.includes('Villa') ? 'checked' : '' %>>
+                <span class="checkmark"></span>
+                Villa
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" name="type" value="Land" <%= locals.filters?.type?.includes('Land') ? 'checked' : '' %>>
+                <span class="checkmark"></span>
+                Land
+              </label>
+            </div>
+          </div>
+
+          <!-- Price Range -->
+          <div class="filter-group">
+            <h4>Price Range</h4>
+            <div class="price-range">
+              <div class="form-group">
+                <label for="minPrice">Min Price (€)</label>
+                <input type="text" id="minPrice" placeholder="€0" 
+                       value="<%= locals.filters?.min_price ? '€' + Number(locals.filters.min_price).toLocaleString() : '' %>" 
+                       class="form-input" inputmode="numeric" autocomplete="off">
+                <input type="hidden" id="minPriceHidden" name="min_price" value="<%= locals.filters?.min_price || '' %>">
+              </div>
+              <div class="form-group">
+                <label for="maxPrice">Max Price (€)</label>
+                <input type="text" id="maxPrice" placeholder="€ Any" 
+                       value="<%= locals.filters?.max_price ? '€' + Number(locals.filters.max_price).toLocaleString() : '' %>" 
+                       class="form-input" inputmode="numeric" autocomplete="off">
+                <input type="hidden" id="maxPriceHidden" name="max_price" value="<%= locals.filters?.max_price || '' %>">
+              </div>
+            </div>
+          </div>
+
+          <!-- Bedrooms & Bathrooms -->
+          <div class="filter-group">
+            <h4>Bedrooms</h4>
+            <div class="checkbox-group">
+              <label class="checkbox-label">
+                <input type="checkbox" name="bedrooms" value="1" <%= locals.filters?.bedrooms?.includes('1') ? 'checked' : '' %>>
+                <span class="checkmark"></span>
+                1+
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" name="bedrooms" value="2" <%= locals.filters?.bedrooms?.includes('2') ? 'checked' : '' %>>
+                <span class="checkmark"></span>
+                2+
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" name="bedrooms" value="3" <%= locals.filters?.bedrooms?.includes('3') ? 'checked' : '' %>>
+                <span class="checkmark"></span>
+                3+
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" name="bedrooms" value="4" <%= locals.filters?.bedrooms?.includes('4') ? 'checked' : '' %>>
+                <span class="checkmark"></span>
+                4+
+              </label>
+            </div>
+          </div>
+
+          <!-- Bathrooms -->
+          <div class="filter-group">
+            <h4>Bathrooms</h4>
+            <div class="checkbox-group">
+              <label class="checkbox-label">
+                <input type="checkbox" name="bathrooms" value="1" <%= locals.filters?.bathrooms === '1' ? 'checked' : '' %>>
+                <span class="checkmark"></span>
+                1+
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" name="bathrooms" value="2" <%= locals.filters?.bathrooms === '2' ? 'checked' : '' %>>
+                <span class="checkmark"></span>
+                2+
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" name="bathrooms" value="3" <%= locals.filters?.bathrooms === '3' ? 'checked' : '' %>>
+                <span class="checkmark"></span>
+                3+
+              </label>
+            </div>
+          </div>
+
+          <!-- Size Range -->
+          <div class="filter-group">
+            <h4>Size Range (m²)</h4>
+            <div class="size-range">
+              <div class="form-group">
+                <label for="minSize">Min Size</label>
+                <input type="number" id="minSize" name="min_size" placeholder="0" 
+                       value="<%= locals.filters?.min_size || '' %>" class="form-input">
+              </div>
+              <div class="form-group">
+                <label for="maxSize">Max Size</label>
+                <input type="number" id="maxSize" name="max_size" placeholder="Any" 
+                       value="<%= locals.filters?.max_size || '' %>" class="form-input">
+              </div>
+            </div>
+          </div>
+
+          <!-- Year Built Range -->
+          <div class="filter-group">
+            <h4>Year Built</h4>
+            <div class="year-range">
+              <div class="form-group">
+                <label for="yearBuiltMin">From Year</label>
+                <input type="number" id="yearBuiltMin" name="year_built_min" placeholder="1900" 
+                       min="1800" max="<%= new Date().getFullYear() %>"
+                       value="<%= locals.filters?.year_built_min || '' %>" class="form-input">
+              </div>
+              <div class="form-group">
+                <label for="yearBuiltMax">To Year</label>
+                <input type="number" id="yearBuiltMax" name="year_built_max" placeholder="<%= new Date().getFullYear() %>" 
+                       min="1800" max="<%= new Date().getFullYear() %>"
+                       value="<%= locals.filters?.year_built_max || '' %>" class="form-input">
+              </div>
+            </div>
+          </div>
+
+          <!-- Property Features -->
+          <div class="filter-group">
+            <h4>Features</h4>
+            <div class="checkbox-group">
+              <label class="checkbox-label">
+                <input type="checkbox" name="featured" value="true" <%= locals.filters?.featured === 'true' ? 'checked' : '' %>>
+                <span class="checkmark"></span>
+                Featured Properties
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" name="new_listing" value="true" <%= locals.filters?.new_listing === 'true' ? 'checked' : '' %>>
+                <span class="checkmark"></span>
+                New Listings (7 days)
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" name="features" value="garden" <%= locals.filters?.features?.includes('garden') ? 'checked' : '' %>>
+                <span class="checkmark"></span>
+                Garden
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" name="features" value="balcony" <%= locals.filters?.features?.includes('balcony') ? 'checked' : '' %>>
+                <span class="checkmark"></span>
+                Balcony
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" name="features" value="parking" <%= locals.filters?.features?.includes('parking') ? 'checked' : '' %>>
+                <span class="checkmark"></span>
+                Parking
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" name="features" value="elevator" <%= locals.filters?.features?.includes('elevator') ? 'checked' : '' %>>
+                <span class="checkmark"></span>
+                Elevator
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" name="features" value="air_conditioning" <%= locals.filters?.features?.includes('air_conditioning') ? 'checked' : '' %>>
+                <span class="checkmark"></span>
+                Air Conditioning
+              </label>
+            </div>
+          </div>
+
+          <!-- Apply Filters Button -->
+          <button type="submit" class="btn btn-primary btn-block">Apply Filters</button>
+        </form>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="property-main">
+        <!-- Results Header -->
+        <div class="results-header">
+          <div class="results-info">
+            <h2><%= totalProperties %> Properties Found</h2>
+            <p>
+              <% if (locals.query || Object.values(locals.filters).some(v => v && (Array.isArray(v) ? v.length > 0 : true))) { %>
+                Showing <%= properties.length %> of <%= totalProperties %> results
+                <% if (locals.query) { %>
+                  for "<%= locals.query %>"
+                <% } %>
+                <% if (locals.filters.country || locals.filters.city) { %>
+                  in <%= locals.filters.city || locals.filters.country %>
+                <% } %>
+              <% } else { %>
+                Browse all available properties
+              <% } %>
+            </p>
+            
+            <!-- Active Filters Display -->
+            <% if (Object.values(locals.filters).some(v => v && (Array.isArray(v) ? v.length > 0 : true))) { %>
+              <div class="active-filters">
+                <span class="active-filters-label">Active filters:</span>
+                <% if (locals.filters.country) { %>
+                  <span class="filter-tag">
+                    <%= locals.filters.country %>
+                    <button onclick="removeFilter('country')" class="filter-remove">&times;</button>
+                  </span>
+                <% } %>
+                <% if (locals.filters.city) { %>
+                  <span class="filter-tag">
+                    <%= locals.filters.city %>
+                    <button onclick="removeFilter('city')" class="filter-remove">&times;</button>
+                  </span>
+                <% } %>
+                <% if (locals.filters.type && locals.filters.type.length > 0) { %>
+                  <% locals.filters.type.forEach(type => { %>
+                    <span class="filter-tag">
+                      <%= type %>
+                      <button onclick="removeFilter('type', '<%= type %>')" class="filter-remove">&times;</button>
+                    </span>
+                  <% }) %>
+                <% } %>
+                <% if (locals.filters.min_price || locals.filters.max_price) { %>
+                  <span class="filter-tag">
+                    €<%= locals.filters.min_price || '0' %> - €<%= locals.filters.max_price || '∞' %>
+                    <button onclick="removeFilter('price')" class="filter-remove">&times;</button>
+                  </span>
+                <% } %>
+                <% if (locals.filters.min_size || locals.filters.max_size) { %>
+                  <span class="filter-tag">
+                    <%= locals.filters.min_size || '0' %> - <%= locals.filters.max_size || '∞' %> m²
+                    <button onclick="removeFilter('size')" class="filter-remove">&times;</button>
+                  </span>
+                <% } %>
+                <% if (locals.filters.year_built_min || locals.filters.year_built_max) { %>
+                  <span class="filter-tag">
+                    <%= locals.filters.year_built_min || '1900' %> - <%= locals.filters.year_built_max || new Date().getFullYear() %>
+                    <button onclick="removeFilter('year_built')" class="filter-remove">&times;</button>
+                  </span>
+                <% } %>
+                <% if (locals.filters.features && locals.filters.features.length > 0) { %>
+                  <% locals.filters.features.forEach(feature => { %>
+                    <span class="filter-tag">
+                      <%= feature %>
+                      <button onclick="removeFilter('features', '<%= feature %>')" class="filter-remove">&times;</button>
+                    </span>
+                  <% }) %>
+                <% } %>
+                
+                <!-- Save Search Button -->
+                <button class="btn btn-outline btn-sm save-search-btn" onclick="saveSearch()">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                  </svg>
+                  Save Search
+                </button>
+              </div>
+            <% } %>
+          </div>
+          
+          <div class="results-controls">
+            <div class="sort-controls">
+              <label for="sortBy">Sort by:</label>
+              <select id="sortBy" name="sort" class="form-select" onchange="updateSort()">
+                <option value="relevance" <%= locals.sort === 'relevance' ? 'selected' : '' %>>Relevance</option>
+                <option value="price_low" <%= locals.sort === 'price_low' ? 'selected' : '' %>>Price: Low to High</option>
+                <option value="price_high" <%= locals.sort === 'price_high' ? 'selected' : '' %>>Price: High to Low</option>
+                <option value="date_new" <%= locals.sort === 'date_new' ? 'selected' : '' %>>Newest First</option>
+                <option value="date_old" <%= locals.sort === 'date_old' ? 'selected' : '' %>>Oldest First</option>
+              </select>
+            </div>
+            
+            <div class="view-controls">
+              <button class="view-btn active" data-view="grid" onclick="switchView('grid')">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="3" width="7" height="7"></rect>
+                  <rect x="14" y="3" width="7" height="7"></rect>
+                  <rect x="14" y="14" width="7" height="7"></rect>
+                  <rect x="3" y="14" width="7" height="7"></rect>
+                </svg>
+              </button>
+              <button class="view-btn" data-view="list" onclick="switchView('list')">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="8" y1="6" x2="21" y2="6"></line>
+                  <line x1="8" y1="12" x2="21" y2="12"></line>
+                  <line x1="8" y1="18" x2="21" y2="18"></line>
+                  <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                  <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                  <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                </svg>
+              </button>
+              <button class="view-btn" data-view="map" onclick="switchView('map')">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M9 20l-5.447-2.724A1 1 0 0 1 3 16.382V5.618a1 1 0 0 1 1.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0 0 21 18.382V7.618a1 1 0 0 0-1.447-.894L15 4m0 13V4m-6 3l6-3"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Properties Grid -->
+        <div class="properties-container">
+          <% if (properties.length > 0) { %>
+            <!-- Property Comparison Bar -->
+            <div id="comparisonContainer" class="comparison-container" style="display: none;">
+              <div class="comparison-header">
+                <h3>Properties to Compare</h3>
+                <button id="compareBtn" class="btn btn-primary" onclick="showComparisonModal()" disabled>
+                  Compare (0)
+                </button>
+              </div>
+              <div id="comparisonList" class="comparison-list">
+                <!-- Comparison items will be added here -->
+              </div>
+            </div>
+            
+            <div class="properties-grid" id="propertiesGrid">
+              <% properties.forEach(property => { %>
+                <div class="property-card country-<%= property.country.toLowerCase() %>" 
+                     data-country="<%= property.country %>"
+                     data-property-id="<%= property.id %>"
+                     onclick="window.location.href='/properties/<%= property.slug %>'">
+                  
+                  <!-- Property Image -->
+                  <div class="property-image">
+                      <% if (property.photos && property.photos.length > 0) { %>
+                        <% if (property.has_variants && property.variant_base) { %>
+                          <picture>
+                            <source srcset="<%= property.variant_base %>-320.avif 320w, <%= property.variant_base %>-640.avif 640w, <%= property.variant_base %>-960.avif 960w, <%= property.variant_base %>-1280.avif 1280w, <%= property.variant_base %>-1920.avif 1920w" type="image/avif">
+                            <source srcset="<%= property.variant_base %>-320.webp 320w, <%= property.variant_base %>-640.webp 640w, <%= property.variant_base %>-960.webp 960w, <%= property.variant_base %>-1280.webp 1280w, <%= property.variant_base %>-1920.webp 1920w" type="image/webp">
+                            <img src="<%= property.photos[0] %>" alt="<%= property.title %>"
+                                 srcset="<%= property.variant_base %>-320.jpg 320w, <%= property.variant_base %>-640.jpg 640w, <%= property.variant_base %>-960.jpg 960w, <%= property.variant_base %>-1280.jpg 1280w, <%= property.variant_base %>-1920.jpg 1920w"
+                                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 350px"
+                                 loading="lazy" decoding="async"
+                                 onerror="this.src='/img/property-placeholder.jpg'">
+                          </picture>
+                        <% } else { %>
+                          <img src="<%= property.photos[0] %>" alt="<%= property.title %>" loading="lazy" decoding="async"
+                               onerror="this.src='/img/property-placeholder.jpg'">
+                        <% } %>
+                    <% } else { %>
+                        <img src="/img/property-placeholder.jpg" alt="<%= property.title %>" loading="lazy" decoding="async">
+                    <% } %>
+                    
+                    <!-- Property Badges -->
+                    <div class="property-badges">
+                      <% if (property.featured) { %>
+                        <span class="badge badge-featured">Featured</span>
+                      <% } %>
+                      <span class="badge badge-type"><%= property.type %></span>
+                    </div>
+                  </div>
+                  
+                  <!-- Property Content -->
+                  <div class="property-content">
+                    <h3 class="property-title"><%= property.title %></h3>
+                    
+                    <div class="property-location">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                        <circle cx="12" cy="10" r="3"></circle>
+                      </svg>
+                      <%= property.city %>, <%= property.country %>
+                    </div>
+                    
+                    <div class="property-details">
+                      <div class="detail-item">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                          <polyline points="9,22 9,12 15,12 15,22"></polyline>
+                        </svg>
+                        <%= property.bedrooms || 0 %> beds
+                      </div>
+                      <div class="detail-item">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                          <path d="M4 10h16"></path>
+                        </svg>
+                        <%= property.bathrooms || 0 %> baths
+                      </div>
+                      <div class="detail-item">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                          <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                          <polyline points="21,15 16,10 5,21"></polyline>
+                        </svg>
+                        <%= property.size || 0 %> m²
+                      </div>
+                    </div>
+                    
+                    <div class="property-price">
+                       <span class="price-amount">€<%= Number(property.price || 0).toLocaleString('en-US') %></span>
+                    </div>
+                    
+                    <div class="property-footer">
+                      <div class="agent-info">
+                        <img src="<%= property.agent?.profile_picture || '/img/default-avatar.jpg' %>" 
+                             alt="<%= property.agent?.name || 'Agent' %>" class="agent-avatar" loading="lazy" decoding="async">
+                        <span class="agent-name"><%= property.agent?.name || 'Agent' %></span>
+                      </div>
+                      <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); compareProperty('<%= property.id %>')">
+                        Compare
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              <% }); %>
+            </div>
+            
+            <!-- Map View Container -->
+            <div id="mapContainer" class="map-container" style="display: none;">
+              <div class="map-header">
+                <h3>Property Map View</h3>
+                <p>Click on map markers to view property details</p>
+              </div>
+              <div id="propertyMap" class="property-map">
+                <!-- Map will be loaded here -->
+                <div class="map-loading">
+                  <div class="map-loading-spinner"></div>
+                  <p>Loading map...</p>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Pagination -->
+            <% if (totalPages > 1) { %>
+              <div class="pagination">
+                <% if (currentPage > 1) { %>
+                  <a href="?<%= new URLSearchParams({...locals.query, page: currentPage - 1}) %>" class="page-link">Previous</a>
+                <% } %>
+                
+                <% for (let i = 1; i <= totalPages; i++) { %>
+                  <% if (i === currentPage) { %>
+                    <span class="page-link active"><%= i %></span>
+                  <% } else if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) { %>
+                    <a href="?<%= new URLSearchParams({...locals.query, page: i}) %>" class="page-link"><%= i %></a>
+                  <% } else if (i === currentPage - 3 || i === currentPage + 3) { %>
+                    <span class="page-link">...</span>
+                  <% } %>
+                <% } %>
+                
+                <% if (currentPage < totalPages) { %>
+                  <a href="?<%= new URLSearchParams({...locals.query, page: currentPage + 1}) %>" class="page-link">Next</a>
+                <% } %>
+              </div>
+            <% } %>
+            
+          <% } else { %>
+            <div class="no-results">
+              <div class="no-results-icon">🏠</div>
+              <h3>No Properties Found</h3>
+              <p>Try adjusting your search criteria or browse all available properties.</p>
+              <div class="no-results-actions">
+                <button class="btn btn-secondary" onclick="clearAllFilters()">Clear Filters</button>
+                <a href="/properties" class="btn btn-primary">Browse All Properties</a>
+              </div>
+            </div>
+          <% } %>
+        </div>
+      </main>
+    </div>
+  </div>
+</div>
+
+<!-- Property Comparison Modal -->
+<div id="comparisonModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>Property Comparison</h3>
+      <button class="modal-close" onclick="closeComparisonModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div id="comparisonContent">
+        <!-- Comparison content will be loaded here -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Save Search Modal -->
+<div id="saveSearchModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>Save Search</h3>
+      <button class="modal-close" onclick="closeSaveSearchModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <form id="saveSearchForm" class="save-search-form">
+        <div class="form-group">
+          <label for="searchName">Search Name</label>
+          <input type="text" id="searchName" name="searchName" placeholder="e.g., 3-bedroom apartments in Madrid" required class="form-input">
+        </div>
+        <div class="form-group">
+          <label for="searchDescription">Description (optional)</label>
+          <textarea id="searchDescription" name="searchDescription" placeholder="Add a description to help you remember this search..." class="form-input" rows="3"></textarea>
+        </div>
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input type="checkbox" id="emailAlerts" name="emailAlerts">
+            <span class="checkmark"></span>
+            Receive email alerts for new properties matching this search
+          </label>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeSaveSearchModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Search</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Saved Searches Modal -->
+<div id="savedSearchesModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>Saved Searches</h3>
+      <button class="modal-close" onclick="closeSavedSearchesModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div id="savedSearchesContent">
+        <!-- Saved searches will be loaded here -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="/js/property-list.js"></script>

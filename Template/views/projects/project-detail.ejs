@@ -1,0 +1,287 @@
+<% title = project.title %>
+<link rel="stylesheet" href="/css/project-detail.css" />
+
+<div class="project-detail-page">
+  <!-- Project Header -->
+  <section class="project-header">
+    <div class="container">
+      <nav class="breadcrumb">
+        <a href="/projects">Projects</a>
+        <span class="separator">/</span>
+        <a href="/projects?country=<%= project.country %>"><%= project.country %></a>
+        <span class="separator">/</span>
+        <a href="/projects?country=<%= project.country %>&city=<%= project.city %>"><%= project.city %></a>
+        <span class="separator">/</span>
+        <span class="current"><%= project.title %></span>
+      </nav>
+      
+      <div class="project-header-content">
+        <div class="project-badges">
+          <span class="badge badge-type"><%= project.type || 'Development' %></span>
+          <% if (project.status) { %>
+            <span class="badge badge-status badge-<%= project.status %>"><%= project.status %></span>
+          <% } %>
+        </div>
+        
+        <h1 class="project-title"><%= project.title %></h1>
+        
+        <div class="project-location">
+          <i class="fas fa-map-marker-alt"></i>
+          <span><%= project.city %>, <%= project.country %></span>
+          <% if (project.neighborhood) { %>
+            <span class="neighborhood">• <%= project.neighborhood %></span>
+          <% } %>
+        </div>
+        
+        <div class="project-meta">
+          <% if (project.total_units) { %>
+            <div class="meta-item">
+              <i class="fas fa-building"></i>
+              <span><%= project.total_units %> Units</span>
+            </div>
+          <% } %>
+          
+          <% if (project.completion_date) { %>
+            <div class="meta-item">
+              <i class="fas fa-calendar"></i>
+              <span>Completion: <%= project.completion_date %></span>
+            </div>
+          <% } %>
+          
+          <% if (project.price_range) { %>
+            <div class="meta-item">
+              <i class="fas fa-dollar-sign"></i>
+              <span><%= project.price_range %></span>
+            </div>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Project Content -->
+  <section class="project-content">
+    <div class="container">
+      <div class="project-layout">
+        <!-- Main Content -->
+        <div class="project-main">
+          <!-- Project Gallery -->
+          <div class="project-gallery">
+            <% if (project.photos && project.photos.length > 0) { %>
+              <div class="gallery-main">
+                <img src="/uploads/projects/<%= project.id %>/<%= project.photos[0] %>" 
+                     alt="<%= project.title %>" 
+                     id="main-image"
+                     class="main-image">
+              </div>
+              
+              <% if (project.photos.length > 1) { %>
+                <div class="gallery-thumbnails">
+                  <% project.photos.forEach((photo, index) => { %>
+                    <div class="thumbnail <%= index === 0 ? 'active' : '' %>" 
+                         data-photo="<%= photo %>"
+                         data-index="<%= index %>">
+                      <img src="/uploads/projects/<%= project.id %>/<%= photo %>" 
+                           alt="<%= project.title %> - Image <%= index + 1 %>">
+                    </div>
+                  <% }) %>
+                </div>
+              <% } %>
+            <% } else { %>
+              <div class="gallery-placeholder">
+                <i class="fas fa-image"></i>
+                <p>No images available</p>
+              </div>
+            <% } %>
+          </div>
+
+          <!-- Project Description -->
+          <div class="project-section">
+            <h2>Project Overview</h2>
+            <div class="project-description">
+              <p><%= project.description %></p>
+            </div>
+          </div>
+
+          <!-- Project Features -->
+          <% if (project.features && project.features.length > 0) { %>
+            <div class="project-section">
+              <h2>Key Features</h2>
+              <div class="features-grid">
+                <% project.features.forEach(feature => { %>
+                  <div class="feature-item">
+                    <i class="fas fa-check"></i>
+                    <span><%= feature %></span>
+                  </div>
+                <% }) %>
+              </div>
+            </div>
+          <% } %>
+
+          <!-- Project Amenities -->
+          <% if (project.amenities && project.amenities.length > 0) { %>
+            <div class="project-section">
+              <h2>Amenities</h2>
+              <div class="amenities-grid">
+                <% project.amenities.forEach(amenity => { %>
+                  <div class="amenity-item">
+                    <i class="fas fa-star"></i>
+                    <span><%= amenity %></span>
+                  </div>
+                <% }) %>
+              </div>
+            </div>
+          <% } %>
+
+          <!-- Project Specifications -->
+          <% if (project.specifications && Object.keys(project.specifications).length > 0) { %>
+            <div class="project-section">
+              <h2>Specifications</h2>
+              <div class="specifications-table">
+                <% Object.entries(project.specifications).forEach(([key, value]) => { %>
+                  <div class="spec-row">
+                    <div class="spec-label"><%= key %></div>
+                    <div class="spec-value"><%= value %></div>
+                  </div>
+                <% }) %>
+              </div>
+            </div>
+          <% } %>
+
+          <!-- Location Details -->
+          <% if (project.location_details) { %>
+            <div class="project-section">
+              <h2>Location Details</h2>
+              <div class="location-details">
+                <p><%= project.location_details %></p>
+              </div>
+            </div>
+          <% } %>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="project-sidebar">
+          <!-- Contact Form -->
+          <div class="contact-card">
+            <h3>Interested in this project?</h3>
+            <p>Get in touch with our team for more information</p>
+            
+            <form class="contact-form" id="project-contact-form">
+              <div class="form-group">
+                <label for="contact-name">Full Name</label>
+                <input type="text" id="contact-name" name="name" required class="form-input">
+              </div>
+              
+              <div class="form-group">
+                <label for="contact-email">Email</label>
+                <input type="email" id="contact-email" name="email" required class="form-input">
+              </div>
+              
+              <div class="form-group">
+                <label for="contact-phone">Phone (Optional)</label>
+                <input type="tel" id="contact-phone" name="phone" class="form-input">
+              </div>
+              
+              <div class="form-group">
+                <label for="contact-message">Message</label>
+                <textarea id="contact-message" name="message" rows="4" required class="form-textarea" 
+                          placeholder="Tell us about your interest in this project..."></textarea>
+              </div>
+              
+              <button type="submit" class="btn btn-primary btn-block">
+                <i class="fas fa-paper-plane"></i>
+                Send Message
+              </button>
+            </form>
+          </div>
+
+          <!-- Project Quick Info -->
+          <div class="quick-info-card">
+            <h3>Project Details</h3>
+            
+            <div class="info-list">
+              <% if (project.type) { %>
+                <div class="info-item">
+                  <span class="info-label">Type:</span>
+                  <span class="info-value"><%= project.type %></span>
+                </div>
+              <% } %>
+              
+              <% if (project.total_units) { %>
+                <div class="info-item">
+                  <span class="info-label">Total Units:</span>
+                  <span class="info-value"><%= project.total_units %></span>
+                </div>
+              <% } %>
+              
+              <% if (project.completion_date) { %>
+                <div class="info-item">
+                  <span class="info-label">Completion:</span>
+                  <span class="info-value"><%= project.completion_date %></span>
+                </div>
+              <% } %>
+              
+              <% if (project.price_range) { %>
+                <div class="info-item">
+                  <span class="info-label">Price Range:</span>
+                  <span class="info-value"><%= project.price_range %></span>
+                </div>
+              <% } %>
+              
+              <div class="info-item">
+                <span class="info-label">Status:</span>
+                <span class="info-value status-<%= project.status %>"><%= project.status %></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Related Projects -->
+          <% if (relatedProjects && relatedProjects.length > 0) { %>
+            <div class="related-projects-card">
+              <h3>Related Projects</h3>
+              
+              <div class="related-projects-list">
+                <% relatedProjects.forEach(relatedProject => { %>
+                  <div class="related-project-item">
+                    <div class="related-project-image">
+                      <% if (relatedProject.photos && relatedProject.photos.length > 0) { %>
+                        <img src="/uploads/projects/<%= relatedProject.id %>/<%= relatedProject.photos[0] %>" 
+                             alt="<%= relatedProject.title %>">
+                      <% } else { %>
+                        <div class="placeholder-image">
+                          <i class="fas fa-image"></i>
+                        </div>
+                      <% } %>
+                    </div>
+                    
+                    <div class="related-project-content">
+                      <h4><%= relatedProject.title %></h4>
+                      <p class="location"><%= relatedProject.city %>, <%= relatedProject.country %></p>
+                      <a href="/projects/<%= relatedProject.slug %>" class="btn btn-outline btn-sm">View Details</a>
+                    </div>
+                  </div>
+                <% }) %>
+              </div>
+            </div>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Call to Action -->
+  <section class="project-cta">
+    <div class="container">
+      <div class="cta-content">
+        <h2>Ready to get started?</h2>
+        <p>Contact our team today to learn more about this exciting development opportunity</p>
+        <div class="cta-actions">
+          <a href="#contact" class="btn btn-primary btn-lg">Contact Us</a>
+          <a href="/projects" class="btn btn-outline btn-lg">Browse More Projects</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script src="/js/project-detail.js"></script>

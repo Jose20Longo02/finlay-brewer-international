@@ -1,10 +1,7 @@
 <% title = 'Manage Properties' %>
 <link rel="stylesheet" href="/css/superadmin/manage-properties.css" />
 
-<script>
-  // Make locations available for client‐side filtering
-  window.LOCATIONS = <%- JSON.stringify(locations) %>;
-</script>
+<div id="mp-data" data-locations='<%- JSON.stringify(locations).replace(/'/g, '&#39;') %>'></div>
 
 <div class="admin-panel">
   <div class="admin-body">
@@ -127,6 +124,10 @@
                   <button type="submit" class="btn btn-danger">Delete</button>
                 </form>
                 <a
+                  href="/properties/<%= prop.id %>/edit"
+                  class="btn btn-secondary"
+                >Edit</a>
+                <a
                   href="/properties/<%= prop.slug %>"
                   class="btn btn-secondary"
                 >View</a>
@@ -154,6 +155,9 @@
 
 <script>
   document.addEventListener('DOMContentLoaded', () => {
+    const dataNode = document.getElementById('mp-data');
+    let LOCATIONS = {};
+    try { LOCATIONS = JSON.parse(dataNode.getAttribute('data-locations') || '{}'); } catch(_) { LOCATIONS = {}; }
     const countrySel = document.getElementById('countrySelect');
     const citySel    = document.getElementById('citySelect');
     const filterForm = document.getElementById('filterForm');

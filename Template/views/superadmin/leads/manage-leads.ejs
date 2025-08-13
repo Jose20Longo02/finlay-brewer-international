@@ -1,0 +1,143 @@
+<% title = 'All Leads'; %>
+<link rel="stylesheet" href="/css/superadmin/leads.css" />
+
+<div class="admin-panel">
+  <div class="admin-body">
+    <!-- Sidebar -->
+    <%- include('../../partials/superadmin-sidebar', { activePage: 'leads', pendingCount: typeof pendingCount !== 'undefined' ? pendingCount : 0 }) %>
+
+    <!-- Main content -->
+    <main class="admin-content">
+  <header class="np-header">
+    <div class="left">
+      <h1>All Leads</h1>
+      <p class="subtitle">All inquiries across all properties</p>
+    </div>
+    <div class="right">
+      <a href="/superadmin/dashboard" class="btn btn-light">← Return to dashboard</a>
+    </div>
+  </header>
+
+  <section class="card" style="margin-top: 1rem;">
+    <form method="get" class="filters-grid">
+      <input type="text" name="q" placeholder="Search name/email/phone/message" value="<%= filters.q || '' %>" />
+      <select name="status">
+        <option value="">All Statuses</option>
+        <% ['New','Contacted','Interested','Not Interested','Closed'].forEach(s => { %>
+          <option value="<%= s %>" <%= filters.status === s ? 'selected' : '' %>><%= s %></option>
+        <% }) %>
+      </select>
+      <input type="date" name="from" value="<%= filters.from || '' %>" />
+      <input type="date" name="to" value="<%= filters.to || '' %>" />
+      <input type="number" name="agentId" placeholder="Agent ID" value="<%= filters.agentId || '' %>" />
+      <input type="number" name="propertyId" placeholder="Property ID" value="<%= filters.propertyId || '' %>" />
+      <button class="btn btn-primary" type="submit">Filter</button>
+    </form>
+  </section>
+
+  <section class="card" style="margin-top: 1rem;">
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Created</th>
+            <th>Property</th>
+            <th>Agent</th>
+            <th>Lead</th>
+            <th>Status</th>
+            <th>Last Contact</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if (!leads || leads.length === 0) { %>
+            <tr><td colspan="7" style="text-align:center;">No leads found</td></tr>
+          <% } %>
+          <% leads.forEach(lead => { %>
+            <tr>
+              <td data-label="Created"><%= new Date(lead.created_at).toLocaleString() %></td>
+              <td data-label="Property">
+                <div><strong>#<%= lead.property_id %></strong> <%= lead.property_title || '' %></div>
+              </td>
+              <td data-label="Agent">
+                <div><%= lead.agent_id ? ('#' + lead.agent_id + ' ' + (lead.agent_name || '')) : 'Unassigned' %></div>
+              </td>
+              <td data-label="Lead">
+                <div><strong><%= lead.name %></strong></div>
+                <div><a href="mailto:<%= lead.email %>"><%= lead.email %></a></div>
+                <% if (lead.phone) { %><div><a href="tel:<%= lead.phone %>"><%= lead.phone %></a></div><% } %>
+              </td>
+              <td data-label="Status">
+                <select data-lead-id="<%= lead.id %>" class="lead-status">
+                  <% ['New','Contacted','Interested','Not Interested','Closed'].forEach(s => { %>
+                    <option value="<%= s %>" <%= lead.status === s ? 'selected' : '' %>><%= s %></option>
+                  <% }) %>
+                </select>
+              </td>
+              <td data-label="Last Contact">
+                <input type="datetime-local" data-lead-id="<%= lead.id %>" class="lead-last-contact" value="<%= lead.last_contact_at ? new Date(lead.last_contact_at).toISOString().slice(0,16) : '' %>" />
+              </td>
+              <td data-label="Actions">
+                <button class="btn btn-light" data-toggle-notes="<%= lead.id %>">Notes</button>
+              </td>
+            </tr>
+            <tr id="notes-<%= lead.id %>" class="notes-row" style="display:none;">
+              <td colspan="7">
+                <textarea rows="3" style="width:100%;" data-lead-id="<%= lead.id %>" class="lead-notes"><%= lead.internal_notes || '' %></textarea>
+                <div style="margin-top: .5rem; text-align: right;">
+                  <button class="btn btn-primary" data-save="<%= lead.id %>">Save</button>
+                </div>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </section>
+    </main>
+  </div>
+</div>
+
+<script>
+document.addEventListener('click', function(e) {
+  const toggleId = e.target.getAttribute('data-toggle-notes');
+  if (toggleId) {
+    const row = document.getElementById('notes-' + toggleId);
+    if (row) row.style.display = row.style.display === 'none' ? '' : 'none';
+  }
+  const saveId = e.target.getAttribute('data-save');
+  if (saveId) {
+    const notes = document.querySelector('.lead-notes[data-lead-id="' + saveId + '"]').value;
+    const last = document.querySelector('.lead-last-contact[data-lead-id="' + saveId + '"]').value;
+    const status = document.querySelector('.lead-status[data-lead-id="' + saveId + '"]').value;
+    fetch('/api/leads/' + saveId, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ internal_notes: notes, last_contact_at: last, status })
+    }).then(r => r.json()).then(() => {
+      alert('Saved');
+    }).catch(() => alert('Failed'));
+  }
+});
+
+document.addEventListener('change', function(e) {
+  if (e.target.matches('.lead-status')) {
+    const id = e.target.getAttribute('data-lead-id');
+    fetch('/api/leads/' + id, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: e.target.value })
+    });
+  }
+  if (e.target.matches('.lead-last-contact')) {
+    const id = e.target.getAttribute('data-lead-id');
+    fetch('/api/leads/' + id, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ last_contact_at: e.target.value })
+    });
+  }
+});
+</script>
+
+

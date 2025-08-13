@@ -14,7 +14,8 @@ const {
   deleteProperty,
   listPropertiesAdmin,
   deletePropertyAdmin,
-  reassignProperty        // ← make sure this is exported from your controller
+  reassignProperty,        // ← make sure this is exported from your controller
+  getFeaturedProperties
 } = propertyController;
 
 // ———————————————————————————————————————————————
@@ -22,15 +23,28 @@ const {
 // ———————————————————————————————————————————————
 const publicRouter = express.Router();
 
+// Allow both Admin and SuperAdmin for creation endpoints
+const allowStaff = (req, res, next) => {
+  const role = req.session.user?.role;
+  return (role === 'Admin' || role === 'SuperAdmin')
+    ? next()
+    : res.status(403).send('Forbidden – staff only');
+};
+
 publicRouter.get('/',             listPropertiesPublic);
+
+// Agent-only (placed before slug route to avoid being captured as a slug)
+publicRouter.get('/new',          allowStaff, newPropertyForm);
+publicRouter.post('/',            allowStaff, uploadPropertyMedia, createProperty);
+publicRouter.get('/:id/edit',     allowStaff, editPropertyForm);
+publicRouter.post('/:id',         allowStaff, uploadPropertyMedia, updateProperty);
+publicRouter.post('/:id/delete',  ensureAdmin, deleteProperty);
+
+// Keep slug route last
 publicRouter.get('/:slug',        showProperty);
 
-// Agent-only
-publicRouter.get('/new',          ensureAdmin, newPropertyForm);
-publicRouter.post('/',            ensureAdmin, uploadPropertyMedia, createProperty);
-publicRouter.get('/:id/edit',     ensureAdmin, editPropertyForm);
-publicRouter.post('/:id',         ensureAdmin, uploadPropertyMedia, updateProperty);
-publicRouter.post('/:id/delete',  ensureAdmin, deleteProperty);
+// API endpoints
+publicRouter.get('/api/featured', getFeaturedProperties);
 
 // ———————————————————————————————————————————————
 // Super-Admin Router (mount at `/admin/properties`)

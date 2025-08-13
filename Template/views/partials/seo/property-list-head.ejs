@@ -1,0 +1,28 @@
+<% const listDesc = (typeof locals !== 'undefined' && locals.query) ? `Search results for "${locals.query}"` : 'Browse property listings'; %>
+<meta name="description" content="<%= listDesc %>">
+<link rel="canonical" href="/properties<%= (typeof locals !== 'undefined' && Object.keys(locals.query || {}).length) ? '?' + new URLSearchParams(locals.query).toString() : '' %>">
+
+<!-- Open Graph -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="<%= typeof title !== 'undefined' ? title : 'Property Search Results' %>">
+<meta property="og:description" content="<%= listDesc %>">
+<meta property="og:url" content="/properties<%= (typeof locals !== 'undefined' && Object.keys(locals.query || {}).length) ? '?' + new URLSearchParams(locals.query).toString() : '' %>">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="<%= typeof title !== 'undefined' ? title : 'Property Search Results' %>">
+<meta name="twitter:description" content="<%= listDesc %>">
+
+<!-- JSON-LD ItemList -->
+<script type="application/ld+json">
+<%- JSON.stringify({
+  '@context': 'https://schema.org',
+  '@type': 'ItemList',
+  itemListElement: (typeof properties !== 'undefined' && properties ? properties : []).map((p, idx) => ({
+    '@type': 'ListItem',
+    position: idx + 1,
+    url: `/properties/${p.slug}`
+  }))
+}) %>
+</script>
+

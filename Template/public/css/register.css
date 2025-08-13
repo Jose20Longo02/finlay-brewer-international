@@ -1,25 +1,10 @@
 /* public/css/auth.css */
 
 /* Center form on page */
-html, body {
-  height: 100%;
-  margin: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #f7f9fc;
-}
+html, body { height:100%; margin:0; display:flex; align-items:center; justify-content:center; background: radial-gradient(1200px 800px at 10% -10%, rgba(0,0,0,0.05), transparent), radial-gradient(1200px 800px at 110% 110%, rgba(0,0,0,0.04), transparent), #f7f9fc; }
 
 /* Form wrapper */
-.auth-form {
-  background: #fff;
-  padding: 2rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  width: 100%;
-  max-width: 400px;
-  box-sizing: border-box;
-}
+.auth-form { background:#fff; padding:2rem; border-radius: var(--card-radius); box-shadow: var(--card-shadow); border:1px solid rgba(0,0,0,.08); width:100%; max-width: 420px; box-sizing:border-box; }
 
 /* Heading */
 .auth-form h1 {
@@ -37,17 +22,8 @@ html, body {
 }
 
 /* Inputs & selects */
-.auth-form input,
-.auth-form select {
-  width: 100%;
-  padding: 0.5rem;
-  margin-top: 0.5rem;
-  border: 1px solid var(--color-secondary);
-  border-radius: 4px;
-  font-family: inherit;
-  font-size: 1rem;
-  box-sizing: border-box;
-}
+.auth-form input, .auth-form select { width:100%; padding:.7rem .9rem; margin-top:.5rem; border:1px solid rgba(0,0,0,.16); border-radius:12px; font-family:inherit; font-size:1rem; box-sizing:border-box; transition: border-color .15s, box-shadow .15s; }
+.auth-form input:focus, .auth-form select:focus { outline:none; border-color: var(--color-primary); box-shadow:0 0 0 4px rgba(0,0,0,.06); }
 
 /* File input */
 .auth-form input[type="file"] {
@@ -55,20 +31,8 @@ html, body {
 }
 
 /* Buttons */
-.auth-form button {
-  width: 100%;
-  margin-top: 1.5rem;
-  padding: 0.75rem;
-  background: var(--color-primary);
-  color: #fff;
-  border: none;
-  border-radius: 4px;
-  font-size: 1rem;
-  cursor: pointer;
-}
-.auth-form button:hover {
-  background: var(--color-tertiary);
-}
+.auth-form button { width:100%; margin-top:1.5rem; padding:.9rem; background:var(--color-primary); color:#fff; border:none; border-radius:999px; font-size:1rem; cursor:pointer; box-shadow:0 8px 20px rgba(0,0,0,.12); transition: transform .16s ease, box-shadow .16s ease, opacity .16s ease; }
+.auth-form button:hover { transform: translateY(-1px); opacity:.95; box-shadow:0 12px 28px rgba(0,0,0,.16); }
 
 /* Alert messages */
 .auth-form .alert {

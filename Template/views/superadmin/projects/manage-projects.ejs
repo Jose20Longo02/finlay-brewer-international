@@ -13,7 +13,10 @@
     <!-- Main content -->
     <main class="admin-content">
       <section class="projects-container">
-        <h1>All Projects by Country</h1>
+        <div class="properties-header" style="display:flex;align-items:center;justify-content:space-between;gap:1rem;">
+          <h1>All Projects by Country</h1>
+          <a href="/superadmin/dashboard/projects/new" class="btn btn-primary">New Project</a>
+        </div>
 
         <% Object.keys(grouped).forEach(country => { %>
           <div class="project-area">
@@ -36,15 +39,10 @@
                     </p>
 
                     <div class="actions">
-                      <form action="/admin/projects/<%= project.id %>/delete" method="post">
-                        <button type="submit" class="btn btn-danger">
-                          Delete Project
-                        </button>
+                      <form action="/superadmin/dashboard/projects/<%= project.id %>/delete" method="post" onsubmit="return confirm('Delete “<%= project.title %>”?');">
+                        <button type="submit" class="btn btn-danger">Delete</button>
                       </form>
-                      <a
-                        href="/admin/projects/<%= project.id %>/edit"
-                        class="btn btn-secondary"
-                      >View Project</a>
+                      <a href="/superadmin/dashboard/projects/<%= project.id %>/edit" class="btn btn-secondary">Edit</a>
                     </div>
                   </div>
                 <% }); %>

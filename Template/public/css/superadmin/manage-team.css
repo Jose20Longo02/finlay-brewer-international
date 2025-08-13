@@ -29,11 +29,7 @@ html, body {
 }
 
 /* 4. Team container (align left, no horizontal centering) */
-.team-container {
-  max-width: 1200px;
-  margin: 0;
-  padding: 0 1rem;
-}
+.team-container { max-width:1200px; margin:0; padding:0 1rem; }
 .team-container h1 {
   font-size: var(--font-size-xl);
   color: var(--color-primary);
@@ -55,12 +51,7 @@ html, body {
 }
 
 /* 6. Members grid: auto-fit responsive columns */
-.members-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, 220px);
-  gap: 1rem;
-  justify-content: flex-start; /* left‐align, don’t stretch */
-}
+.members-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1.25rem; justify-content:flex-start; }
 .admin-sidebar .badge {
   background: var(--color-primary);
   color: #fff;
@@ -72,15 +63,8 @@ html, body {
 }
 
 /* 7. Individual member card */
-.member-card {
-  background: #fff;
-  border: 1px solid var(--color-secondary);
-  border-radius: 8px;
-  padding: 1rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
+.member-card { background:#fff; border:1px solid rgba(0,0,0,.08); border-radius:16px; padding:1rem; display:flex; flex-direction:column; align-items:center; box-shadow: var(--card-shadow); transition: transform .2s ease, box-shadow .2s ease; }
+.member-card:hover { transform: translateY(-4px); box-shadow: 0 10px 28px rgba(0,0,0,.12); }
 .member-card .thumb {
   width: 100px;
   height: 100px;
@@ -106,16 +90,8 @@ html, body {
   gap: 0.5rem;
   width: 100%;
 }
-.actions .btn {
-  flex: 1;
-  padding: 0.5rem;
-  border: none;
-  border-radius: 4px;
-  font-size: var(--font-size-base);
-  text-decoration: none;
-  text-align: center;
-  cursor: pointer;
-}
+.actions .btn { flex:1; padding:.7rem .9rem; border:none; border-radius:12px; font-size:var(--font-size-base); text-decoration:none; text-align:center; cursor:pointer; transition: transform .16s ease, box-shadow .16s ease, opacity .16s ease; }
+.actions .btn:hover { transform: translateY(-1px); opacity:.95; box-shadow: 0 8px 20px rgba(0,0,0,.08); }
 .btn-danger {
   background: #dc3545;
   color: #fff;

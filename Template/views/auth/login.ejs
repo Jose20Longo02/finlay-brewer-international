@@ -4,26 +4,28 @@
   <link rel="stylesheet" href="/css/auth/login.css">
 </head>
 
-<form action="/auth/login" method="post" class="auth-form">
-  <h1>Sign In</h1>
+<div class="login-wrap">
+  <form action="/auth/login" method="post" class="auth-form">
+    <h1>Sign In</h1>
 
-  <% if (error) { %>
-    <div class="alert alert-error"><%= error %></div>
-  <% } %>
+    <% if (error) { %>
+      <div class="alert alert-error"><%= error %></div>
+    <% } %>
 
-  <label for="email">Email</label>
-  <input id="email" name="email" type="email" required />
+    <label for="email">Email</label>
+    <input id="email" name="email" type="email" autocomplete="email" required />
 
-  <label for="password">Password</label>
-  <input id="password" name="password" type="password" required />
+    <label for="password">Password</label>
+    <input id="password" name="password" type="password" autocomplete="current-password" required />
 
-  <button type="submit">Log In</button>
+    <button type="submit">Log In</button>
 
-  <p>
-    Don’t have an account?
-    <a href="/auth/register">Register here</a>
-  </p>
-</form>
+    <p>
+      Don’t have an account?
+      <a href="/auth/register">Register here</a>
+    </p>
+  </form>
+</div>
 
 <% if (awaitingApproval) { %>
   <!-- The overlay -->

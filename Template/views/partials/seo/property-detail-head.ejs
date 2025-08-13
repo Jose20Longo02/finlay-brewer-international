@@ -1,0 +1,46 @@
+<% if (typeof property !== 'undefined' && property) { %>
+  <meta name="description" content="<%= (property.description || '').slice(0, 160) %>">
+  <link rel="canonical" href="/properties/<%= property.slug %>">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="<%= property.title %>">
+  <meta property="og:description" content="<%= (property.description || '').slice(0, 200) %>">
+  <meta property="og:url" content="/properties/<%= property.slug %>">
+  <meta property="og:image" content="<%= property.photos && property.photos[0] ? property.photos[0] : '/img/property-placeholder.jpg' %>">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="<%= property.title %>">
+  <meta name="twitter:description" content="<%= (property.description || '').slice(0, 200) %>">
+  <meta name="twitter:image" content="<%= property.photos && property.photos[0] ? property.photos[0] : '/img/property-placeholder.jpg' %>">
+
+  <!-- JSON-LD Structured Data -->
+  <script type="application/ld+json">
+  <%- JSON.stringify({
+    '@context': 'https://schema.org',
+    '@type': ['Residence'],
+    name: property.title,
+    description: property.description || '',
+    image: (property.photos && property.photos.length > 0) ? property.photos : ['/img/property-placeholder.jpg'],
+    url: `/properties/${property.slug}`,
+    address: {
+      '@type': 'PostalAddress',
+      addressLocality: property.city,
+      addressCountry: property.country
+    },
+    geo: (property.latitude && property.longitude) ? {
+      '@type': 'GeoCoordinates',
+      latitude: Number(property.latitude),
+      longitude: Number(property.longitude)
+    } : undefined,
+    offers: {
+      '@type': 'Offer',
+      price: Number(property.price || 0),
+      priceCurrency: 'EUR',
+      availability: 'https://schema.org/InStock'
+    }
+  }) %>
+  </script>
+<% } %>
+

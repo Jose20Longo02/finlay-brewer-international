@@ -1,31 +1,121 @@
 :root {
-  /* Core colors */
-  --color-primary:   #000000; /* e.g. buttons, links */
-  --color-secondary: #4e4e4e; /* e.g. hover states, card borders */
-  --color-tertiary:  #999999; /* e.g. accents, success indicators */
-
-  /* Typography */
-  --font-family-base:    'Inter', sans-serif;
-  --font-size-base:      16px;
-  --font-size-lg:        1.25rem;
-  --font-size-xl:        2rem;
-
-  /* Spacing */
-  --spacing-xs: 0.5rem;
-  --spacing-sm: 1rem;
-  --spacing-md: 1.5rem;
-  --spacing-lg: 2rem;
-
-  /* Radii */
-  --radius-sm: 4px;
-  --radius-md: 8px;
+  /* Color Palette */
+  --primary-color: #2563eb;
+  --primary-dark: #1d4ed8;
+  --primary-light: #3b82f6;
+  --secondary-color: #64748b;
+  --accent-color: #f59e0b;
+  --success-color: #10b981;
+  --error-color: #ef4444;
+  --warning-color: #f59e0b;
+  /* Legacy/alias tokens used across admin/auth styles */
+  --color-primary: var(--primary-color);
+  --color-primary-dark: var(--primary-dark);
+  --color-secondary: var(--secondary-color);
+  --color-tertiary: var(--gray-500);
+  --color-accent: var(--accent-color);
+  --color-success: var(--success-color);
+  --color-error: var(--error-color);
+  --color-warning: var(--warning-color);
   
-  /* Dashboard Layout */
-  --dashboard-max-width: 960px;
-  --dashboard-gap:       var(--spacing-md);
+  /* Neutral Colors */
+  --white: #ffffff;
+  --gray-50: #f8fafc;
+  --gray-100: #f1f5f9;
+  --gray-200: #e2e8f0;
+  --gray-300: #cbd5e1;
+  --gray-400: #94a3b8;
+  --gray-500: #64748b;
+  --gray-600: #475569;
+  --gray-700: #334155;
+  --gray-800: #1e293b;
+  --gray-900: #0f172a;
+  
+  /* Country-Specific Colors for Property Containers */
+  --usa-color: #dc2626;
+  --usa-light: #fecaca;
+  --usa-bg: #fef2f2;
+  
+  --spain-color: #f59e0b;
+  --spain-light: #fde68a;
+  --spain-bg: #fffbeb;
+  
+  --germany-color: #000000;
+  --germany-light: #d1d5db;
+  --germany-bg: #f3f4f6;
+  
+  --france-color: #1d4ed8;
+  --france-light: #bfdbfe;
+  --france-bg: #eff6ff;
+  
+  --italy-color: #059669;
+  --italy-light: #a7f3d0;
+  --italy-bg: #ecfdf5;
+  
+  --uk-color: #7c3aed;
+  --uk-light: #c4b5fd;
+  --uk-bg: #f5f3ff;
+  
+  /* Typography */
+  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
+  --font-size-2xl: 1.5rem;
+  --font-size-3xl: 1.875rem;
+  --font-size-4xl: 2.25rem;
+  --font-size-5xl: 3rem;
+  
+  /* Spacing */
+  --spacing-1: 0.25rem;
+  --spacing-2: 0.5rem;
+  --spacing-3: 0.75rem;
+  --spacing-4: 1rem;
+  --spacing-5: 1.25rem;
+  --spacing-6: 1.5rem;
+  --spacing-8: 2rem;
+  --spacing-10: 2.5rem;
+  --spacing-12: 3rem;
+  --spacing-16: 4rem;
+  --spacing-20: 5rem;
+  --spacing-24: 6rem;
+  
+  /* Border Radius */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-2xl: 1rem;
+  --radius-full: 9999px;
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  
+  /* Transitions */
+  --transition-fast: 150ms ease-in-out;
+  --transition-normal: 250ms ease-in-out;
+  --transition-slow: 350ms ease-in-out;
+  
+  /* Z-Index */
+  --z-dropdown: 1000;
+  --z-sticky: 1020;
+  --z-fixed: 1030;
+  --z-modal-backdrop: 1040;
+  --z-modal: 1050;
+  --z-popover: 1060;
+  --z-tooltip: 1070;
 
-  --spacing: 1rem;
-  --card-radius: 0.75rem;
-  --card-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-  --font-sans: 'Inter', sans-serif;
+  /* Layout aliases and shared tokens */
+  --font-sans: var(--font-family);
+  --card-radius: var(--radius-xl);
+  --card-shadow: var(--shadow-md);
+  --spacing-sm: var(--spacing-3);
+  --spacing-md: var(--spacing-4);
+  --spacing-lg: var(--spacing-8);
+  --spacing: var(--spacing-4);
 }

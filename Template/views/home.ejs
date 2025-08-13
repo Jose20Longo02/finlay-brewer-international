@@ -1,0 +1,266 @@
+<% title = 'Find Your Dream Home' %>
+<link rel="stylesheet" href="/css/home.css" />
+
+<!-- Locations data for JavaScript -->
+<script>
+  window.locationsData = <%- JSON.stringify(locations) %>;
+  console.log('Home page - Locations data loaded:', window.locationsData);
+  console.log('Home page - Countries available:', Object.keys(window.locationsData || {}));
+</script>
+
+<!-- Hero Section with Search -->
+<section class="hero">
+  <div class="hero-background">
+    <div class="hero-overlay"></div>
+  </div>
+  
+  <div class="container">
+    <div class="hero-content">
+      <h1 class="hero-title">Find Your Dream Home</h1>
+      <p class="hero-subtitle">Discover the perfect property in the most desirable locations worldwide</p>
+      
+      <!-- Property Search Form -->
+      <div class="search-container">
+        <form class="search-form" action="/properties" method="GET">
+          <div class="search-grid">
+            <div class="search-field">
+              <label for="country">Country</label>
+              <select id="country" name="country" class="search-select">
+                <option value="">Any country</option>
+                <% Object.keys(locations).forEach(country => { %>
+                  <option value="<%= country %>"><%= country %></option>
+                <% }); %>
+              </select>
+            </div>
+            
+            <div class="search-field">
+              <label for="city">City</label>
+              <select id="city" name="city" class="search-select" disabled style="opacity: 1 !important; visibility: visible !important; display: block !important; background: white !important; color: black !important;">
+                <option value="">Any City</option>
+              </select>
+            </div>
+            
+            <div class="search-field">
+              <label for="neighborhood">Neighborhood</label>
+              <select id="neighborhood" name="neighborhood" class="search-select" disabled style="opacity: 1 !important; visibility: visible !important; display: block !important; background: white !important; color: black !important;">
+                <option value="">Any Neighborhood</option>
+              </select>
+            </div>
+            
+            <div class="search-field">
+              <label for="type">Property Type</label>
+              <select id="type" name="type" class="search-select">
+                <option value="">Any Type</option>
+                <option value="Apartment">Apartment</option>
+                <option value="House">House</option>
+                <option value="Villa">Villa</option>
+                <option value="Land">Land</option>
+              </select>
+            </div>
+          </div>
+          
+          <button type="submit" class="search-btn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"></circle>
+              <path d="m21 21-4.35-4.35"></path>
+            </svg>
+            Search Properties
+          </button>
+        </form>
+      </div>
+      
+      <!-- Debug Info (remove in production) -->
+      <div style="margin-top: 20px; padding: 10px; background: rgba(255,255,255,0.1); border-radius: 5px; font-size: 12px; color: white;">
+        <strong>Debug Info:</strong> 
+        Countries: <%= Object.keys(locations).length %>, 
+        Total Cities: <%= Object.values(locations).reduce((sum, cities) => sum + Object.keys(cities).length, 0) %>,
+        Total Neighborhoods: <%= Object.values(locations).reduce((sum, cities) => sum + Object.values(cities).reduce((citySum, neighborhoods) => citySum + neighborhoods.length, 0), 0) %>
+        <br>
+        <strong>Sample Data:</strong>
+        <% if (Object.keys(locations).length > 0) { %>
+          First Country: <%= Object.keys(locations)[0] %>,
+          First City: <%= Object.keys(locations[Object.keys(locations)[0]])[0] %>,
+          First Neighborhood: <%= locations[Object.keys(locations)[0]][Object.keys(locations[Object.keys(locations)[0]])[0]][0] %>
+        <% } %>
+        <br>
+        <button onclick="testDropdowns()" style="margin-top: 10px; padding: 5px 10px; background: white; color: black; border: none; border-radius: 3px; cursor: pointer;">Test Dropdowns</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Featured Properties Section -->
+<section class="featured-properties">
+  <div class="container">
+    <div class="section-header">
+      <h2>Featured Properties</h2>
+      <p>Discover our handpicked selection of premium properties</p>
+      <a href="/properties" class="btn btn-outline">View All Properties</a>
+    </div>
+    
+    <div class="properties-grid" id="featuredProperties">
+      <!-- Properties will be loaded dynamically -->
+      <div class="property-card loading-placeholder">
+        <div class="property-image"></div>
+        <div class="property-content">
+          <div class="property-title"></div>
+          <div class="property-location"></div>
+          <div class="property-price"></div>
+        </div>
+      </div>
+      <div class="property-card loading-placeholder">
+        <div class="property-image"></div>
+        <div class="property-content">
+          <div class="property-title"></div>
+          <div class="property-location"></div>
+          <div class="property-price"></div>
+        </div>
+      </div>
+      <div class="property-card loading-placeholder">
+        <div class="property-image"></div>
+        <div class="property-content">
+          <div class="property-title"></div>
+          <div class="property-location"></div>
+          <div class="property-price"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Services Section -->
+<section class="services">
+  <div class="container">
+    <div class="section-header text-center">
+      <h2>Our Services</h2>
+      <p>Comprehensive real estate solutions for buyers, sellers, and investors</p>
+    </div>
+    
+    <div class="services-grid">
+      <div class="service-card">
+        <div class="service-icon">🏠</div>
+        <h3>Property Search</h3>
+        <p>Advanced search tools to find your perfect property with detailed filters and location-based results.</p>
+      </div>
+      
+      <div class="service-card">
+        <div class="service-icon">💰</div>
+        <h3>Mortgage Calculator</h3>
+        <p>Calculate your monthly payments, compare loan options, and understand your financing options.</p>
+      </div>
+      
+      <div class="service-card">
+        <div class="service-icon">📊</div>
+        <h3>Property Comparison</h3>
+        <p>Compare multiple properties side by side to make informed decisions about your investment.</p>
+      </div>
+      
+      <div class="service-card">
+        <div class="service-icon">📱</div>
+        <h3>Virtual Tours</h3>
+        <p>Explore properties from anywhere with our immersive virtual tour technology.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Mortgage Calculator Section -->
+<section class="mortgage-calculator">
+  <div class="container">
+    <div class="section-header text-center">
+      <h2>Mortgage Calculator</h2>
+      <p>Calculate your monthly mortgage payments and understand your financing options</p>
+    </div>
+    
+    <div class="calculator-container">
+      <div class="calculator-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="propertyPrice">Property Price (€)</label>
+            <input type="number" id="propertyPrice" placeholder="500,000" min="0" step="1000">
+          </div>
+          <div class="form-group">
+            <label for="downPayment">Down Payment (€)</label>
+            <input type="number" id="downPayment" placeholder="100,000" min="0" step="1000">
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="loanTerm">Loan Term (Years)</label>
+            <select id="loanTerm">
+              <option value="15">15 Years</option>
+              <option value="20">20 Years</option>
+              <option value="25">25 Years</option>
+              <option value="30" selected>30 Years</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="interestRate">Interest Rate (%)</label>
+            <input type="number" id="interestRate" placeholder="3.5" min="0" max="20" step="0.1">
+          </div>
+        </div>
+        
+        <button type="button" class="btn btn-primary btn-lg" onclick="calculateMortgage()">
+          Calculate Payment
+        </button>
+      </div>
+      
+      <div class="calculator-results" id="calculatorResults" style="display: none;">
+        <h3>Your Monthly Payment</h3>
+        <div class="payment-breakdown">
+          <div class="result-item">
+            <span class="result-label">Principal & Interest:</span>
+            <span class="result-value" id="monthlyPayment">€0</span>
+          </div>
+          <div class="result-item">
+            <span class="result-label">Property Tax (estimated):</span>
+            <span class="result-value" id="propertyTax">€0</span>
+          </div>
+          <div class="result-item">
+            <span class="result-label">Insurance (estimated):</span>
+            <span class="result-value" id="insurance">€0</span>
+          </div>
+          <div class="result-item total">
+            <span class="result-label">Total Monthly Payment:</span>
+            <span class="result-value" id="totalPayment">€0</span>
+          </div>
+        </div>
+        
+        <div class="loan-summary">
+          <h4>Loan Summary</h4>
+          <div class="summary-grid">
+            <div class="summary-item">
+              <span class="summary-label">Loan Amount:</span>
+              <span class="summary-value" id="loanAmount">€0</span>
+            </div>
+            <div class="summary-item">
+              <span class="summary-label">Total Interest:</span>
+              <span class="summary-value" id="totalInterest">€0</span>
+            </div>
+            <div class="summary-item">
+              <span class="summary-label">Total Cost:</span>
+              <span class="summary-value" id="totalCost">€0</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA Section -->
+<section class="cta-section">
+  <div class="container">
+    <div class="cta-content text-center">
+      <h2>Ready to Find Your Dream Home?</h2>
+      <p>Join thousands of satisfied customers who found their perfect property with us</p>
+      <div class="cta-buttons">
+        <a href="/properties" class="btn btn-primary btn-lg">Browse Properties</a>
+        <a href="/auth/register" class="btn btn-outline btn-lg">Join as Agent</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script src="/js/home.js"></script>

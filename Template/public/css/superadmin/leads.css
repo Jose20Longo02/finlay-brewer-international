@@ -1,0 +1,66 @@
+@import url('../variables.css');
+
+/* Layout for superadmin leads page integrated with sidebar */
+.admin-panel { display:flex; flex-direction:column; height:100vh; overflow:hidden; }
+.admin-body { display:flex; flex:1; min-height:0; }
+.admin-content { flex:1; min-width:0; overflow:auto; padding: 16px; }
+
+.np-header { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+.np-header .left h1 { margin: 0 0 4px 0; font-size: 24px; }
+.np-header .subtitle { margin: 0; color: var(--gray-600); font-size: 14px; }
+
+.card { background: #fff; border: 1px solid var(--gray-200); border-radius: 10px; padding: 16px; }
+
+.filters-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 12px; }
+.filters-grid input, .filters-grid select { width: 100%; padding: 10px 12px; border: 1px solid var(--gray-300); border-radius: 8px; font-size: 14px; }
+.filters-grid .btn { height: 42px; }
+
+.table-responsive { width: 100%; overflow: auto; }
+.table { width: 100%; border-collapse: separate; border-spacing: 0 10px; }
+.table th, .table td { text-align: left; padding: 12px 14px; vertical-align: top; }
+.table thead th { color: var(--gray-700); font-weight: 600; font-size: 13px; border-bottom: 1px solid var(--gray-200); }
+.table tbody tr { background: #fff; border: 1px solid var(--gray-200); border-radius: 10px; }
+.table tbody tr + tr { margin-top: 8px; }
+
+.table tbody tr td:first-child { border-top-left-radius: 10px; border-bottom-left-radius: 10px; }
+.table tbody tr td:last-child { border-top-right-radius: 10px; border-bottom-right-radius: 10px; }
+
+.table .lead-status { padding: 8px 10px; border: 1px solid var(--gray-300); border-radius: 8px; font-size: 13px; }
+.table .lead-last-contact { padding: 8px 10px; border: 1px solid var(--gray-300); border-radius: 8px; font-size: 13px; }
+
+.notes-row td { background: #fafafa; border: 1px dashed var(--gray-300); border-radius: 8px; }
+.lead-notes { width: 100%; padding: 10px 12px; border: 1px solid var(--gray-300); border-radius: 8px; font-size: 14px; }
+
+/* Dense info made more readable */
+.table td div + div { margin-top: 4px; }
+.table td strong { color: var(--gray-800); }
+
+/* Buttons */
+.btn { display:inline-flex; align-items:center; gap:8px; padding:10px 14px; border-radius:8px; border:1px solid transparent; cursor:pointer; font-weight:600; font-size:14px; }
+.btn-primary { background: var(--primary-600); color:#fff; border-color: var(--primary-600); }
+.btn-primary:hover { background: var(--primary-700); border-color: var(--primary-700); }
+.btn-light { background:#fff; color: var(--gray-800); border-color: var(--gray-300); }
+.btn-light:hover { background: var(--gray-50); }
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .filters-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+@media (max-width: 640px) {
+  .filters-grid { grid-template-columns: 1fr; }
+  .np-header .left h1 { font-size: 20px; }
+  .table thead { display: none; }
+  .table, .table tbody, .table tr, .table td { display: block; width: 100%; }
+  .table tbody tr { margin-bottom: 12px; }
+  .table tbody tr td { padding: 10px 12px; border: none; }
+  .table tbody tr td::before {
+    content: attr(data-label);
+    display: block;
+    font-size: 12px;
+    color: var(--gray-600);
+    margin-bottom: 4px;
+  }
+}
+
+

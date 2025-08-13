@@ -1,0 +1,83 @@
+<% title = 'Edit Team Member' %>
+<link rel="stylesheet" href="/css/admin/new-property.css" />
+
+<div class="admin-panel" style="margin:0; padding:0;">
+  <div class="admin-body" style="margin:0; padding:0;">
+    <%- include('../../partials/superadmin-sidebar', { activePage: 'team', pendingCount }) %>
+
+    <main class="admin-content">
+      <form class="np-form" action="/superadmin/dashboard/team/<%= member.id %>/edit" method="post">
+        <header class="np-header">
+          <div class="left">
+            <h1>Edit Member</h1>
+            <p class="subtitle">Update role, area and position for <strong><%= member.name %></strong>.</p>
+          </div>
+          <div class="right">
+            <a href="/superadmin/dashboard/team" class="btn btn-light">Cancel</a>
+          </div>
+        </header>
+
+        <% if (error) { %>
+          <div class="alert alert-error"><%= error %></div>
+        <% } %>
+
+        <section class="card">
+          <h2>Account</h2>
+          <div class="grid-3">
+            <div class="field">
+              <label>Role<span class="req">*</span></label>
+              <select name="role" required>
+                <option value="Admin" <%= member.role==='Admin'?'selected':'' %>>Admin</option>
+                <option value="SuperAdmin" <%= member.role==='SuperAdmin'?'selected':'' %>>SuperAdmin</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Area<span class="req">*</span></label>
+              <select id="areaSelect" name="area" required>
+                <option value="">-- Select Area --</option>
+                <% Object.keys(areaRoles).forEach(a => { %>
+                  <option value="<%= a %>" <%= member.area===a?'selected':'' %>><%= a %></option>
+                <% }) %>
+              </select>
+            </div>
+            <div class="field">
+              <label>Position<span class="req">*</span></label>
+              <select id="positionSelect" name="position" required>
+                <% (areaRoles[member.area] || []).forEach(pos => { %>
+                  <option value="<%= pos %>" <%= member.position===pos?'selected':'' %>><%= pos %></option>
+                <% }) %>
+              </select>
+            </div>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="actions">
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+          </div>
+        </section>
+      </form>
+    </main>
+  </div>
+</div>
+
+<script>
+  const areaRoles = <%- JSON.stringify(areaRoles) %>;
+  const areaSel = document.getElementById('areaSelect');
+  const posSel  = document.getElementById('positionSelect');
+  areaSel.addEventListener('change', () => {
+    const opts = areaRoles[areaSel.value] || [];
+    posSel.innerHTML = '';
+    if (opts.length) {
+      posSel.disabled = false;
+      posSel.appendChild(new Option('-- Select Position --',''));
+      opts.forEach(r => posSel.appendChild(new Option(r, r)));
+    } else {
+      posSel.disabled = true;
+      posSel.appendChild(new Option('Choose an area first',''));
+    }
+  });
+</script>
+
+
+

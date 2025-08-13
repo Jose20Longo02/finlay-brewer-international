@@ -5,35 +5,30 @@
   --sidebar-width: 220px;
 }
 
+/* Hide mobile toggle on desktop by default */
+.mobile-nav-toggle { display: none; }
+
 /* Ensure the body flex container is ready for sidebar + content */
-.admin-body {
-  display: flex;
-  flex: 1;
-  overflow: hidden;
+.admin-body { display:flex; flex:1; overflow:hidden; align-items:stretch; justify-content:flex-start; }
+
+/* Make superadmin pages full-width, not centered inside global .container */
+.container {
+  max-width: 100% !important;
+  margin: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
 }
 
 /* Sidebar styling */
-.admin-sidebar {
-  width: var(--sidebar-width);
-  background: linear-gradient(180deg, var(--color-secondary) 0%, var(--color-tertiary) 100%);
-  padding: var(--spacing) 0;
-  flex-shrink: 0;
-}
-.admin-sidebar ul {
-  list-style: none;
-}
+.admin-sidebar { width: var(--sidebar-width); background: linear-gradient(180deg, var(--color-secondary) 0%, var(--color-tertiary) 100%); padding: 0; flex-shrink:0; box-shadow: 4px 0 20px rgba(0,0,0,.06); align-self: stretch; min-height: 100vh; margin:0; }
+/* Ensure main content takes remaining width and can shrink */
+.admin-content { flex: 1; min-width: 0; }
+.admin-sidebar ul { list-style: none; padding-left: 0; margin: 0; }
 .admin-sidebar li + li {
   margin-top: 0.5rem;
 }
-.admin-sidebar a {
-  display: block;
-  padding: calc(var(--spacing) * 1.5) var(--spacing);
-  font-size: 1rem;
-  color: #fff;
-  text-decoration: none;
-  transition: background 0.3s;
-  border-left: 4px solid transparent;
-}
+.admin-sidebar a { display:block; padding: 14px; font-size: .98rem; color:#fff; text-decoration:none; transition: background .25s; border-left: 4px solid transparent; }
+.admin-sidebar a:hover { background: rgba(255,255,255,0.08); }
 .admin-sidebar li.active a,
 .admin-sidebar a:hover {
   background: rgba(255,255,255,0.1);
@@ -70,23 +65,59 @@
 }
 /* Sidebar responsiveness */
 @media (max-width: 768px) {
-  .admin-body {
-    flex-direction: column;
-  }
+  /* Make sidebar off-canvas on mobile */
+  .mobile-nav-toggle { display: inline-flex; }
   .admin-sidebar {
-    width: 100%;
-    padding: 0;
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 80vw;
+    max-width: 280px;
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+    z-index: 1100;
+    overflow-y: auto;
   }
-  .admin-sidebar ul {
-    display: flex;
-    justify-content: space-around;
+  .admin-panel.sidebar-open .admin-sidebar {
+    transform: translateX(0);
   }
-  .admin-sidebar li {
-    flex: 1;
-    margin: 0;
+
+  /* Dark overlay behind the drawer */
+  .admin-overlay {
+    display: none;
   }
-  .admin-sidebar a {
-    padding: var(--spacing) 0;
-    text-align: center;
+  .admin-panel.sidebar-open .admin-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 1090;
+    display: block;
+  }
+
+  /* Floating mobile menu button */
+  .mobile-nav-toggle {
+    position: fixed;
+    top: 12px;
+    left: 12px;
+    z-index: 1200;
+    background: var(--color-secondary);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 12px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+  }
+  .mobile-nav-toggle[aria-expanded="true"] {
+    background: var(--color-primary);
+  }
+
+  /* Ensure content is visible under the floating button */
+  .admin-content {
+    padding-top: 56px;
   }
 }

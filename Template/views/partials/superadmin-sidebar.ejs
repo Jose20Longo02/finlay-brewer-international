@@ -1,8 +1,12 @@
 <!-- views/partials/superadmin-sidebar.ejs -->
-<head>
-    <link rel="stylesheet" href="/css/superadmin/superadmin-sidebar.css" />
-</head>
-<aside class="admin-sidebar">
+<link rel="stylesheet" href="/css/superadmin/superadmin-sidebar.css" />
+<button class="mobile-nav-toggle" aria-controls="superadmin-sidebar" aria-expanded="false" type="button">
+  ☰ Menu
+  <% if (pendingCount > 0) { %>
+    <span class="badge"><%= pendingCount %></span>
+  <% } %>
+ </button>
+<aside id="superadmin-sidebar" class="admin-sidebar" aria-hidden="true">
   <ul>
     <li class="<%= activePage==='dashboard' ? 'active' : '' %>">
       <a href="/superadmin/dashboard">Dashboard</a>
@@ -18,6 +22,9 @@
     </li>
     <li class="<%= activePage==='team' ? 'active' : '' %>">
       <a href="/superadmin/dashboard/team">Team</a>
+    </li>
+    <li class="<%= activePage==='leads' ? 'active' : '' %>">
+      <a href="/superadmin/dashboard/leads">Leads</a>
     </li>
     <li class="<%= activePage==='requests' ? 'active' : '' %>">
       <a href="/superadmin/dashboard/requests">
@@ -36,3 +43,4 @@
     </li>
   </ul>
 </aside>
+<div class="admin-overlay" data-close-sidebar></div>

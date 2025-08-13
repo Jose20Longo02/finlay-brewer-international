@@ -1,10 +1,7 @@
 <% title = 'Projects' %>
 <link rel="stylesheet" href="/css/admin/all-projects.css" />
 
-<script>
-  // make the locations map available to JS
-  window.LOCATIONS = <%- JSON.stringify(locations || {}) %>;
-</script>
+<div id="ap-data" data-locations='<%- JSON.stringify(locations || {}).replace(/'/g, '&#39;') %>'></div>
 
 <div class="page-wrap">
   <!-- Header -->
@@ -12,7 +9,7 @@
     <h1>All Projects</h1>
     <div class="header-actions">
       <a href="/admin/dashboard" class="link-home">← Return to dashboard</a>
-      <a href="/admin/dashboard/projects/new" class="btn btn-primary">New Project</a>
+      <a href="/superadmin/dashboard/projects/new" class="btn btn-primary">New Project</a>
     </div>
   </div>
 
@@ -44,17 +41,21 @@
     <div class="cards-grid">
       <% projects.forEach(function(p) { %>
         <article class="project-card">
-          <img
-            class="thumb"
-            src="<%= (p.photos && p.photos[0]) || '/img/project-placeholder.png' %>"
-            alt="<%= p.title %>"
-          />
+          <% const cover = (Array.isArray(p.photos) && p.photos[0]) ? p.photos[0] : null; %>
+          <% if (cover) { %>
+            <img class="thumb" src="<%= cover %>" alt="<%= p.title %>">
+          <% } else { %>
+            <div class="thumb thumb--placeholder" aria-label="No image available"></div>
+          <% } %>
           <div class="card-body">
             <h3 class="title"><%= p.title %></h3>
             <p class="meta">
               <%= p.country %><% if (p.city) { %> — <%= p.city %><% } %><% if (p.neighborhood) { %>, <%= p.neighborhood %><% } %>
             </p>
             <div class="actions">
+              <form action="/superadmin/dashboard/projects/<%= p.id %>/delete" method="post" onsubmit="return confirm('Delete “<%= p.title %>”?');">
+                <button type="submit" class="btn btn-danger">Delete</button>
+              </form>
               <a class="btn btn-secondary" href="/admin/dashboard/projects/<%= p.id %>/edit">Edit</a>
               <a class="btn btn-ghost" href="/projects/<%= p.slug || p.id %>">View</a>
             </div>
@@ -87,6 +88,9 @@
 
 <script>
   (function () {
+    const dataNode = document.getElementById('ap-data');
+    let LOCATIONS = {};
+    try { LOCATIONS = JSON.parse(dataNode.getAttribute('data-locations') || '{}'); } catch(_) { LOCATIONS = {}; }
     const countrySel = document.getElementById('countrySelect');
     const citySel    = document.getElementById('citySelect');
     const form       = document.getElementById('filterForm');
@@ -95,7 +99,7 @@
 
     countrySel.addEventListener('change', () => {
       const country = countrySel.value;
-      const cityObj = (window.LOCATIONS && window.LOCATIONS[country]) || {};
+      const cityObj = (LOCATIONS && LOCATIONS[country]) || {};
       const cities  = Object.keys(cityObj);
 
       citySel.innerHTML = '<option value="">All Cities</option>';

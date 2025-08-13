@@ -1,0 +1,80 @@
+/* Uses shared variables in public/css/variables.css */
+body{font-family:var(--font-sans)}
+.new-prop-page{max-width:1100px;margin:var(--spacing-lg) auto;padding:0 var(--spacing-sm)}
+.np-header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:var(--spacing-sm);background:linear-gradient(180deg, rgba(0,0,0,.04), rgba(0,0,0,0));padding:var(--spacing-sm);border-radius:var(--card-radius)}
+.np-header h1{letter-spacing:.3px}
+.np-header .subtitle{color:var(--color-tertiary);margin-top:6px}
+.btn{display:inline-flex;align-items:center;gap:10px;border-radius:999px;padding:12px 18px;border:1px solid rgba(0,0,0,.08);cursor:pointer;text-decoration:none;font-weight:600;transition:transform .16s ease, box-shadow .16s ease, opacity .16s ease}
+.btn-primary{background:var(--color-primary);color:#fff;box-shadow:0 6px 16px rgba(0,0,0,.12)}
+.btn-primary:hover{transform:translateY(-1px);opacity:.95;box-shadow:0 10px 24px rgba(0,0,0,.16)}
+.btn-light{background:#fff;border-color:rgba(0,0,0,.12);color:var(--color-secondary)}
+.alert{padding:12px 14px;border-radius:var(--radius-md);margin:14px 0}
+.alert-error{background:#fff0f2;border:1px solid #ffd6de;color:#b30024}
+.np-form{display:flex;flex-direction:column;gap:var(--spacing-sm)}
+.card{background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:var(--card-radius);padding:22px 18px;box-shadow:var(--card-shadow)}
+.card h2{font-size:1.05rem;margin:0 0 12px 0;color:var(--color-primary);display:flex;align-items:center;gap:8px}
+.card h2::after{content:"";flex:1;height:1px;background:linear-gradient(90deg, rgba(0,0,0,.08), transparent);margin-left:8px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+@media (max-width:900px){.grid-4{grid-template-columns:1fr 1fr}}
+@media (max-width:700px){.grid-3,.grid-2,.grid-4{grid-template-columns:1fr}}
+.field{display:flex;flex-direction:column;gap:6px}
+label{font-size:.85rem;color:var(--color-secondary)}
+input,select,textarea{background:#fff;border:1px solid rgba(0,0,0,.16);color:var(--color-primary);border-radius:12px;padding:12px 14px;font-size:14px;transition:border-color .15s ease, box-shadow .15s ease}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--color-primary);box-shadow:0 0 0 4px rgba(0,0,0,.06)}
+input::placeholder,textarea::placeholder{color:#b8b8b8}
+textarea{resize:vertical}
+.req{color:#b30024;margin-left:4px}
+.chips{display:flex;gap:10px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:8px;background:#fff;border:1px solid rgba(0,0,0,.12);border-radius:999px;padding:8px 12px;color:var(--color-secondary);cursor:pointer;user-select:none;transition:transform .12s ease, background .12s ease}
+.chip:hover{transform:translateY(-1px)}
+.chip input{appearance:none;width:0;height:0;position:absolute;opacity:0}
+.chip input:checked + span{background:var(--color-primary);color:#fff;border-radius:999px;padding:6px 10px}
+.preview-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-top:10px}
+.preview-grid .item{position:relative;border:1px dashed rgba(0,0,0,.2);border-radius:16px;background:#fafafa;display:flex;align-items:center;justify-content:center;aspect-ratio:4/3;overflow:hidden;transition:border-color .15s ease, transform .15s ease}
+.preview-grid .item:hover{border-color:rgba(0,0,0,.35);transform:translateY(-1px)}
+.preview-grid .thumb{width:100%;height:100%;object-fit:contain;display:block;background:#fff}
+.preview-grid .handle{position:absolute;inset:auto 8px 8px auto;background:#fff;border:1px solid rgba(0,0,0,.15);border-radius:10px;padding:6px 8px;font-size:12px;color:var(--color-secondary);cursor:grab;box-shadow:0 4px 10px rgba(0,0,0,.1)}
+.video-preview{margin-top:8px}
+.video-preview video{max-width:360px;border-radius:var(--radius-md);border:1px solid var(--color-secondary)}
+.actions{display:flex;justify-content:flex-end}
+
+/* File inputs — modern upload buttons */
+input[type="file"]{padding:8px 10px}
+input[type="file"]::file-selector-button{
+  background:var(--color-primary);
+  color:#fff;
+  border:0;
+  padding:10px 14px;
+  border-radius:999px;
+  font-weight:600;
+  margin-right:12px;
+  cursor:pointer;
+  box-shadow:0 6px 16px rgba(0,0,0,.12);
+  transition:transform .16s ease, box-shadow .16s ease, opacity .16s ease;
+}
+input[type="file"]:hover::file-selector-button{
+  transform:translateY(-1px);
+  opacity:.95;
+  box-shadow:0 10px 24px rgba(0,0,0,.16);
+}
+/* Safari/old Chromium */
+input[type="file"]::-webkit-file-upload-button{
+  background:var(--color-primary);
+  color:#fff;
+  border:0;
+  padding:10px 14px;
+  border-radius:999px;
+  font-weight:600;
+  margin-right:12px;
+  cursor:pointer;
+  box-shadow:0 6px 16px rgba(0,0,0,.12);
+  transition:transform .16s ease, box-shadow .16s ease, opacity .16s ease;
+}
+input[type="file"]:hover::-webkit-file-upload-button{
+  transform:translateY(-1px);
+  opacity:.95;
+  box-shadow:0 10px 24px rgba(0,0,0,.16);
+}
+

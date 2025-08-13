@@ -5,7 +5,6 @@
 <!-- views/admin/team/list.ejs -->
 <% title = 'Team Management' %>
 
-<link rel="stylesheet" href="/css/team.css" />
 
 <div class="admin-panel">
   <div class="admin-body">
@@ -39,20 +38,14 @@
                     <h3><%= member.name %></h3>
                     <p class="position"><%= member.position %></p>
 
-                    <% if (member.id !== currentUser.id) { %>
-                      <div class="actions">
-                        <form 
-                          action="/superadmin/dashboard/team/<%= member.id %>/delete" 
-                          method="post"
-                          onsubmit="return confirm('Are you sure you want to delete <%= member.name %>?');"
-                        >
+                    <div class="actions">
+                      <% if (member.id !== currentUser.id) { %>
+                        <form action="/superadmin/dashboard/team/<%= member.id %>/delete" method="post" onsubmit="return confirm('Are you sure you want to delete <%= member.name %>?');">
                           <button type="submit" class="btn btn-danger">Delete</button>
                         </form>
-                        <form action="/superadmin/dashboard/team/<%= member.id %>/message" method="post">
-                          <button type="submit" class="btn btn-secondary">Send Message</button>
-                        </form>
-                      </div>
-                    <% } %>
+                        <a href="/superadmin/dashboard/team/<%= member.id %>/edit" class="btn btn-secondary">Edit</a>
+                      <% } %>
+                    </div>
                   </div>
                 <% }); %>
               </div>

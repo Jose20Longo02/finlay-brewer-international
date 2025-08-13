@@ -1,0 +1,486 @@
+<% title = 'New Property' %>
+<link rel="stylesheet" href="/css/admin/new-property.css" />
+
+<div id="np-data"
+     data-locations='<%- JSON.stringify(locations).replace(/'/g, '&#39;') %>'
+     data-projects='<%- JSON.stringify(projects || []).replace(/'/g, '&#39;') %>'></div>
+
+<div class="new-prop-page">
+  <header class="np-header">
+    <div class="left">
+      <h1>Create New Property</h1>
+      <p class="subtitle">Add a listing with all required details. Fields change based on property type.</p>
+    </div>
+    <div class="right">
+      <a href="/admin/dashboard" class="btn btn-light">Cancel</a>
+    </div>
+  </header>
+
+  <% if (error) { %>
+    <div class="alert alert-error"><%= error %></div>
+  <% } %>
+
+  <form id="propertyForm" class="np-form" method="post" action="/properties" enctype="multipart/form-data">
+
+    <!-- A. Location -->
+    <section class="card">
+      <h2>Location</h2>
+      <div class="grid-3">
+        <div class="field">
+          <label for="country">Country<span class="req">*</span></label>
+          <select id="country" name="country" required>
+            <option value="">Select country</option>
+            <% Object.keys(locations).forEach(c => { %>
+              <option value="<%= c %>" <%= form.country===c?'selected':'' %>><%= c %></option>
+            <% }) %>
+          </select>
+        </div>
+        <div class="field">
+          <label for="city">City<span class="req">*</span></label>
+          <select id="city" name="city" required <%= form.country?'':'disabled' %>></select>
+        </div>
+        <div class="field">
+          <label for="neighborhood">Neighborhood</label>
+          <select id="neighborhood" name="neighborhood" <%= form.city?'':'disabled' %>></select>
+        </div>
+      </div>
+      
+      <div class="field">
+        <label for="map_link">Map link or "lat,lng"</label>
+        <input id="map_link" name="map_link" type="text" placeholder="Paste Google Maps / OpenStreetMap link or 40.4168,-3.7038" value="<%= form.map_link||'' %>" />
+        <small>Optional: If provided and coordinates are empty, we will extract coordinates from this.</small>
+      </div>
+    </section>
+
+    <!-- B. Basics -->
+    <section class="card">
+      <h2>Basics</h2>
+      <div class="grid-2">
+        <div class="field">
+          <label for="title">Title<span class="req">*</span></label>
+          <input id="title" name="title" type="text" maxlength="255" required value="<%= form.title||'' %>" />
+        </div>
+        <div class="field">
+          <label for="type">Type<span class="req">*</span></label>
+          <select id="type" name="type" required>
+            <option value="">Select type</option>
+            <% ['Apartment','House','Villa','Land'].forEach(t => { %>
+              <option value="<%= t %>" <%= form.type===t?'selected':'' %>><%= t %></option>
+            <% }) %>
+          </select>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="field">
+          <label for="agent_id">Assigned team member<span class="req">*</span></label>
+          <select id="agent_id" name="agent_id" required>
+            <% (teamMembers || []).forEach(m => { %>
+              <option value="<%= m.id %>" <%= String(form.agent_id||currentUser.id)===String(m.id)?'selected':'' %>><%= m.name %></option>
+            <% }) %>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label for="description">Description<span class="req">*</span></label>
+        <textarea id="description" name="description" rows="6" required><%= form.description||'' %></textarea>
+      </div>
+      <div class="grid-3">
+        <div class="field">
+          <label for="price_display">Price<span class="req">*</span></label>
+          <input id="price_display" type="text" inputmode="decimal" placeholder="€0.00" required />
+          <input id="price" name="price" type="hidden" value="<%= form.price||'' %>" />
+        </div>
+        <div class="field">
+          <label>Status tags</label>
+          <div class="chips">
+            <% ['New','Reduced','Exclusive'].forEach(s => { %>
+              <label class="chip">
+                <input type="checkbox" name="status_tags" value="<%= s %>" <%= (form.status_tags||[]).includes(s)?'checked':'' %> />
+                <span><%= s %></span>
+              </label>
+            <% }) %>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- C. Media -->
+    <section class="card">
+      <h2>Media</h2>
+      <div class="field">
+        <label for="photos">Photos<span class="req">*</span></label>
+        <input id="photos" name="photos" type="file" accept="image/*" multiple required />
+        <small>Upload 1–20 images. You can drag to reorder after upload.</small>
+        <div id="photoPreview" class="preview-grid"></div>
+      </div>
+      <div class="grid-3">
+        <div class="field">
+          <label>Video source</label>
+          <div class="chips">
+            <label class="chip"><input type="radio" name="video_source" id="videoSrcUpload" value="upload" checked /> <span>Upload</span></label>
+            <label class="chip"><input type="radio" name="video_source" id="videoSrcLink" value="link" /> <span>Link</span></label>
+          </div>
+        </div>
+        <div class="field" id="videoUploadWrap">
+          <label for="video">Upload video</label>
+          <input id="video" name="video" type="file" accept="video/*" />
+          <div id="videoPreview" class="video-preview"></div>
+        </div>
+        <div class="field" id="videoUrlWrap" hidden>
+          <label for="video_url">Video URL</label>
+          <input id="video_url" name="video_url" type="url" placeholder="https://..." value="<%= form.video_url||'' %>" />
+        </div>
+      </div>
+    </section>
+
+    <!-- D. Project -->
+    <section class="card">
+      <h2>Project</h2>
+      <div class="grid-2">
+        <label class="checkbox">
+          <input type="checkbox" id="is_in_project" name="is_in_project" <%= form.is_in_project?'checked':'' %> />
+          <span>Part of a project</span>
+        </label>
+        <div class="field" id="projectWrap" hidden>
+          <label for="project_id">Project</label>
+          <select id="project_id" name="project_id" disabled>
+            <option value="">Select project</option>
+            <% (projects||[]).forEach(p => { %>
+              <option value="<%= p.id %>" <%= String(form.project_id||'')===String(p.id)?'selected':'' %>><%= p.title %></option>
+            <% }) %>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <!-- E. Type-specific -->
+    <section class="card">
+      <h2>Type-specific</h2>
+      <div id="typeApartment" class="type-block" hidden>
+        <div class="grid-4">
+          <div class="field">
+            <label for="apartment_size">Apartment size (sqm)<span class="req">*</span></label>
+            <input id="apartment_size" name="apartment_size" type="number" min="0" step="0.01" />
+          </div>
+          <div class="field">
+            <label for="bedrooms_a">Bedrooms<span class="req">*</span></label>
+            <input id="bedrooms_a" name="bedrooms" type="number" min="0" step="1" />
+          </div>
+          <div class="field">
+            <label for="bathrooms_a">Bathrooms<span class="req">*</span></label>
+            <input id="bathrooms_a" name="bathrooms" type="number" min="0" step="1" />
+          </div>
+          <div class="field">
+            <label for="floorplan">Floorplan image</label>
+            <input id="floorplan" name="floorplan" type="file" accept="image/*" />
+            <div id="floorplanPreview" class="preview-grid"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="typeHouseVilla" class="type-block" hidden>
+        <div class="grid-4">
+          <div class="field">
+            <label for="total_size">Total lot size (sqm)<span class="req">*</span></label>
+            <input id="total_size" name="total_size" type="number" min="0" step="0.01" />
+          </div>
+          <div class="field">
+            <label for="living_space">Living space (sqm)</label>
+            <input id="living_space" name="living_space" type="number" min="0" step="0.01" />
+          </div>
+          <div class="field">
+            <label for="bedrooms_hv">Bedrooms<span class="req">*</span></label>
+            <input id="bedrooms_hv" name="bedrooms" type="number" min="0" step="1" />
+          </div>
+          <div class="field">
+            <label for="bathrooms_hv">Bathrooms<span class="req">*</span></label>
+            <input id="bathrooms_hv" name="bathrooms" type="number" min="0" step="1" />
+          </div>
+          <div class="field">
+            <label for="plan_photo_hv">Plan image</label>
+            <input id="plan_photo_hv" name="plan_photo" type="file" accept="image/*" />
+            <div id="planPhotoPreviewHV" class="preview-grid"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="typeLand" class="type-block" hidden>
+        <div class="grid-3">
+          <div class="field">
+            <label for="land_size">Land size (sqm)<span class="req">*</span></label>
+            <input id="land_size" name="land_size" type="number" min="0" step="0.01" />
+          </div>
+          <div class="field">
+            <label for="plan_photo">Plan image</label>
+            <input id="plan_photo" name="plan_photo" type="file" accept="image/*" />
+            <div id="planPhotoPreview" class="preview-grid"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- F. Submit -->
+    <section class="card">
+      <div class="actions">
+        <button type="submit" class="btn btn-primary">Save Property</button>
+      </div>
+    </section>
+  </form>
+</div>
+
+<script>
+  const dataNode = document.getElementById('np-data');
+  let LOCATIONS = {};
+  try { LOCATIONS = JSON.parse(dataNode.getAttribute('data-locations') || '{}'); } catch(_) { LOCATIONS = {}; }
+  const countrySel = document.getElementById('country');
+  const citySel = document.getElementById('city');
+  const hoodSel = document.getElementById('neighborhood');
+  const typeSel = document.getElementById('type');
+  const isInProject = document.getElementById('is_in_project');
+  const projectWrap = document.getElementById('projectWrap');
+  const projectSelect = document.getElementById('project_id');
+
+  function fillCities() {
+    const cities = Object.keys((LOCATIONS[countrySel.value]||{}));
+    citySel.innerHTML = '<option value="">Select city</option>';
+    cities.forEach(ct => {
+      const opt = document.createElement('option');
+      opt.value = ct; opt.textContent = ct;
+      if ("<%= (form.city||'') %>" === ct) opt.selected = true;
+      citySel.appendChild(opt);
+    });
+    citySel.disabled = cities.length === 0;
+    fillNeighborhoods();
+  }
+  function fillNeighborhoods() {
+    const hoods = ((LOCATIONS[countrySel.value]||{}))[citySel.value] || [];
+    hoodSel.innerHTML = '<option value="">Select neighborhood (optional)</option>';
+    hoods.forEach(h => {
+      const opt = document.createElement('option');
+      opt.value = h; opt.textContent = h;
+      if ("<%= (form.neighborhood||'') %>" === h) opt.selected = true;
+      hoodSel.appendChild(opt);
+    });
+    hoodSel.disabled = hoods.length === 0;
+  }
+
+  function updateTypeBlocks() {
+    const t = typeSel.value;
+    const blocks = [
+      { id: 'typeApartment', active: t === 'Apartment' },
+      { id: 'typeHouseVilla', active: t === 'House' || t === 'Villa' },
+      { id: 'typeLand', active: t === 'Land' }
+    ];
+    blocks.forEach(({ id, active }) => {
+      const el = document.getElementById(id);
+      el.hidden = !active;
+      // Disable all inputs in hidden blocks to prevent duplicate form keys
+      el.querySelectorAll('input, select, textarea').forEach(ctrl => {
+        ctrl.disabled = !active;
+      });
+    });
+
+    // Required flags per type
+    const apt = t === 'Apartment';
+    const hv  = t === 'House' || t === 'Villa';
+    const land= t === 'Land';
+
+    const aptSize = document.getElementById('apartment_size');
+    const bedA = document.getElementById('bedrooms_a');
+    const bathA = document.getElementById('bathrooms_a');
+    if (aptSize) aptSize.required = apt;
+    if (bedA) bedA.required = apt;
+    if (bathA) bathA.required = apt;
+
+    const totalSize = document.getElementById('total_size');
+    const bedHV = document.getElementById('bedrooms_hv');
+    const bathHV = document.getElementById('bathrooms_hv');
+    if (totalSize) totalSize.required = hv;
+    if (bedHV) bedHV.required = hv;
+    if (bathHV) bathHV.required = hv;
+
+    const landSize = document.getElementById('land_size');
+    if (landSize) landSize.required = land;
+  }
+  function updateProjectVisibility() {
+    const on = !!isInProject.checked;
+    projectWrap.hidden = !on;
+    projectSelect.required = on;
+    projectSelect.disabled = !on;
+    if (!on) projectSelect.value = '';
+  }
+
+  countrySel.addEventListener('change', fillCities);
+  citySel.addEventListener('change', fillNeighborhoods);
+  typeSel.addEventListener('change', updateTypeBlocks);
+  isInProject.addEventListener('change', updateProjectVisibility);
+
+  // Photo preview
+  // Photo preview + drag to reorder
+  const photosInput = document.getElementById('photos');
+  const preview = document.getElementById('photoPreview');
+  let dragIndex = null;
+  function rebuildPreview() {
+    preview.innerHTML = '';
+    Array.from(photosInput.files).forEach((file, index) => {
+      const url = URL.createObjectURL(file);
+      const item = document.createElement('div');
+      item.className = 'item';
+      item.draggable = true;
+      const img = document.createElement('img');
+      img.src = url; img.className = 'thumb';
+      const handle = document.createElement('div');
+      handle.className = 'handle';
+      handle.textContent = 'drag';
+      item.appendChild(img);
+      item.appendChild(handle);
+      item.addEventListener('dragstart', () => { dragIndex = index; });
+      item.addEventListener('dragover', (e) => { e.preventDefault(); });
+      item.addEventListener('drop', (e) => {
+        e.preventDefault();
+        if (dragIndex === null) return;
+        const files = Array.from(photosInput.files);
+        const moved = files.splice(dragIndex, 1)[0];
+        files.splice(index, 0, moved);
+        const dt = new DataTransfer();
+        files.forEach(f => dt.items.add(f));
+        photosInput.files = dt.files;
+        dragIndex = null;
+        rebuildPreview();
+      });
+      preview.appendChild(item);
+    });
+  }
+  photosInput.addEventListener('change', rebuildPreview);
+
+  // Video source toggle
+  const videoSrcUpload = document.getElementById('videoSrcUpload');
+  const videoSrcLink   = document.getElementById('videoSrcLink');
+  const videoUploadWrap= document.getElementById('videoUploadWrap');
+  const videoUrlWrap   = document.getElementById('videoUrlWrap');
+  const videoInput     = document.getElementById('video');
+  const videoUrlInput  = document.getElementById('video_url');
+  const videoPreview   = document.getElementById('videoPreview');
+
+  function updateVideoSource() {
+    const useUpload = videoSrcUpload.checked;
+    videoUploadWrap.hidden = !useUpload;
+    videoUrlWrap.hidden    = useUpload;
+    if (useUpload) {
+      videoUrlInput.value = '';
+      videoUrlInput.disabled = true;
+      videoInput.disabled = false;
+    } else {
+      videoInput.value = '';
+      videoInput.disabled = true;
+      videoUrlInput.disabled = false;
+    }
+  }
+  videoSrcUpload.addEventListener('change', updateVideoSource);
+  videoSrcLink.addEventListener('change', updateVideoSource);
+
+  // Video preview when selecting a file
+  videoInput.addEventListener('change', () => {
+    videoPreview.innerHTML = '';
+    if (videoInput.files && videoInput.files[0]) {
+      const url = URL.createObjectURL(videoInput.files[0]);
+      const vid = document.createElement('video');
+      vid.src = url; vid.controls = true; vid.playsInline = true;
+      videoPreview.appendChild(vid);
+    }
+  });
+
+  // Floorplan preview
+  const floorplanInput = document.getElementById('floorplan');
+  const floorplanPreview = document.getElementById('floorplanPreview');
+  if (floorplanInput) {
+    floorplanInput.addEventListener('change', () => {
+      floorplanPreview.innerHTML = '';
+      if (floorplanInput.files && floorplanInput.files[0]) {
+        const url = URL.createObjectURL(floorplanInput.files[0]);
+        const img = document.createElement('img');
+        img.src = url; img.className = 'thumb';
+        const wrap = document.createElement('div'); wrap.className = 'item';
+        wrap.appendChild(img);
+        floorplanPreview.appendChild(wrap);
+      }
+    });
+  }
+
+  // Plan photo previews (HV)
+  const planPhotoHVInput = document.getElementById('plan_photo_hv');
+  const planPhotoPreviewHV = document.getElementById('planPhotoPreviewHV');
+  if (planPhotoHVInput) {
+    planPhotoHVInput.addEventListener('change', () => {
+      planPhotoPreviewHV.innerHTML = '';
+      if (planPhotoHVInput.files && planPhotoHVInput.files[0]) {
+        const url = URL.createObjectURL(planPhotoHVInput.files[0]);
+        const img = document.createElement('img');
+        img.src = url; img.className = 'thumb';
+        const wrap = document.createElement('div'); wrap.className = 'item';
+        wrap.appendChild(img);
+        planPhotoPreviewHV.appendChild(wrap);
+      }
+    });
+  }
+
+  // Plan photo previews (Land)
+  const planPhotoInput = document.getElementById('plan_photo');
+  const planPhotoPreview = document.getElementById('planPhotoPreview');
+  if (planPhotoInput) {
+    planPhotoInput.addEventListener('change', () => {
+      planPhotoPreview.innerHTML = '';
+      if (planPhotoInput.files && planPhotoInput.files[0]) {
+        const url = URL.createObjectURL(planPhotoInput.files[0]);
+        const img = document.createElement('img');
+        img.src = url; img.className = 'thumb';
+        const wrap = document.createElement('div'); wrap.className = 'item';
+        wrap.appendChild(img);
+        planPhotoPreview.appendChild(wrap);
+      }
+    });
+  }
+
+  // Init
+  fillCities();
+  updateTypeBlocks();
+  updateProjectVisibility();
+
+  // Price input formatting (Euro)
+  const priceInputHidden = document.getElementById('price');
+  const priceInputDisplay = document.getElementById('price_display');
+  const euro = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 2 });
+  const parseNumeric = (str) => {
+    if (typeof str !== 'string') return null;
+    // Remove everything except digits and separators, normalize comma to dot
+    const cleaned = str.replace(/[^0-9,\.]/g, '').replace(/,/g, '.');
+    if (!cleaned) return null;
+    const num = Number(cleaned);
+    return Number.isNaN(num) ? null : num;
+  };
+  // Initialize display from hidden raw value
+  if (priceInputHidden && priceInputHidden.value) {
+    const raw = Number(priceInputHidden.value);
+    if (!Number.isNaN(raw)) priceInputDisplay.value = euro.format(raw);
+  }
+  priceInputDisplay.addEventListener('input', () => {
+    const num = parseNumeric(priceInputDisplay.value);
+    if (num === null) {
+      priceInputHidden.value = '';
+      // do not format while typing invalid
+      return;
+    }
+    priceInputHidden.value = String(num.toFixed(2));
+  });
+  priceInputDisplay.addEventListener('blur', () => {
+    const num = parseNumeric(priceInputDisplay.value);
+    if (num === null) {
+      priceInputDisplay.value = '';
+      priceInputHidden.value = '';
+      return;
+    }
+    priceInputDisplay.value = euro.format(num);
+    priceInputHidden.value = String(num.toFixed(2));
+  });
+</script>
+

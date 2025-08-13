@@ -37,12 +37,7 @@ html, body {
   width: 100%;            /* full width up to max-width */
   padding: 0;
 }
-.properties-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.5rem;
-}
+.properties-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; background:linear-gradient(180deg, rgba(0,0,0,.04), transparent); padding:1rem; border-radius: var(--card-radius); }
 .properties-filters {
   display: flex;
   flex-wrap: wrap;
@@ -50,12 +45,9 @@ html, body {
   margin-bottom: 1.5rem;
 }
 .properties-filters select,
-.properties-filters input {
-  padding: 0.5rem;
-  border: 1px solid var(--color-secondary);
-  border-radius: 4px;
-  font-size: 0.9rem;
-}
+.properties-filters input { padding:.6rem .75rem; border:1px solid rgba(0,0,0,.16); border-radius:12px; font-size:.95rem; transition:border-color .15s, box-shadow .15s; }
+.properties-filters select:focus,
+.properties-filters input:focus { outline:none; border-color: var(--color-primary); box-shadow:0 0 0 4px rgba(0,0,0,.06); }
 
 /* 6) Grid & cards */
 .properties-grid {
@@ -63,16 +55,8 @@ html, body {
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: 1rem;
 }
-.property-card {
-  position: relative;
-  background: #fff;
-  border: 1px solid var(--color-secondary);
-  border-radius: 8px;
-  padding: 1rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
+.property-card { position:relative; background:#fff; border:1px solid rgba(0,0,0,.08); border-radius:16px; padding:1rem; display:flex; flex-direction:column; align-items:center; box-shadow: var(--card-shadow); transition: transform .2s ease, box-shadow .2s ease; }
+.property-card:hover { transform: translateY(-4px); box-shadow: 0 10px 28px rgba(0,0,0,.12); }
 .unassigned-warning {
   position: absolute;
   top: 0.5rem;
@@ -173,13 +157,8 @@ html, body {
   gap: 1rem;
   margin-top: 2rem;
 }
-.page-link {
-  padding: 0.5rem 1rem;
-  background: var(--color-secondary);
-  color: #fff;
-  border-radius: 4px;
-  text-decoration: none;
-}
+.page-link { padding:.5rem 1rem; border:1px solid rgba(0,0,0,.12); border-radius:12px; color: var(--color-secondary); background:#fff; text-decoration:none; transition: transform .16s, box-shadow .16s; }
+.page-link:hover { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(0,0,0,.08); }
 .page-info {
   font-size: 0.9rem;
 }

@@ -1,9 +1,7 @@
 <% title = 'My Properties' %>
 <link rel="stylesheet" href="/css/admin/my-properties.css" />
 
-<script>
-  window.LOCATIONS = <%- JSON.stringify(locations) %>;
-</script>
+<div id="mp-data" data-locations='<%- JSON.stringify(locations).replace(/'/g, '&#39;') %>'></div>
 
 <div class="page-wrap">
   <header class="section-header">
@@ -67,10 +65,26 @@
         <article class="prop-card">
           <div class="flip">
             <div class="front">
-              <img class="thumb" src="<%= p.photos?.[0] || '/img/property-placeholder.png' %>" alt="<%= p.title %>">
-              <h3 class="title"><%= p.title %></h3>
-              <p class="meta"><%= p.city %>, <%= p.neighborhood %></p>
-              <p class="price"><%= p.price ? `$${Number(p.price).toLocaleString()}` : 'Price on request' %></p>
+              <div class="media">
+                <img class="thumb" src="<%= p.photos?.[0] || '/img/property-placeholder.png' %>" alt="<%= p.title %>">
+                <div class="badges">
+                  <% (p.status_tags || []).forEach(tag => { %>
+                    <span class="badge badge-status"><%= tag %></span>
+                  <% }) %>
+                </div>
+                <div class="type-badge"><%= p.type %></div>
+                <div class="price-badge"><%= p.price ? `$${Number(p.price).toLocaleString()}` : 'Price on request' %></div>
+              </div>
+              <div class="content">
+                <h3 class="title" title="<%= p.title %>"><%= p.title %></h3>
+                <p class="meta">
+                  <span class="loc-city"><%= p.city %></span>
+                  <% if (p.neighborhood) { %>
+                    <span class="dot">•</span>
+                    <span class="loc-hood"><%= p.neighborhood %></span>
+                  <% } %>
+                </p>
+              </div>
             </div>
             <div class="back">
               <div class="stat">
@@ -79,7 +93,7 @@
               </div>
               <div class="stat">
                 <span class="stat-num"><%= p.inquiry_count || 0 %></span>
-                <span class="stat-label">Contact forms</span>
+                <span class="stat-label">Contacts</span>
               </div>
             </div>
           </div>
@@ -109,6 +123,9 @@
 
 <script>
   // keep cities in sync with selected country
+  const dataNode   = document.getElementById('mp-data');
+  let LOCATIONS = {};
+  try { LOCATIONS = JSON.parse(dataNode.getAttribute('data-locations') || '{}'); } catch(_) { LOCATIONS = {}; }
   const countrySel = document.getElementById('countrySelect');
   const citySel    = document.getElementById('citySelect');
   const form       = document.getElementById('filters');
