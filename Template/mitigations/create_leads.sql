@@ -33,6 +33,6 @@ $$ LANGUAGE plpgsql;
 DROP TRIGGER IF EXISTS trg_leads_updated_at ON leads;
 CREATE TRIGGER trg_leads_updated_at
 BEFORE UPDATE ON leads
-FOR EACH ROW EXECUTE FUNCTION set_leads_updated_at();
+FOR EACH ROW EXECUTE PROCEDURE set_leads_updated_at();
 
 

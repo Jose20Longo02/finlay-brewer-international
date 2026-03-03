@@ -1,179 +1,146 @@
 <% title = 'Find Your Dream Home' %>
+<%
+  const heroDestinations = [
+    { id: 'france', label: 'France', country: 'France' },
+    { id: 'monaco', label: 'Monaco', country: 'Monaco' },
+    { id: 'montenegro', label: 'Montenegro', country: 'Montenegro' },
+    { id: 'costa-del-sol', label: 'Costa Del Sol', country: 'Spain' },
+    { id: 'london', label: 'London', country: 'UK' }
+  ];
+  const locationCountries = Object.keys(locations || {});
+  const heroCountries = heroDestinations.map(d => d.country);
+  const allCountries = [...new Set([...locationCountries, ...heroCountries])].sort();
+%>
 <link rel="stylesheet" href="/css/home.css" />
 
-<!-- Locations data for JavaScript -->
 <script>
   window.locationsData = <%- JSON.stringify(locations) %>;
-  console.log('Home page - Locations data loaded:', window.locationsData);
-  console.log('Home page - Countries available:', Object.keys(window.locationsData || {}));
+  window.heroDestinations = <%- JSON.stringify(heroDestinations) %>;
 </script>
 
-<!-- Hero Section with Search -->
-<section class="hero">
-  <div class="hero-background">
-    <div class="hero-overlay"></div>
+<!-- Hero Section (design: coastal background + search bar + destination tabs) -->
+<section class="hero" id="hero">
+  <div class="hero-backgrounds">
+    <% heroDestinations.forEach((dest, i) => { %>
+    <div class="hero-bg <%= i === 0 ? 'active' : '' %>" data-destination="<%= dest.id %>"></div>
+    <% }); %>
   </div>
-  
-  <div class="container">
-    <div class="hero-content">
-      <h1 class="hero-title">Find Your Dream Home</h1>
-      <p class="hero-subtitle">Discover the perfect property in the most desirable locations worldwide</p>
-      
-      <!-- Property Search Form -->
-      <div class="search-container">
-        <form class="search-form" action="/properties" method="GET">
-          <div class="search-grid">
-            <div class="search-field">
-              <label for="country">Country</label>
-              <select id="country" name="country" class="search-select">
-                <option value="">Any country</option>
-                <% Object.keys(locations).forEach(country => { %>
-                  <option value="<%= country %>"><%= country %></option>
-                <% }); %>
-              </select>
-            </div>
-            
-            <div class="search-field">
-              <label for="city">City</label>
-              <select id="city" name="city" class="search-select" disabled style="opacity: 1 !important; visibility: visible !important; display: block !important; background: white !important; color: black !important;">
-                <option value="">Any City</option>
-              </select>
-            </div>
-            
-            <div class="search-field">
-              <label for="neighborhood">Neighborhood</label>
-              <select id="neighborhood" name="neighborhood" class="search-select" disabled style="opacity: 1 !important; visibility: visible !important; display: block !important; background: white !important; color: black !important;">
-                <option value="">Any Neighborhood</option>
-              </select>
-            </div>
-            
-            <div class="search-field">
-              <label for="type">Property Type</label>
-              <select id="type" name="type" class="search-select">
-                <option value="">Any Type</option>
-                <option value="Apartment">Apartment</option>
-                <option value="House">House</option>
-                <option value="Villa">Villa</option>
-                <option value="Land">Land</option>
-              </select>
-            </div>
+  <div class="hero-overlay" aria-hidden="true"></div>
+
+  <div class="hero-content">
+    <div class="search-container">
+      <div class="search-bar-top"></div>
+      <form class="search-form" action="/properties" method="GET">
+        <div class="search-row">
+          <div class="search-field-inline">
+            <label for="hero-country">Location:</label>
+            <select id="hero-country" name="country">
+              <option value="">Any</option>
+              <% allCountries.forEach(country => { %>
+                <option value="<%= country %>"><%= country %></option>
+              <% }); %>
+            </select>
           </div>
-          
-          <button type="submit" class="search-btn">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="11" cy="11" r="8"></circle>
-              <path d="m21 21-4.35-4.35"></path>
-            </svg>
-            Search Properties
-          </button>
-        </form>
-      </div>
-      
-      <!-- Debug Info (remove in production) -->
-      <div style="margin-top: 20px; padding: 10px; background: rgba(255,255,255,0.1); border-radius: 5px; font-size: 12px; color: white;">
-        <strong>Debug Info:</strong> 
-        Countries: <%= Object.keys(locations).length %>, 
-        Total Cities: <%= Object.values(locations).reduce((sum, cities) => sum + Object.keys(cities).length, 0) %>,
-        Total Neighborhoods: <%= Object.values(locations).reduce((sum, cities) => sum + Object.values(cities).reduce((citySum, neighborhoods) => citySum + neighborhoods.length, 0), 0) %>
-        <br>
-        <strong>Sample Data:</strong>
-        <% if (Object.keys(locations).length > 0) { %>
-          First Country: <%= Object.keys(locations)[0] %>,
-          First City: <%= Object.keys(locations[Object.keys(locations)[0]])[0] %>,
-          First Neighborhood: <%= locations[Object.keys(locations)[0]][Object.keys(locations[Object.keys(locations)[0]])[0]][0] %>
-        <% } %>
-        <br>
-        <button onclick="testDropdowns()" style="margin-top: 10px; padding: 5px 10px; background: white; color: black; border: none; border-radius: 3px; cursor: pointer;">Test Dropdowns</button>
-      </div>
+          <div class="search-field-inline">
+            <label for="hero-operation">Operation:</label>
+            <select id="hero-operation" name="operation">
+              <option value="">Any</option>
+              <option value="sale">Buy</option>
+              <option value="rent">Rent</option>
+            </select>
+          </div>
+          <div class="search-field-inline">
+            <label for="hero-type">Type:</label>
+            <select id="hero-type" name="type">
+              <option value="">Any Type</option>
+              <option value="Apartment">Apartment</option>
+              <option value="House">House</option>
+              <option value="Villa">Villa</option>
+              <option value="Land">Land</option>
+            </select>
+          </div>
+        </div>
+        <button type="submit" class="search-btn-hero">Search</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="hero-destinations">
+    <div class="hero-tabs" role="tablist">
+      <span class="hero-tabs-line" aria-hidden="true"></span>
+      <span class="hero-tab-indicator" aria-hidden="true"></span>
+      <% heroDestinations.forEach((dest, i) => { %>
+      <span class="hero-tab <%= i === 0 ? 'active' : '' %>" data-destination="<%= dest.id %>" data-country="<%= dest.country %>"><a href="/properties?country=<%= encodeURIComponent(dest.country) %>"><%= dest.label %></a></span>
+      <% }); %>
     </div>
   </div>
 </section>
 
-<!-- Featured Properties Section -->
-<section class="featured-properties">
-  <div class="container">
-    <div class="section-header">
-      <h2>Featured Properties</h2>
-      <p>Discover our handpicked selection of premium properties</p>
-      <a href="/properties" class="btn btn-outline">View All Properties</a>
-    </div>
-    
-    <div class="properties-grid" id="featuredProperties">
-      <!-- Properties will be loaded dynamically -->
-      <div class="property-card loading-placeholder">
-        <div class="property-image"></div>
-        <div class="property-content">
-          <div class="property-title"></div>
-          <div class="property-location"></div>
-          <div class="property-price"></div>
-        </div>
-      </div>
-      <div class="property-card loading-placeholder">
-        <div class="property-image"></div>
-        <div class="property-content">
-          <div class="property-title"></div>
-          <div class="property-location"></div>
-          <div class="property-price"></div>
-        </div>
-      </div>
-      <div class="property-card loading-placeholder">
-        <div class="property-image"></div>
-        <div class="property-content">
-          <div class="property-title"></div>
-          <div class="property-location"></div>
-          <div class="property-price"></div>
-        </div>
-      </div>
-    </div>
+<div class="container">
+
+<!-- Our Favorite Properties Section -->
+<section class="favorite-properties-section" id="favorite-properties">
+  <div class="section-header-row">
+    <h2>Our Favorite Properties</h2>
+    <a href="/properties" class="cta-button" aria-label="View all properties">
+      <span class="cta-icon" aria-hidden="true">→</span>
+      <span class="cta-label">All Properties</span>
+    </a>
   </div>
 </section>
+<!-- Carousel full-bleed (outside section padding) -->
+<svg width="0" height="0" aria-hidden="true"><defs><clipPath id="cinema-curve" clipPathUnits="objectBoundingBox"><path d="M 0,0.06 Q 0.5,-0.02 1,0.06 L 1,0.94 Q 0.5,1.02 0,0.94 Z"/></clipPath></defs></svg>
+<div class="gallery-strip-wrapper">
+  <div class="gallery-strip" data-autoplay="true">
+    <div class="gallery-track" id="favoritePropertiesTrack">
+      <% const fp = typeof featuredProperties !== 'undefined' ? featuredProperties : []; %>
+      <% if (fp.length > 0) { %>
+        <% fp.forEach(property => { %>
+          <a href="<%= property.slug ? '/properties/' + property.slug : '/properties' %>" class="gallery-frame gallery-frame--property" data-index="<%= property.id %>">
+            <div class="gallery-frame-img">
+              <img src="<%= (property.photos && property.photos[0]) ? property.photos[0] : '/img/property-placeholder.jpg' %>" 
+                   alt="<%= property.title %>" loading="lazy" decoding="async"
+                   onerror="this.src='/img/property-placeholder.jpg'">
+            </div>
+            <div class="gallery-frame-content">
+              <h3 class="gallery-frame-title"><%= property.title %></h3>
+              <div class="gallery-frame-meta"><%= property.city %>, <%= property.country %></div>
+              <div class="gallery-frame-price">€<%= Number(property.price).toLocaleString('en-US', { maximumFractionDigits: 0 }) %></div>
+            </div>
+          </a>
+        <% }); %>
+      <% } else { %>
+        <div class="gallery-empty" style="padding: 48px; text-align: center; color: var(--gray-600); width: 100%;">
+          <p>No properties available. <a href="/properties">Browse all properties</a></p>
+        </div>
+      <% } %>
+    </div>
+  </div>
+</div>
 
-<!-- Services Section -->
-<section class="services">
-  <div class="container">
-    <div class="section-header text-center">
-      <h2>Our Services</h2>
-      <p>Comprehensive real estate solutions for buyers, sellers, and investors</p>
-    </div>
-    
-    <div class="services-grid">
-      <div class="service-card">
-        <div class="service-icon">🏠</div>
-        <h3>Property Search</h3>
-        <p>Advanced search tools to find your perfect property with detailed filters and location-based results.</p>
-      </div>
-      
-      <div class="service-card">
-        <div class="service-icon">💰</div>
-        <h3>Mortgage Calculator</h3>
-        <p>Calculate your monthly payments, compare loan options, and understand your financing options.</p>
-      </div>
-      
-      <div class="service-card">
-        <div class="service-icon">📊</div>
-        <h3>Property Comparison</h3>
-        <p>Compare multiple properties side by side to make informed decisions about your investment.</p>
-      </div>
-      
-      <div class="service-card">
-        <div class="service-icon">📱</div>
-        <h3>Virtual Tours</h3>
-        <p>Explore properties from anywhere with our immersive virtual tour technology.</p>
-      </div>
-    </div>
+<!-- About Finlay Brewer International Section -->
+<section class="about-section" id="about">
+  <div class="about-section-bg" style="background-image: url('/img/Montenegro.jpg');" aria-hidden="true"></div>
+  <div class="about-section-overlay" aria-hidden="true"></div>
+  <div class="about-section-content">
+    <h2 class="about-section-title">About Finlay Brewer<br>International</h2>
+    <p class="about-section-text">Lorem ipsum dolor sit amet consectetur. Morbi senectus egestas ipsum id purus sit vivamus amet. Est pulvinar at dignissim elementum ut. Aliquet ullamcorper mattis eu etiam id tempor facilisis urna enim. Blandit varius elementum et faucibus duis magna laoreet mauris. Mattis fames eleifend nulla.</p>
+    <a href="/properties" class="cta-button cta-button--white" aria-label="Learn more about us">
+      <span class="cta-icon" aria-hidden="true">→</span>
+      <span class="cta-label">Learn More</span>
+    </a>
   </div>
 </section>
 
 <!-- Mortgage Calculator Section -->
 <section class="mortgage-calculator">
-  <div class="container">
     <div class="section-header text-center">
       <h2>Mortgage Calculator</h2>
       <p>Calculate your monthly mortgage payments and understand your financing options</p>
     </div>
     
     <div class="calculator-container">
-      <div class="calculator-form">
+      <div class="calculator-form" id="calculatorForm">
         <div class="form-row">
           <div class="form-group">
             <label for="propertyPrice">Property Price (€)</label>
@@ -206,7 +173,7 @@
         </button>
       </div>
       
-      <div class="calculator-results" id="calculatorResults" style="display: none;">
+      <div class="calculator-results" id="calculatorResults">
         <h3>Your Monthly Payment</h3>
         <div class="payment-breakdown">
           <div class="result-item">
@@ -244,23 +211,91 @@
             </div>
           </div>
         </div>
+        <div class="calculator-results-actions">
+          <button type="button" class="btn btn-primary btn-lg" onclick="resetMortgageCalculator()">
+            Do another calculation
+          </button>
+        </div>
+      </div>
+    </div>
+</section>
+
+<!-- Recent Articles Section -->
+<section class="recent-articles-section" id="blog" aria-label="Recent articles">
+  <div class="recent-articles-inner">
+    <div class="recent-articles-content">
+      <h2 class="recent-articles-title">Recent Articles</h2>
+      <p class="recent-articles-text">Lorem ipsum dolor sit amet consectetur. Morbi senectus egestas ipsum id purus sit vivamus amet. Est pulvinar at dignissim elementum ut. Aliquet ullamcorper mattis eu etiam id tempor facilisis urna enim. Blandit varius elementum et faucibus duis magna laoreet mauris. Mattis fames eleifend nulla.</p>
+      <p class="recent-articles-text">Lorem ipsum dolor sit amet consectetur. Morbi senectus egestas ipsum id purus sit vivamus amet. Est pulvinar at dignissim elementum ut.</p>
+      <a href="/blog" class="cta-button" aria-label="Visit blog">
+        <span class="cta-icon" aria-hidden="true">→</span>
+        <span class="cta-label">Visit Blog</span>
+      </a>
+    </div>
+    <div class="recent-articles-carousel-wrapper">
+      <div class="recent-articles-carousel" id="articlesCarousel">
+        <% const articles = typeof recentArticles !== 'undefined' && Array.isArray(recentArticles) ? recentArticles : []; %>
+        <% const posMap = ['pos-0', 'pos-1', 'pos-2', 'pos-3', 'pos-4']; %>
+        <% if (articles.length === 0) { %>
+          <% for (var i = 0; i < 5; i++) { %>
+            <a href="#" class="article-card <%= posMap[i] || '' %>" data-index="<%= i %>">
+              <div class="article-card-bg" style="background-image: url('/img/France.jpg');"></div>
+              <div class="article-card-overlay">
+                <h3 class="article-card-title">Placeholder Article <%= i + 1 %></h3>
+                <span class="article-card-link">Read Article</span>
+              </div>
+            </a>
+          <% } %>
+        <% } else { %>
+          <% articles.forEach((article, i) => { %>
+            <a href="<%= article.slug ? '/blog/' + article.slug : '#' %>" class="article-card <%= posMap[i] || '' %>" data-index="<%= i %>">
+              <div class="article-card-bg" style="background-image: url('<%= article.cover_image || '/img/property-placeholder.jpg' %>');"></div>
+              <div class="article-card-overlay">
+                <h3 class="article-card-title"><%= article.title %></h3>
+                <span class="article-card-link">Read Article</span>
+              </div>
+            </a>
+          <% }); %>
+        <% } %>
+      </div>
+      <div class="recent-articles-nav">
+        <button type="button" class="articles-nav-btn articles-nav-prev" aria-label="Previous article">‹</button>
+        <button type="button" class="articles-nav-btn articles-nav-next" aria-label="Next article">›</button>
       </div>
     </div>
   </div>
 </section>
 
-<!-- CTA Section -->
-<section class="cta-section">
-  <div class="container">
-    <div class="cta-content text-center">
-      <h2>Ready to Find Your Dream Home?</h2>
-      <p>Join thousands of satisfied customers who found their perfect property with us</p>
-      <div class="cta-buttons">
-        <a href="/properties" class="btn btn-primary btn-lg">Browse Properties</a>
-        <a href="/auth/register" class="btn btn-outline btn-lg">Join as Agent</a>
+<!-- Contact Us Section -->
+<section class="contact-section" id="contact">
+  <h2 class="contact-section-title">Contact Us</h2>
+  <div class="contact-inner">
+    <div class="contact-office-card" id="contactOfficeCard">
+      <div class="contact-office-bg" style="background-image: url('/img/London.jpg');"></div>
+      <div class="contact-office-overlay">
+        <h3 class="contact-office-heading">Our Office</h3>
+        <p class="contact-office-text">Office Addresse</p>
+        <p class="contact-office-phone">+49-030 65852933</p>
       </div>
     </div>
+    <form class="contact-form" id="homeContactForm" method="post">
+      <input type="text" name="name" placeholder="Full name*" required class="contact-input">
+      <input type="tel" name="phone" placeholder="Phone number*" required class="contact-input">
+      <input type="email" name="email" placeholder="Email Address*" required class="contact-input">
+      <select name="language" required class="contact-input contact-select">
+        <option value="">Preferred language*</option>
+        <option value="en">English</option>
+        <option value="es">Spanish</option>
+        <option value="fr">French</option>
+        <option value="de">German</option>
+        <option value="it">Italian</option>
+      </select>
+      <textarea name="message" placeholder="Message" rows="4" class="contact-input contact-textarea"></textarea>
+      <button type="submit" class="contact-submit">Send</button>
+    </form>
   </div>
 </section>
+
+</div><!-- /.container -->
 
 <script src="/js/home.js"></script>

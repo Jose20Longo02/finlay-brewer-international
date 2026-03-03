@@ -1,0 +1,47 @@
+/* Admin & Superadmin theme – matches site design (#111, #1a1a1a) */
+
+/* Black header on admin/superadmin pages */
+body:has(.admin-panel) .site-header {
+  background: #111 !important;
+  min-height: 120px;
+}
+body:has(.admin-panel) .header-inner { padding: var(--spacing-5, 1.5rem) var(--page-side-gutter, 2rem); }
+body:has(.admin-panel) .header-logo-img { height: 64px; }
+body:has(.admin-panel) .header-logo--mobile .header-logo-img { height: 52px; }
+body:has(.admin-panel) .header-nav a { color: rgba(255, 255, 255, 0.9); }
+body:has(.admin-panel) .header-nav a:hover { color: #fff; }
+body:has(.admin-panel) .header-hamburger-bar { background: #fff; }
+@media (max-width: 1024px) {
+  body:has(.admin-panel) .site-header { min-height: auto; }
+  body:has(.admin-panel) .header-nav-panel { background: #111; }
+  body:has(.admin-panel) .header-nav-panel .header-nav a { color: rgba(255, 255, 255, 0.9); }
+  body:has(.admin-panel) .header-nav-panel .header-nav a:hover { color: #fff; }
+}
+
+/* Override color variables for admin context */
+.admin-panel,
+body:has(.admin-panel) {
+  --color-primary: #111;
+  --color-primary-dark: #000;
+  --color-primary-light: #333;
+  --primary-color: #111;
+  --primary-dark: #000;
+}
+
+/* Consistent content area styling */
+.admin-content {
+  background: #fafafa;
+}
+.admin-content h1,
+.admin-content h2,
+.carousel-section h2,
+.properties-container h1,
+.requests-container h1,
+.team-container h1 {
+  color: #1a1a1a !important;
+}
+
+/* Stat cards – black background */
+.stat-card {
+  background: #111 !important;
+}

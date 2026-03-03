@@ -1,0 +1,32 @@
+<% title = typeof title !== 'undefined' ? title : 'Contact Us'; %>
+<link rel="stylesheet" href="/css/contact.css" />
+
+<div class="contact-page">
+  <h1 class="contact-page-title">Contact Us</h1>
+
+  <div class="contact-layout">
+    <div class="contact-office-card">
+      <div class="contact-office-image" style="background-image: url('/img/London.jpg');"></div>
+      <div class="contact-office-overlay">
+        <h2 class="contact-office-heading">London Office</h2>
+        <p class="contact-office-text">Lorem ipsum dolor sit amet</p>
+        <p class="contact-office-phone">+44 030 65852933</p>
+      </div>
+    </div>
+
+    <form class="contact-form" id="contactForm" method="post">
+      <input type="text" name="name" placeholder="Full name*" required class="contact-input">
+      <input type="tel" name="phone" placeholder="Phone number*" required class="contact-input">
+      <input type="email" name="email" placeholder="Email Address*" required class="contact-input">
+      <select name="language" required class="contact-input contact-select">
+        <option value="">Preferred language*</option>
+        <option value="en">English</option>
+        <option value="fr">French</option>
+      </select>
+      <textarea name="message" placeholder="Message" rows="4" class="contact-input contact-textarea"></textarea>
+      <button type="submit" class="contact-submit">Send</button>
+    </form>
+  </div>
+</div>
+
+<script src="/js/contact.js"></script>

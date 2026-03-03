@@ -1,0 +1,194 @@
+/* Contact Page */
+
+/* Black header (same as property list/detail) */
+body.header-dark .site-header {
+  display: flex;
+  align-items: center;
+  background: #111;
+  border-bottom: none;
+  min-height: 120px;
+  transition: transform 0.3s ease;
+}
+body.header-dark .site-header.header-scrolled-down {
+  transform: translateY(-100%);
+}
+body.header-dark .header-inner { width: 100%; padding: var(--spacing-5, 1.5rem) var(--page-side-gutter, 2rem); }
+body.header-dark .header-logo-img { height: 64px; }
+body.header-dark .header-logo--mobile .header-logo-img { height: 52px; }
+body.header-dark .header-nav a { color: rgba(255, 255, 255, 0.9); }
+body.header-dark .header-nav a:hover { color: #fff; }
+body.page-contact .header-nav a[href="/contact"] { font-weight: 600; }
+body.header-dark .header-hamburger-bar { background: #fff; }
+@media (max-width: 1024px) {
+  body.header-dark .site-header { min-height: auto; }
+  body.header-dark .header-inner { padding: var(--spacing-3, 1rem) var(--page-side-gutter, 2rem); }
+  body.header-dark .header-nav-panel { background: #111; }
+  body.header-dark .header-nav-panel .header-nav a { color: rgba(255, 255, 255, 0.9); }
+  body.header-dark .header-nav-panel .header-nav a:hover { color: #fff; }
+}
+
+.contact-page {
+  background: #fff;
+  min-height: 100vh;
+  padding-top: var(--spacing-16, 5rem);
+  padding-bottom: var(--spacing-12, 4rem);
+}
+
+.contact-page-title {
+  font-size: clamp(2rem, 4vw, 2.75rem);
+  font-weight: 300;
+  color: #1a1a1a;
+  text-align: center;
+  margin: 0 0 4.5rem 0;
+}
+
+.contact-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2.5rem;
+  align-items: start;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+/* Office card */
+.contact-office-card {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  aspect-ratio: 4/5;
+  max-height: 520px;
+  background: #f0f0f0;
+}
+
+.contact-office-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-size: cover;
+  background-position: center;
+}
+
+.contact-office-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 3rem 1.5rem 2rem;
+  background: linear-gradient(to top, rgba(17, 17, 17, 0.98) 0%, rgba(17, 17, 17, 0.6) 40%, transparent 100%);
+  color: #fff;
+}
+
+.contact-office-heading {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem 0;
+  color: #fff;
+}
+
+.contact-office-text,
+.contact-office-phone {
+  font-size: 0.95rem;
+  margin: 0;
+  color: #fff;
+}
+
+.contact-office-phone {
+  margin-top: 0.5rem;
+}
+
+/* Contact form */
+.contact-form {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.contact-input {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+}
+
+.contact-input:focus {
+  outline: none;
+  border-color: #333;
+}
+
+.contact-input::placeholder {
+  color: #999;
+}
+
+.contact-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  padding-right: 2.5rem;
+}
+
+.contact-textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.contact-submit {
+  width: 100%;
+  padding: 0.875rem 1.5rem;
+  background: #000;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.contact-submit:hover {
+  background: #333;
+}
+
+.contact-submit:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Toast message */
+.contact-message {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  color: white;
+  font-weight: 500;
+  z-index: 1001;
+  transform: translateX(100%);
+  transition: transform 0.3s ease;
+  max-width: 320px;
+}
+
+.contact-message.show {
+  transform: translateX(0);
+}
+
+.contact-message.success { background-color: #16a34a; }
+.contact-message.error { background-color: #dc2626; }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .contact-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .contact-office-card {
+    max-height: 400px;
+    aspect-ratio: 16/10;
+  }
+}

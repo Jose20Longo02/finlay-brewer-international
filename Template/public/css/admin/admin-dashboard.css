@@ -31,10 +31,9 @@ html, body {
   padding: 2rem;
   display: flex;
   flex-direction: column;
-  align-items: center;    /* center horizontally */
-  justify-content: center; /* center vertically */
+  align-items: center;
+  justify-content: center;
   overflow-y: auto;
-  background: #fff;
 }
 
 /* 4. Header */
@@ -76,9 +75,10 @@ html, body {
   margin-bottom: 7rem;     /* spacing below cards */
 }
 .card {
-  background: #fafafa;
-  border-radius: 0.75rem;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  background: #fff;
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
   padding: 2rem 1.5rem;
   text-decoration: none;
   color: inherit;
@@ -115,17 +115,18 @@ html, body {
   margin-top: 2rem;       /* spacing above logout */
 }
 .btn-logout {
-  background: var(--color-secondary);
+  background: #111;
   color: #fff;
   border: none;
   padding: 0.75rem 2rem;
-  border-radius: 2rem;
+  border-radius: 12px;
   cursor: pointer;
   font-size: 1rem;
+  font-weight: 600;
   transition: background .2s, transform .2s;
 }
 .btn-logout:hover {
-  background: var(--color-tertiary);
+  background: #333;
   transform: translateY(-2px);
 }
 

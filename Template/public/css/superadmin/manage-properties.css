@@ -47,7 +47,7 @@ html, body {
 .properties-filters select,
 .properties-filters input { padding:.6rem .75rem; border:1px solid rgba(0,0,0,.16); border-radius:12px; font-size:.95rem; transition:border-color .15s, box-shadow .15s; }
 .properties-filters select:focus,
-.properties-filters input:focus { outline:none; border-color: var(--color-primary); box-shadow:0 0 0 4px rgba(0,0,0,.06); }
+.properties-filters input:focus { outline:none; border-color: #111; box-shadow:0 0 0 4px rgba(0,0,0,.06); }
 
 /* 6) Grid & cards */
 .properties-grid {
@@ -191,7 +191,7 @@ html, body {
 }
 .assign-agent select:hover,
 .assign-agent select:focus {
-  border-color: var(--color-primary);
+  border-color: #111;
   outline: none;
 }
 

@@ -3,6 +3,58 @@ const { query } = require('../config/db');
 const Lead = require('../models/Lead');
 const sendMail = require('../config/mailer');
 
+// Render for-sellers page
+exports.forSellersPage = (req, res) => {
+  res.render('for-sellers', {
+    title: 'For Sellers',
+    bodyClass: 'page-for-sellers header-dark'
+  });
+};
+
+// Render about page
+exports.aboutPage = (req, res) => {
+  res.render('about', {
+    title: 'About Us',
+    bodyClass: 'page-about header-dark'
+  });
+};
+
+// Render contact page
+exports.contactPage = (req, res) => {
+  res.render('contact', {
+    title: 'Contact Us',
+    bodyClass: 'page-contact header-dark'
+  });
+};
+
+// Public API: create a lead from home page contact form
+exports.createFromContact = async (req, res, next) => {
+  try {
+    const { name, email, phone, message, language, source } = req.body;
+    if (!name || !email) {
+      return res.status(400).json({ success: false, message: 'Name and email are required' });
+    }
+    const fullMessage = [
+      message || '',
+      language ? `Preferred language: ${language}` : ''
+    ].filter(Boolean).join('\n\n');
+
+    await Lead.create({
+      property_id: null,
+      agent_id: null,
+      name: name.trim(),
+      email: email.trim(),
+      phone: (phone || '').trim() || null,
+      message: fullMessage || null,
+      source: source === 'for_sellers' ? 'for_sellers' : 'contact_form'
+    });
+
+    res.json({ success: true, message: 'Thank you for your message. We will be in touch soon.' });
+  } catch (err) {
+    next(err);
+  }
+};
+
 // Public API: create a lead from property detail form
 exports.createFromProperty = async (req, res, next) => {
   try {

@@ -40,11 +40,11 @@ publicRouter.get('/:id/edit',     allowStaff, editPropertyForm);
 publicRouter.post('/:id',         allowStaff, uploadPropertyMedia, updateProperty);
 publicRouter.post('/:id/delete',  ensureAdmin, deleteProperty);
 
+// API (must be before /:slug or "api" is captured as slug)
+publicRouter.get('/api/featured', getFeaturedProperties);
+
 // Keep slug route last
 publicRouter.get('/:slug',        showProperty);
-
-// API endpoints
-publicRouter.get('/api/featured', getFeaturedProperties);
 
 // ———————————————————————————————————————————————
 // Super-Admin Router (mount at `/admin/properties`)

@@ -50,7 +50,7 @@ exports.dashboard = async (req, res, next) => {
     if (totalProps > 0) {
       // 2) Top 5 properties by views
       const topPropsPromise = query(`
-        SELECT p.id, p.title, ps.views
+        SELECT p.id, p.title, p.slug, p.photos, ps.views
           FROM properties p
           JOIN property_stats ps ON p.id = ps.property_id
          ORDER BY ps.views DESC

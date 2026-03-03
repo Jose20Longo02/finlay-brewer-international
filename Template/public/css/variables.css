@@ -1,4 +1,10 @@
 :root {
+  /* Hero (from technical guide) */
+  --hero-height: 96vh;
+  --hero-height-tablet: 70vh;
+  --transition-ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --page-side-gutter: clamp(24px, 5vw, 100px);
+
   /* Color Palette */
   --primary-color: #2563eb;
   --primary-dark: #1d4ed8;
@@ -31,30 +37,22 @@
   --gray-800: #1e293b;
   --gray-900: #0f172a;
   
-  /* Country-Specific Colors for Property Containers */
-  --usa-color: #dc2626;
-  --usa-light: #fecaca;
-  --usa-bg: #fef2f2;
-  
-  --spain-color: #f59e0b;
-  --spain-light: #fde68a;
+  /* Country-Specific Colors (flag-based, for countries in list: Spain, France, Monaco, Montenegro) */
+  --spain-color: #f1bf00;
+  --spain-light: #fef9e7;
   --spain-bg: #fffbeb;
   
-  --germany-color: #000000;
-  --germany-light: #d1d5db;
-  --germany-bg: #f3f4f6;
+  --france-color: #002395;
+  --france-light: #e6ecfa;
+  --france-bg: #f0f4ff;
   
-  --france-color: #1d4ed8;
-  --france-light: #bfdbfe;
-  --france-bg: #eff6ff;
+  --monaco-color: #ce2b37;
+  --monaco-light: #fde8e9;
+  --monaco-bg: #fef2f3;
   
-  --italy-color: #059669;
-  --italy-light: #a7f3d0;
-  --italy-bg: #ecfdf5;
-  
-  --uk-color: #7c3aed;
-  --uk-light: #c4b5fd;
-  --uk-bg: #f5f3ff;
+  --montenegro-color: #006747;
+  --montenegro-light: #e0f2eb;
+  --montenegro-bg: #f0faf5;
   
   /* Typography */
   --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;

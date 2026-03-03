@@ -61,7 +61,7 @@ html, body {
   top: 0.75rem;
   right: 0.75rem;
 }
-.role-select { padding:.6rem .8rem; font-size:.9rem; font-family:inherit; color: var(--color-primary); background-color:#fff; border:1px solid var(--color-primary); border-radius:10px; appearance:none; cursor:pointer; background-image: linear-gradient(45deg, transparent 50%, var(--color-primary) 50%), linear-gradient(135deg, var(--color-primary) 50%, transparent 50%); background-position: calc(100% - 1rem) calc(50% - 0.1em), calc(100% - 0.6rem) calc(50% - 0.1em); background-size:.4em .4em; background-repeat:no-repeat; padding-right:2rem; }
+.role-select { padding:.6rem .8rem; font-size:.9rem; font-family:inherit; color: #111; background-color:#fff; border:1px solid #111; border-radius:10px; appearance:none; cursor:pointer; background-image: linear-gradient(45deg, transparent 50%, #111 50%), linear-gradient(135deg, #111 50%, transparent 50%); background-position: calc(100% - 1rem) calc(50% - 0.1em), calc(100% - 0.6rem) calc(50% - 0.1em); background-size:.4em .4em; background-repeat:no-repeat; padding-right:2rem; }
 
 /* 7. Thumb & other card styles */
 .request-card .thumb {
@@ -92,11 +92,11 @@ html, body {
 .actions .btn { flex:1; padding:.7rem .9rem; border:none; border-radius:12px; font-size:var(--font-size-base); text-decoration:none; text-align:center; cursor:pointer; transition: transform .16s ease, box-shadow .16s ease, opacity .16s ease; }
 .actions .btn:hover { transform: translateY(-1px); opacity:.95; box-shadow: 0 8px 20px rgba(0,0,0,.08); }
 .btn-primary {
-  background: var(--color-primary);
+  background: #111;
   color: #fff;
 }
 .btn-primary:hover {
-  background: var(--color-tertiary);
+  background: #333;
 }
 .btn-danger {
   background: #dc3545;

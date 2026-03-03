@@ -15,6 +15,8 @@ exports.loginPage = (req, res) => {
 
   res.render('auth/login', {
     title: 'Sign In',
+    bodyClass: 'page-login header-dark',
+    loadLoginCss: true,
     awaitingApproval,
     role,
     error: null
@@ -34,6 +36,8 @@ exports.login = async (req, res, next) => {
     if (rows.length === 0) {
       return res.render('auth/login', {
         title: 'Sign In',
+        bodyClass: 'page-login header-dark',
+        loadLoginCss: true,
         awaitingApproval: false,
         role: null,
         error: "This account doesn't exist"
@@ -46,6 +50,8 @@ exports.login = async (req, res, next) => {
     if (!match) {
       return res.render('auth/login', {
         title: 'Sign In',
+        bodyClass: 'page-login header-dark',
+        loadLoginCss: true,
         awaitingApproval: false,
         role: null,
         error: 'The password is incorrect'
@@ -56,6 +62,8 @@ exports.login = async (req, res, next) => {
     if (!user.approved) {
       return res.render('auth/login', {
         title: 'Sign In',
+        bodyClass: 'page-login header-dark',
+        loadLoginCss: true,
         awaitingApproval: false,
         role: null,
         error: 'This account is still waiting for approval'
@@ -88,6 +96,10 @@ exports.registerPage = async (req, res, next) => {
     );
     const pendingCount = parseInt(rows[0].count, 10);
     res.render('auth/register', {
+      title: 'Register',
+      bodyClass: 'page-register header-dark',
+      headPartial: 'partials/auth/register-head',
+      loadRegisterCss: true,
       areaRoles,
       pendingCount,
       error: null
@@ -119,6 +131,10 @@ exports.register = async (req, res, next) => {
     // Validate inputs
     if (!name || !email || !password || !passwordConfirm || !area || !position) {
       return res.render('auth/register', {
+        title: 'Register',
+        bodyClass: 'page-register header-dark',
+        headPartial: 'partials/auth/register-head',
+        loadRegisterCss: true,
         areaRoles,
         pendingCount: 0,
         error: 'All fields are required'
@@ -126,6 +142,10 @@ exports.register = async (req, res, next) => {
     }
     if (password !== passwordConfirm) {
       return res.render('auth/register', {
+        title: 'Register',
+        bodyClass: 'page-register header-dark',
+        headPartial: 'partials/auth/register-head',
+        loadRegisterCss: true,
         areaRoles,
         pendingCount: 0,
         error: 'Passwords do not match'
@@ -136,6 +156,10 @@ exports.register = async (req, res, next) => {
     const exists = await query('SELECT id FROM users WHERE email = $1', [email]);
     if (exists.rows.length) {
       return res.render('auth/register', {
+        title: 'Register',
+        bodyClass: 'page-register header-dark',
+        headPartial: 'partials/auth/register-head',
+        loadRegisterCss: true,
         areaRoles,
         pendingCount: 0,
         error: 'Email already in use'

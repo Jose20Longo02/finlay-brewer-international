@@ -1,138 +1,251 @@
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-html, body {
-  height: 100%;
-  font-family: var(--font-sans);
-  background: #f5f7fa;
-  color: var(--color-secondary);
-}
-/* 2. Panel & layout containers */
-.admin-panel {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;       /* full viewport height */
-}
-.admin-body {
-  display: flex;
-  flex: 1;             /* take remaining height */
-  min-height: 0;       /* allow children to scroll */
+/* Super Admin Edit Profile – modern, clean design */
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* Match dashboard content area */
+.admin-content.profile-content {
+  background: linear-gradient(180deg, #f8f9fb 0%, #f0f2f5 100%);
 }
 
-
-/* 4. Main content: center the form */
-.admin-content {
-  flex: 1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 2rem;
-  overflow-y: auto;
+.profile-content {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: var(--spacing-6) var(--spacing-6) var(--spacing-12);
 }
 
-/* 5. Form container */
-.form-container {
-  max-width: 500px;
-  margin: 0;               /* centered by flex parent */
-  background: #fff;
-  padding: 2rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+/* Header */
+.profile-header {
+  margin-bottom: var(--spacing-6);
 }
 
-/* 6. Headings */
-.form-container h1 {
-  margin-bottom: 1.5rem;
-  color: var(--color-primary);
+.profile-header h1 {
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  font-weight: 700;
+  color: #1a1a1a;
+  letter-spacing: -0.02em;
+  margin-bottom: 0.25rem;
 }
 
-/* 7. Alerts */
+.profile-subtitle {
+  font-size: 0.9375rem;
+  color: #5c5c5c;
+}
+
+/* Alerts */
 .alert {
-  padding: 0.75rem 1rem;
-  border-radius: 4px;
-  margin-bottom: 1rem;
+  padding: var(--spacing-4);
+  border-radius: 12px;
+  margin-bottom: var(--spacing-5);
+  font-size: 0.9375rem;
 }
+
 .alert-error {
-  background: #ffe5e5;
-  color: #b00020;
-  border: 1px solid #f5c2c7;
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
 }
+
 .alert-success {
-  background: #e6ffed;
-  color: #027a48;
-  border: 1px solid #c6f6d5;
-}
-.admin-sidebar .badge {
-  background: var(--color-primary);
-  color: #fff;
-  border-radius: 999px;
-  padding: 0.2rem 0.5rem;
-  font-size: 0.75rem;
-  margin-left: 0.5rem;
-  vertical-align: middle;
+  background: #f0fdf4;
+  color: #166534;
+  border: 1px solid #bbf7d0;
 }
 
-/* 8. Form groups */
-.form-group {
-  margin-bottom: 1rem;
-  display: flex;
-  flex-direction: column;
+/* Form sections */
+.form-section {
+  background: #fff;
+  border-radius: var(--card-radius);
+  padding: var(--spacing-6);
+  margin-bottom: var(--spacing-5);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  border: 1px solid rgba(0,0,0,0.06);
 }
-.form-group label {
-  margin-bottom: 0.5rem;
-  font-weight: 600;
-}
-.form-group input,
-.form-group textarea {
-  padding: 0.5rem;
-  border: 1px solid var(--color-secondary);
-  border-radius: 4px;
+
+.form-section-title {
   font-size: 1rem;
-  font-family: inherit;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: var(--spacing-4);
 }
 
-/* 9. Thumbnail and preview */
-.thumb-wrapper {
-  margin-bottom: 0.5rem;
+.form-section-hint {
+  font-size: 0.875rem;
+  color: #666;
+  margin-bottom: var(--spacing-4);
 }
-.thumb {
+
+/* Form rows */
+.form-row { margin-bottom: 0; }
+.form-row + .form-row { margin-top: var(--spacing-4); }
+.form-row--cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-4);
+}
+
+.form-row--profile {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-6);
+}
+
+/* Profile picture upload */
+.profile-picture-upload {
+  flex-shrink: 0;
+}
+
+.profile-picture-label {
   display: block;
-  max-width: 120px;
-  max-height: 120px;
+  cursor: pointer;
+}
+
+.profile-picture-preview {
+  display: block;
+  width: 100px;
+  height: 100px;
   border-radius: 50%;
+  overflow: hidden;
+  background: #f0f2f5;
+  border: 2px dashed rgba(0,0,0,0.15);
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.profile-picture-label:hover .profile-picture-preview {
+  border-color: rgba(0,0,0,0.3);
+  background: #e8eaed;
+}
+
+.profile-picture-preview img {
+  display: block;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
 }
 
-/* 10. Password‐error text */
-.error-text {
-  margin-top: 0.25rem;
+.profile-picture-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: #888;
+}
+
+.placeholder-icon {
+  font-size: 1.75rem;
+  margin-bottom: 0.25rem;
+}
+
+.placeholder-text {
+  font-size: 0.75rem;
+}
+
+.profile-picture-input {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Form groups */
+.form-group { margin-bottom: 0; }
+.form-group--inline { flex: 1; min-width: 0; }
+
+.form-group label {
+  display: block;
   font-size: 0.875rem;
-  color: #b00020;
-  min-height: 1em; /* reserve space */
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 0.35rem;
 }
 
-/* 11. Button */
-.btn-primary {
-  background: var(--color-primary);
-  color: #fff;
-  padding: 0.75rem 1.5rem;
-  border: none;
-  border-radius: 4px;
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 0.625rem 0.875rem;
+  font-size: 1rem;
+  font-family: inherit;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  background: #fff;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: #111;
+  box-shadow: 0 0 0 3px rgba(17, 17, 17, 0.08);
+}
+
+.form-group select {
   cursor: pointer;
-}
-.btn-primary:hover {
-  background: var(--color-tertiary);
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23666' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.875rem center;
+  padding-right: 2rem;
 }
 
-/* 12. Responsive adjustments */
-@media (max-width: 768px) {
-  .admin-body {
-    flex-direction: column;
+/* Error text */
+.error-text {
+  font-size: 0.8125rem;
+  color: #b91c1c;
+  margin-top: 0.35rem;
+  min-height: 1.25em;
+}
+
+/* Form actions */
+.form-actions {
+  margin-top: var(--spacing-2);
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  font-family: inherit;
+  color: #fff;
+  background: #111;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.btn-primary:hover {
+  background: #333;
+}
+
+.btn-primary:active {
+  transform: scale(0.98);
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .profile-content {
+    padding: var(--spacing-4) var(--spacing-4) var(--spacing-8);
   }
 
-  .admin-content {
-    padding: 1rem;
+  .form-row--cols {
+    grid-template-columns: 1fr;
+  }
+
+  .form-row--profile {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .form-group--inline {
+    width: 100%;
+  }
+
+  .form-section {
+    padding: var(--spacing-4);
   }
 }

@@ -1,0 +1,141 @@
+<% title = typeof title !== 'undefined' ? title : 'About Us'; %>
+<link rel="stylesheet" href="/css/about.css" />
+
+<div class="about-page">
+  <!-- Hero -->
+  <section class="about-hero">
+    <div class="about-hero-bg" style="background-image: url('/img/Costa%20Del%20Sol.jpg');"></div>
+    <div class="about-hero-overlay"></div>
+    <div class="about-hero-content">
+      <h1 class="about-hero-title">About Finlay Brewer</h1>
+      <p class="about-hero-subtitle">Lorem ipsum dolor sit amet consectetur. Risus nec sem porta facilisi ut sit aliquam. Libero mauris tristique.</p>
+      <div class="about-hero-ctas">
+        <a href="#meet-the-team" class="about-hero-cta about-hero-cta--filled">Meet the team</a>
+        <a href="#about-contact" class="about-hero-cta about-hero-cta--outline">Contact us</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Our results (same as For Sellers) -->
+  <section class="fs-results">
+    <h2 class="fs-section-title">Our results speak from themselves</h2>
+    <div class="fs-results-carousel-wrap">
+      <div class="fs-results-track">
+        <div class="fs-result-card" data-index="0">
+          <div class="fs-result-image" style="background-image: url('/img/France.jpg');"></div>
+          <div class="fs-result-overlay">
+            <span class="fs-result-label">Recently Sold</span>
+            <span class="fs-result-location">Reinickendorf, Berlin</span>
+          </div>
+        </div>
+        <div class="fs-result-card active" data-index="1">
+          <div class="fs-result-image" style="background-image: url('/img/Monaco.jpg');"></div>
+          <div class="fs-result-overlay">
+            <span class="fs-result-label">Recently Sold</span>
+            <span class="fs-result-location">Monte Carlo, Monaco</span>
+          </div>
+        </div>
+        <div class="fs-result-card" data-index="2">
+          <div class="fs-result-image" style="background-image: url('/img/Montenegro.jpg');"></div>
+          <div class="fs-result-overlay">
+            <span class="fs-result-label">Recently Sold</span>
+            <span class="fs-result-location">Budva, Montenegro</span>
+          </div>
+        </div>
+        <div class="fs-result-card" data-index="3">
+          <div class="fs-result-image" style="background-image: url('/img/France.jpg');"></div>
+          <div class="fs-result-overlay">
+            <span class="fs-result-label">Recently Sold</span>
+            <span class="fs-result-location">Reinickendorf, Berlin</span>
+          </div>
+        </div>
+        <div class="fs-result-card" data-index="4">
+          <div class="fs-result-image" style="background-image: url('/img/Monaco.jpg');"></div>
+          <div class="fs-result-overlay">
+            <span class="fs-result-label">Recently Sold</span>
+            <span class="fs-result-location">Monte Carlo, Monaco</span>
+          </div>
+        </div>
+        <div class="fs-result-card" data-index="5">
+          <div class="fs-result-image" style="background-image: url('/img/Montenegro.jpg');"></div>
+          <div class="fs-result-overlay">
+            <span class="fs-result-label">Recently Sold</span>
+            <span class="fs-result-location">Budva, Montenegro</span>
+          </div>
+        </div>
+        <div class="fs-result-card" data-index="6">
+          <div class="fs-result-image" style="background-image: url('/img/France.jpg');"></div>
+          <div class="fs-result-overlay">
+            <span class="fs-result-label">Recently Sold</span>
+            <span class="fs-result-location">Reinickendorf, Berlin</span>
+          </div>
+        </div>
+        <div class="fs-result-card" data-index="7">
+          <div class="fs-result-image" style="background-image: url('/img/Monaco.jpg');"></div>
+          <div class="fs-result-overlay">
+            <span class="fs-result-label">Recently Sold</span>
+            <span class="fs-result-location">Monte Carlo, Monaco</span>
+          </div>
+        </div>
+        <div class="fs-result-card" data-index="8">
+          <div class="fs-result-image" style="background-image: url('/img/Montenegro.jpg');"></div>
+          <div class="fs-result-overlay">
+            <span class="fs-result-label">Recently Sold</span>
+            <span class="fs-result-location">Budva, Montenegro</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Meet the team -->
+  <section class="about-team" id="meet-the-team">
+    <h2 class="fs-section-title">Meet the team</h2>
+    <div class="about-team-grid">
+      <div class="about-team-card">
+        <div class="about-team-photo" style="background-image: url('/img/Monaco.jpg');"></div>
+        <div class="about-team-info">
+          <h3 class="about-team-name">Name Name</h3>
+          <p class="about-team-position">Position</p>
+        </div>
+      </div>
+      <div class="about-team-card">
+        <div class="about-team-photo" style="background-image: url('/img/France.jpg');"></div>
+        <div class="about-team-info">
+          <h3 class="about-team-name">Name Name</h3>
+          <p class="about-team-position">Position</p>
+        </div>
+      </div>
+      <div class="about-team-card">
+        <div class="about-team-photo" style="background-image: url('/img/Montenegro.jpg');"></div>
+        <div class="about-team-info">
+          <h3 class="about-team-name">Name Name</h3>
+          <p class="about-team-position">Position</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Contact Us -->
+  <section class="fs-contact" id="about-contact">
+    <h2 class="fs-section-title">Contact Us!</h2>
+    <p class="fs-contact-subtitle">Get in touch and we'll respond within 24 hours.</p>
+    <div class="fs-contact-form-wrap">
+      <form class="fs-contact-form" id="fsContactForm" method="post">
+        <div class="fs-form-row">
+          <input type="text" name="firstName" placeholder="First Name" required class="fs-input">
+          <input type="text" name="lastName" placeholder="Last Name" required class="fs-input">
+        </div>
+        <div class="fs-form-row">
+          <input type="text" name="countryCode" placeholder="Country code" class="fs-input">
+          <input type="tel" name="phone" placeholder="Phone Number" required class="fs-input">
+        </div>
+        <input type="email" name="email" placeholder="Email Address" required class="fs-input fs-input-full">
+        <textarea name="message" placeholder="Message" rows="4" required class="fs-input fs-textarea"></textarea>
+        <button type="submit" class="fs-submit">Submit</button>
+      </form>
+    </div>
+  </section>
+</div>
+
+<script src="/js/for-sellers.js"></script>

@@ -88,11 +88,11 @@
             </div>
             <div class="back">
               <div class="stat">
-                <span class="stat-num"><%= p.views_count || 0 %></span>
+                <span class="stat-num"><%= p.views_count != null ? p.views_count : 0 %></span>
                 <span class="stat-label">Views</span>
               </div>
               <div class="stat">
-                <span class="stat-num"><%= p.inquiry_count || 0 %></span>
+                <span class="stat-num"><%= p.inquiry_count != null ? p.inquiry_count : 0 %></span>
                 <span class="stat-label">Contacts</span>
               </div>
             </div>

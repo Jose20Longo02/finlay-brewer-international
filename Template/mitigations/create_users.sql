@@ -4,7 +4,7 @@ CREATE TABLE users (
   name VARCHAR(255)       NOT NULL,
   email VARCHAR(255)      NOT NULL UNIQUE,
   password VARCHAR(255)   NOT NULL,
-  role VARCHAR(20)        NOT NULL CHECK(role IN ('Agent','SuperAdmin')),
+  role VARCHAR(20)        NOT NULL CHECK(role IN ('Agent','Admin','SuperAdmin')),
   profile_picture VARCHAR(255),
   approved BOOLEAN        DEFAULT FALSE,
   created_at TIMESTAMP    DEFAULT NOW(),

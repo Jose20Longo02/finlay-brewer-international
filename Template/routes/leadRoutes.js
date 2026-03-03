@@ -4,6 +4,15 @@ const router = express.Router();
 const leadController = require('../controllers/leadController');
 const { ensureAdmin, ensureSuperAdmin } = require('../middleware/authorize');
 
+// For Sellers page
+router.get('/for-sellers', leadController.forSellersPage);
+
+// Contact page
+router.get('/contact', leadController.contactPage);
+
+// Public API: home page contact form
+router.post('/api/contact', leadController.createFromContact);
+
 // Public API endpoint from property detail page
 router.post('/api/leads', leadController.createFromProperty);
 

@@ -831,6 +831,44 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('✅ Locations data validated successfully');
   }
   
+  // Filters modal (search results page: sticky Filters button opens popup)
+  const filtersStickyBtn = document.getElementById('filtersStickyBtn');
+  const filtersModal = document.getElementById('filtersModal');
+  const filtersModalBackdrop = document.getElementById('filtersModalBackdrop');
+  const filtersModalClose = document.getElementById('filtersModalClose');
+
+  function openFiltersModal() {
+    if (filtersModal) filtersModal.classList.add('is-open');
+    if (filtersModalBackdrop) filtersModalBackdrop.classList.add('is-open');
+    if (filtersModal) {
+      filtersModal.setAttribute('aria-hidden', 'false');
+      filtersModalClose && filtersModalClose.focus();
+    }
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeFiltersModal() {
+    if (filtersModal) filtersModal.classList.remove('is-open');
+    if (filtersModalBackdrop) filtersModalBackdrop.classList.remove('is-open');
+    if (filtersModal) filtersModal.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+  }
+
+  if (filtersStickyBtn && filtersModal) {
+    filtersStickyBtn.addEventListener('click', openFiltersModal);
+  }
+  if (filtersModalBackdrop) {
+    filtersModalBackdrop.addEventListener('click', closeFiltersModal);
+  }
+  if (filtersModalClose) {
+    filtersModalClose.addEventListener('click', closeFiltersModal);
+  }
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && filtersModal && filtersModal.classList.contains('is-open')) {
+      closeFiltersModal();
+    }
+  });
+
   // Initialize cities dropdown
   console.log('🔍 Initializing cities dropdown...');
   updateCities();

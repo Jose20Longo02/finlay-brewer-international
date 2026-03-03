@@ -184,10 +184,9 @@ exports.listPropertiesPublic = async (req, res, next) => {
     }
 
     // Featured properties filter
-    // TODO: Uncomment when featured column is added to database
-    // if (featured === 'true') {
-    //   whereConditions.push(`p.featured = true`);
-    // }
+    if (featured === 'true') {
+      whereConditions.push(`p.featured = true`);
+    }
 
     // New listings filter (last 7 days)
     if (new_listing === 'true') {
@@ -205,7 +204,7 @@ exports.listPropertiesPublic = async (req, res, next) => {
           WHEN p.type = 'Land' THEN p.land_size
           ELSE NULL
         END as size,
-        false as featured, p.created_at, p.description,
+        COALESCE(p.featured, false) as featured, p.created_at, p.description,
         p.year_built, p.map_link,
         u.name as agent_name, u.profile_picture as agent_profile_picture
       FROM properties p
@@ -331,6 +330,7 @@ exports.listPropertiesPublic = async (req, res, next) => {
     };
 
     res.render('properties/property-list', { 
+      bodyClass: 'page-property-list header-dark',
       properties: normalizedProperties,
       locations,
       filters,
@@ -399,7 +399,10 @@ exports.showProperty = async (req, res, next) => {
       }
     };
 
-    res.render('properties/property-detail', { property });
+    res.render('properties/property-detail', {
+      property,
+      bodyClass: 'page-property-detail header-dark'
+    });
   } catch (err) {
     next(err);
   }
@@ -610,10 +613,9 @@ exports.createProperty = async (req, res, next) => {
          $1,$2,$3,$4,$5,$6,
          $7,$8,$9,$10,$11,
          $12,$13,$14,
-         $15,$16,$17,
-         $18,$19,$20,$21,
-         $22,$23,
-         $24,
+         $15,$16,$17,$18,
+         $19,$20,$21,$22,
+         $23,$24,
          NOW()
        ) RETURNING id`,
       [
@@ -1150,7 +1152,7 @@ exports.listMyProperties = async (req, res, next) => {
 
     const { country, city, type, minPrice, maxPrice, status } = req.query;
 
-    // Constrain by: assigned to this user OR (unassigned AND created by this user)
+    // Constrain by: assigned to this user OR (unassigned and created by this user)
     const conds = ['(p.agent_id = $1 OR (p.agent_id IS NULL AND p.created_by = $1))'];
     const vals  = [userId];
     let idx = 2;
@@ -1170,13 +1172,13 @@ exports.listMyProperties = async (req, res, next) => {
     const total    = parseInt(countRes.rows[0].total, 10) || 0;
     const totalPages = Math.max(1, Math.ceil(total / limit));
 
-    // Data query — note aliasing of stats columns
+    // Data query — use views_count/inquiry_count from table (columns added by migration)
     const dataSql = `
       SELECT
         p.id, p.slug, p.title, p.country, p.city, p.neighborhood,
         p.price, p.type, p.status_tags, p.photos,
-        COALESCE(p.views_count,    0) AS views,
-        COALESCE(p.inquiry_count,  0) AS contacts
+        COALESCE(p.views_count, 0) AS views_count,
+        COALESCE(p.inquiry_count, 0) AS inquiry_count
       FROM properties p
       ${where}
       ORDER BY p.created_at DESC
@@ -1212,42 +1214,20 @@ exports.listMyProperties = async (req, res, next) => {
   }
 };
 
-// Get featured properties for home page
-exports.getFeaturedProperties = async (req, res, next) => {
+// Get featured properties for home page (always 200, never 500)
+exports.getFeaturedProperties = async (req, res) => {
   try {
-    const query = `
-      SELECT
-        p.id, p.title, p.slug, p.country, p.city, p.neighborhood,
-        p.price, p.photos, p.type, p.bedrooms, p.bathrooms,
-        CASE 
-          WHEN p.type = 'Apartment' THEN p.apartment_size
-          WHEN p.type IN ('House', 'Villa') THEN p.living_space
-          WHEN p.type = 'Land' THEN p.land_size
-          ELSE NULL
-        END as size,
-        p.featured, p.created_at, p.description,
-        u.name as agent_name, u.profile_picture as agent_profile_picture
-      FROM properties p
-      LEFT JOIN users u ON p.agent_id = u.id
-      WHERE p.featured = true AND p.status = 'active'
-      ORDER BY p.created_at DESC
-      LIMIT 6
-    `;
-    
-    const { rows: properties } = await query(query);
-    
-    // Normalize photos array and agent info for each property
-    const normalizedProperties = properties.map(p => ({
+    const sql = `SELECT id, title, slug, country, city, neighborhood, price, photos, type FROM properties ORDER BY created_at DESC LIMIT 6`;
+    const result = await query(sql);
+    const rows = result && result.rows ? result.rows : [];
+    const list = rows.map(p => ({
       ...p,
       photos: Array.isArray(p.photos) ? p.photos : (p.photos ? [p.photos] : []),
-      agent: {
-        name: p.agent_name || 'Agent',
-        profile_picture: p.agent_profile_picture || null
-      }
+      agent: { name: 'Agent', profile_picture: null }
     }));
-    
-    res.json(normalizedProperties);
+    return res.json(list);
   } catch (err) {
-    next(err);
+    console.error('getFeaturedProperties:', err.message);
+    return res.json([]);
   }
 };

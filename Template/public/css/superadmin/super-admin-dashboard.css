@@ -1,157 +1,269 @@
+/* Super Admin Dashboard – modern, clean design */
 
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
-/* 1. Base reset */
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
 html, body {
-  height: 100%;
   font-family: var(--font-sans);
-  background: #f5f7fa;
-  color: var(--color-secondary);
+  background: #f0f2f5;
+  color: #333;
 }
 
-/* 2. Panel container */
-.admin-panel {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  overflow: hidden;
-}
-
-/* 5. Main dashboard area */
 .admin-content {
   flex: 1;
-  padding: calc(var(--spacing) * 2);
   overflow-y: auto;
-  background: #fff;
-}
-.admin-content h1 {
-  font-size: 2rem;
-  color: var(--color-primary);
-  margin-bottom: 0.5rem;
-}
-.admin-content .subtitle {
-  font-size: 1rem;
-  margin-bottom: calc(var(--spacing) * 2);
-  color: var(--color-secondary);
+  background: linear-gradient(180deg, #f8f9fb 0%, #f0f2f5 100%);
 }
 
-/* 6. Stats grid */
+.dashboard-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--spacing-6) var(--spacing-6) var(--spacing-12);
+}
+
+/* Header */
+.dashboard-header {
+  margin-bottom: var(--spacing-8);
+}
+
+.dashboard-header h1 {
+  font-size: clamp(1.75rem, 4vw, 2.25rem);
+  font-weight: 700;
+  color: #1a1a1a;
+  letter-spacing: -0.02em;
+  margin-bottom: 0.35rem;
+}
+
+.dashboard-subtitle {
+  font-size: 1rem;
+  color: #5c5c5c;
+}
+
+/* Stats grid */
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: var(--spacing);
-  margin-bottom: calc(var(--spacing) * 2);
-}
-.stat-card {
-  position: relative;
-  background: var(--color-primary);
-  color: #fff;
-  border-radius: var(--card-radius);
-  padding: calc(var(--spacing) * 1.5);
-  box-shadow: var(--card-shadow);
-  overflow: hidden;
-  transition: transform 0.3s, box-shadow 0.3s;
-  text-align: center;
-}
-.stat-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 6px 20px rgba(0,0,0,0.12);
-}
-.stat-card h2 {
-  font-size: 1.1rem;
-  margin-bottom: 0.5rem;
-  color: #fff; /* ensure visible on primary background */
-}
-.stat-card p {
-  font-size: 2.25rem;
-  font-weight: bold;
-  margin: 0;
-  color: #fff; /* ensure number stays visible */
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--spacing-4);
+  margin-bottom: var(--spacing-8);
 }
 
-/* 7. Carousel sections */
-.carousel-section {
-  margin-bottom: calc(var(--spacing) * 2);
+.stat-card {
+  background: #fff !important;
+  border-radius: var(--card-radius);
+  padding: var(--spacing-5);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  border: 1px solid rgba(0,0,0,0.06);
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-4);
+  transition: transform 0.2s, box-shadow 0.2s;
 }
-.carousel-section h2 {
-  font-size: 1.25rem;
-  color: var(--color-primary);
-  margin-bottom: var(--spacing);
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.08);
 }
-.carousel-section .empty {
-  color: var(--color-secondary);
+
+.stat-icon {
+  font-size: 1.5rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.stat-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.stat-label {
+  font-size: 0.8125rem;
+  color: #666;
+  font-weight: 500;
+}
+
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+/* Section */
+.dashboard-section {
+  background: #fff;
+  border-radius: var(--card-radius);
+  padding: var(--spacing-6);
+  margin-bottom: var(--spacing-6);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  border: 1px solid rgba(0,0,0,0.06);
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  margin-bottom: var(--spacing-4);
+}
+
+.section-header h2 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  text-transform: capitalize;
+}
+
+.section-badge {
+  font-size: 0.75rem;
+  color: #888;
+  background: #f0f2f5;
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+}
+
+.section-empty {
+  color: #888;
   font-style: italic;
   text-align: center;
+  padding: var(--spacing-6);
 }
 
-/* 8. Carousel wrapper */
-.carousel {
+/* Card carousel */
+.card-carousel {
   display: flex;
-  gap: var(--spacing);
+  gap: var(--spacing-4);
   overflow-x: auto;
   scroll-snap-type: x mandatory;
-  padding-bottom: var(--spacing);
+  padding-bottom: var(--spacing-2);
 }
-.carousel::-webkit-scrollbar {
+
+.card-carousel::-webkit-scrollbar {
   height: 6px;
 }
-.carousel::-webkit-scrollbar-thumb {
-  background: var(--color-tertiary);
+
+.card-carousel::-webkit-scrollbar-track {
+  background: #f0f2f5;
   border-radius: 3px;
 }
 
-/* 9. Cards inside carousel */
-.carousel .card {
-  flex: 0 0 240px;
-  background: #fff;
-  border-radius: var(--card-radius);
-  box-shadow: var(--card-shadow);
-  scroll-snap-align: start;
-  overflow: hidden;
-  transition: transform 0.3s;
-}
-.carousel .card:hover {
-  transform: translateY(-6px);
-}
-.carousel .card img,
-.carousel .card .avatar {
-  display: block;
-  width: 100%;
-  height: 140px;
-  object-fit: cover;
-}
-.carousel .card .card-info {
-  padding: var(--spacing);
-  text-align: center;
-}
-.carousel .card-info h3 {
-  font-size: 1rem;
-  color: var(--color-primary);
-  margin-bottom: 0.5rem;
-}
-.carousel .card-info p {
-  font-size: 0.875rem;
-  color: var(--color-secondary);
+.card-carousel::-webkit-scrollbar-thumb {
+  background: #c0c4cc;
+  border-radius: 3px;
 }
 
-/* 10. Responsive: content padding & carousel size */
+.card-carousel::-webkit-scrollbar-thumb:hover {
+  background: #a0a6b0;
+}
+
+/* Cards */
+.card {
+  flex: 0 0 220px;
+  scroll-snap-align: start;
+  background: #f8f9fb;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(0,0,0,0.06);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+}
+
+a.card {
+  text-decoration: none;
+  color: inherit;
+}
+
+.card-image {
+  aspect-ratio: 4/3;
+  background: #e8eaed;
+  overflow: hidden;
+}
+
+.card-image img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.card-image--avatar {
+  aspect-ratio: 1;
+}
+
+.card-image--avatar img {
+  object-fit: cover;
+}
+
+.card-icon {
+  height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  background: linear-gradient(135deg, #f0f2f5 0%, #e8eaed 100%);
+}
+
+.card-body {
+  padding: var(--spacing-4);
+}
+
+.card-title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 0.25rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.card-meta {
+  font-size: 0.8125rem;
+  color: #666;
+}
+
+/* Place cards – no image, icon only */
+.card--place {
+  display: flex;
+  flex-direction: column;
+}
+
+.card--place .card-body {
+  flex: 1;
+}
+
+/* Responsive */
 @media (max-width: 768px) {
-  .admin-content {
-    padding: var(--spacing);
+  .dashboard-content {
+    padding: var(--spacing-4) var(--spacing-4) var(--spacing-8);
   }
+
   .stats-grid {
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-3);
   }
-  .carousel .card {
-    flex: 0 0 200px;
+
+  .stat-card {
+    padding: var(--spacing-4);
+  }
+
+  .stat-value {
+    font-size: 1.25rem;
+  }
+
+  .card-carousel .card {
+    flex: 0 0 180px;
   }
 }
+
 @media (max-width: 480px) {
-  .carousel .card {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .card-carousel .card {
     flex: 0 0 160px;
   }
 }

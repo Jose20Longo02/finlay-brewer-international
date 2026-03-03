@@ -5,38 +5,94 @@
 <!-- Locations data for JavaScript -->
 <div id="locations-data" data-locations='<%- JSON.stringify(locations).replace(/'/g, '&#39;') %>' style="display: none;"></div>
 
-<div class="property-search-page">
-  <!-- Search Header -->
-  <section class="search-header">
-    <div class="container">
-      <h1>Property Search Results</h1>
-      <p>Find your perfect property from our extensive collection</p>
-      
-      <!-- Quick Search Bar -->
-      <div class="quick-search">
-        <form action="/properties" method="GET" class="quick-search-form">
-          <div class="search-input-group">
-            <input type="text" name="q" placeholder="Search by location, property type, or keywords..." 
-                   value="<%= locals.query || '' %>" class="search-input">
-            <button type="submit" class="search-btn">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="11" cy="11" r="8"></circle>
-                <path d="m21 21-4.35-4.35"></path>
-              </svg>
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </section>
-
+<%
+  const resultsLocation = [locals.filters?.city, locals.filters?.country].filter(Boolean).join(', ') || 'All locations';
+  function buildQueryParams(overrides) {
+    const p = { ...(overrides || {}) };
+    if (locals.query) p.q = locals.query;
+    if (locals.sort && locals.sort !== 'relevance') p.sort = locals.sort;
+    if (locals.filters?.country) p.country = locals.filters.country;
+    if (locals.filters?.city) p.city = locals.filters.city;
+    if (locals.filters?.neighborhood) p.neighborhood = locals.filters.neighborhood;
+    if (locals.filters?.min_price) p.min_price = locals.filters.min_price;
+    if (locals.filters?.max_price) p.max_price = locals.filters.max_price;
+    if (locals.filters?.min_size) p.min_size = locals.filters.min_size;
+    if (locals.filters?.max_size) p.max_size = locals.filters.max_size;
+    if (locals.filters?.year_built_min) p.year_built_min = locals.filters.year_built_min;
+    if (locals.filters?.year_built_max) p.year_built_max = locals.filters.year_built_max;
+    if (locals.filters?.bathrooms) p.bathrooms = locals.filters.bathrooms;
+    if (locals.filters?.bedrooms?.length) locals.filters.bedrooms.forEach(b => { if (!p.bedrooms) p.bedrooms = []; p.bedrooms.push(b); });
+    if (locals.filters?.type?.length) locals.filters.type.forEach(t => { if (!p.type) p.type = []; p.type.push(t); });
+    if (locals.filters?.features?.length) locals.filters.features.forEach(f => { if (!p.features) p.features = []; p.features.push(f); });
+    if (locals.filters?.featured) p.featured = locals.filters.featured;
+    if (locals.filters?.new_listing) p.new_listing = locals.filters.new_listing;
+    return p;
+  }
+  function toQueryString(params) {
+    const pairs = [];
+    Object.entries(params).forEach(([k, v]) => {
+      if (v == null || v === '') return;
+      if (Array.isArray(v)) v.forEach(vv => pairs.push([k, vv]));
+      else pairs.push([k, String(v)]);
+    });
+    return new URLSearchParams(pairs).toString();
+  }
+%>
+<div class="property-search-page search-results-page">
   <div class="container-wide">
-    <div class="property-layout">
-      <!-- Filters Sidebar -->
-      <aside class="filters-sidebar">
+    <!-- Title row: results count + sticky Filters button -->
+    <div class="search-results-top">
+      <h1 class="search-results-title"><%= totalProperties %> Results in <%= resultsLocation %></h1>
+      <button type="button" class="filters-sticky-btn" id="filtersStickyBtn" aria-label="Open filters">
+        Filters
+      </button>
+    </div>
+
+    <!-- Search summary bar (unified horizontal bar with dividers) -->
+    <form action="/properties" method="GET" class="search-summary-bar" id="searchSummaryForm">
+      <input type="hidden" name="sort" value="<%= locals.sort || 'relevance' %>">
+      <div class="search-bar-section">
+        <label for="summaryCountry">Location:</label>
+        <select id="summaryCountry" name="country" class="search-bar-select">
+          <option value="">Any</option>
+          <% Object.keys(locations || {}).forEach(c => { %>
+            <option value="<%= c %>" <%= locals.filters?.country === c ? 'selected' : '' %>><%= c %></option>
+          <% }); %>
+        </select>
+      </div>
+      <div class="search-bar-divider"></div>
+      <div class="search-bar-section">
+        <label for="summaryOperation">Operation:</label>
+        <select id="summaryOperation" name="operation" class="search-bar-select">
+          <option value="">Any</option>
+          <option value="sale">Buy</option>
+          <option value="rent">Rent</option>
+        </select>
+      </div>
+      <div class="search-bar-divider"></div>
+      <div class="search-bar-section">
+        <label for="summaryType">Type:</label>
+        <select id="summaryType" name="type" class="search-bar-select">
+          <option value="">Any</option>
+          <option value="Apartment" <%= (locals.filters?.type && locals.filters.type.includes('Apartment')) ? 'selected' : '' %>>Apartment</option>
+          <option value="House" <%= (locals.filters?.type && locals.filters.type.includes('House')) ? 'selected' : '' %>>House</option>
+          <option value="Villa" <%= (locals.filters?.type && locals.filters.type.includes('Villa')) ? 'selected' : '' %>>Villa</option>
+          <option value="Land" <%= (locals.filters?.type && locals.filters.type.includes('Land')) ? 'selected' : '' %>>Land</option>
+        </select>
+      </div>
+      <div class="search-bar-divider"></div>
+      <button type="submit" class="search-bar-submit">Search</button>
+    </form>
+
+    <div class="property-layout property-layout--no-sidebar">
+      <!-- Filters in modal (content moved below) -->
+      <aside class="filters-sidebar filters-sidebar--modal" id="filtersModal" aria-hidden="true" role="dialog" aria-label="Filters">
         <div class="filters-header">
           <h3>Filters</h3>
-          <button class="clear-filters" onclick="clearAllFilters()">Clear All</button>
+          <div class="filters-header-actions">
+            <button class="clear-filters" onclick="clearAllFilters()">Clear All</button>
+            <button type="button" class="filters-modal-close" id="filtersModalClose" aria-label="Close filters">&times;</button>
+          </div>
         </div>
         
         <form id="filtersForm" class="filters-form">
@@ -249,129 +305,10 @@
           <button type="submit" class="btn btn-primary btn-block">Apply Filters</button>
         </form>
       </aside>
+      <div class="filters-modal-backdrop" id="filtersModalBackdrop" aria-hidden="true"></div>
 
       <!-- Main Content -->
       <main class="property-main">
-        <!-- Results Header -->
-        <div class="results-header">
-          <div class="results-info">
-            <h2><%= totalProperties %> Properties Found</h2>
-            <p>
-              <% if (locals.query || Object.values(locals.filters).some(v => v && (Array.isArray(v) ? v.length > 0 : true))) { %>
-                Showing <%= properties.length %> of <%= totalProperties %> results
-                <% if (locals.query) { %>
-                  for "<%= locals.query %>"
-                <% } %>
-                <% if (locals.filters.country || locals.filters.city) { %>
-                  in <%= locals.filters.city || locals.filters.country %>
-                <% } %>
-              <% } else { %>
-                Browse all available properties
-              <% } %>
-            </p>
-            
-            <!-- Active Filters Display -->
-            <% if (Object.values(locals.filters).some(v => v && (Array.isArray(v) ? v.length > 0 : true))) { %>
-              <div class="active-filters">
-                <span class="active-filters-label">Active filters:</span>
-                <% if (locals.filters.country) { %>
-                  <span class="filter-tag">
-                    <%= locals.filters.country %>
-                    <button onclick="removeFilter('country')" class="filter-remove">&times;</button>
-                  </span>
-                <% } %>
-                <% if (locals.filters.city) { %>
-                  <span class="filter-tag">
-                    <%= locals.filters.city %>
-                    <button onclick="removeFilter('city')" class="filter-remove">&times;</button>
-                  </span>
-                <% } %>
-                <% if (locals.filters.type && locals.filters.type.length > 0) { %>
-                  <% locals.filters.type.forEach(type => { %>
-                    <span class="filter-tag">
-                      <%= type %>
-                      <button onclick="removeFilter('type', '<%= type %>')" class="filter-remove">&times;</button>
-                    </span>
-                  <% }) %>
-                <% } %>
-                <% if (locals.filters.min_price || locals.filters.max_price) { %>
-                  <span class="filter-tag">
-                    €<%= locals.filters.min_price || '0' %> - €<%= locals.filters.max_price || '∞' %>
-                    <button onclick="removeFilter('price')" class="filter-remove">&times;</button>
-                  </span>
-                <% } %>
-                <% if (locals.filters.min_size || locals.filters.max_size) { %>
-                  <span class="filter-tag">
-                    <%= locals.filters.min_size || '0' %> - <%= locals.filters.max_size || '∞' %> m²
-                    <button onclick="removeFilter('size')" class="filter-remove">&times;</button>
-                  </span>
-                <% } %>
-                <% if (locals.filters.year_built_min || locals.filters.year_built_max) { %>
-                  <span class="filter-tag">
-                    <%= locals.filters.year_built_min || '1900' %> - <%= locals.filters.year_built_max || new Date().getFullYear() %>
-                    <button onclick="removeFilter('year_built')" class="filter-remove">&times;</button>
-                  </span>
-                <% } %>
-                <% if (locals.filters.features && locals.filters.features.length > 0) { %>
-                  <% locals.filters.features.forEach(feature => { %>
-                    <span class="filter-tag">
-                      <%= feature %>
-                      <button onclick="removeFilter('features', '<%= feature %>')" class="filter-remove">&times;</button>
-                    </span>
-                  <% }) %>
-                <% } %>
-                
-                <!-- Save Search Button -->
-                <button class="btn btn-outline btn-sm save-search-btn" onclick="saveSearch()">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
-                  </svg>
-                  Save Search
-                </button>
-              </div>
-            <% } %>
-          </div>
-          
-          <div class="results-controls">
-            <div class="sort-controls">
-              <label for="sortBy">Sort by:</label>
-              <select id="sortBy" name="sort" class="form-select" onchange="updateSort()">
-                <option value="relevance" <%= locals.sort === 'relevance' ? 'selected' : '' %>>Relevance</option>
-                <option value="price_low" <%= locals.sort === 'price_low' ? 'selected' : '' %>>Price: Low to High</option>
-                <option value="price_high" <%= locals.sort === 'price_high' ? 'selected' : '' %>>Price: High to Low</option>
-                <option value="date_new" <%= locals.sort === 'date_new' ? 'selected' : '' %>>Newest First</option>
-                <option value="date_old" <%= locals.sort === 'date_old' ? 'selected' : '' %>>Oldest First</option>
-              </select>
-            </div>
-            
-            <div class="view-controls">
-              <button class="view-btn active" data-view="grid" onclick="switchView('grid')">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <rect x="3" y="3" width="7" height="7"></rect>
-                  <rect x="14" y="3" width="7" height="7"></rect>
-                  <rect x="14" y="14" width="7" height="7"></rect>
-                  <rect x="3" y="14" width="7" height="7"></rect>
-                </svg>
-              </button>
-              <button class="view-btn" data-view="list" onclick="switchView('list')">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <line x1="8" y1="6" x2="21" y2="6"></line>
-                  <line x1="8" y1="12" x2="21" y2="12"></line>
-                  <line x1="8" y1="18" x2="21" y2="18"></line>
-                  <line x1="3" y1="6" x2="3.01" y2="6"></line>
-                  <line x1="3" y1="12" x2="3.01" y2="12"></line>
-                  <line x1="3" y1="18" x2="3.01" y2="18"></line>
-                </svg>
-              </button>
-              <button class="view-btn" data-view="map" onclick="switchView('map')">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M9 20l-5.447-2.724A1 1 0 0 1 3 16.382V5.618a1 1 0 0 1 1.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0 0 21 18.382V7.618a1 1 0 0 0-1.447-.894L15 4m0 13V4m-6 3l6-3"></path>
-                </svg>
-              </button>
-            </div>
-          </div>
-        </div>
-
         <!-- Properties Grid -->
         <div class="properties-container">
           <% if (properties.length > 0) { %>
@@ -392,8 +329,7 @@
               <% properties.forEach(property => { %>
                 <div class="property-card country-<%= property.country.toLowerCase() %>" 
                      data-country="<%= property.country %>"
-                     data-property-id="<%= property.id %>"
-                     onclick="window.location.href='/properties/<%= property.slug %>'">
+                     data-property-id="<%= property.id %>">
                   
                   <!-- Property Image -->
                   <div class="property-image">
@@ -430,35 +366,35 @@
                     <h3 class="property-title"><%= property.title %></h3>
                     
                     <div class="property-location">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <svg class="property-location-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
                         <circle cx="12" cy="10" r="3"></circle>
                       </svg>
                       <%= property.city %>, <%= property.country %>
                     </div>
                     
-                    <div class="property-details">
-                      <div class="detail-item">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-                          <polyline points="9,22 9,12 15,12 15,22"></polyline>
-                        </svg>
-                        <%= property.bedrooms || 0 %> beds
-                      </div>
-                      <div class="detail-item">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                          <path d="M4 10h16"></path>
-                        </svg>
-                        <%= property.bathrooms || 0 %> baths
-                      </div>
+                    <div class="property-specs property-details">
                       <div class="detail-item">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                           <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
                           <circle cx="8.5" cy="8.5" r="1.5"></circle>
                           <polyline points="21,15 16,10 5,21"></polyline>
                         </svg>
-                        <%= property.size || 0 %> m²
+                        <span><%= property.size || 0 %> m²</span>
+                      </div>
+                      <div class="detail-item">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                          <polyline points="9,22 9,12 15,12 15,22"></polyline>
+                        </svg>
+                        <span><%= property.bedrooms || 0 %></span>
+                      </div>
+                      <div class="detail-item">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                          <path d="M4 10h16"></path>
+                        </svg>
+                        <span><%= property.bathrooms || 0 %></span>
                       </div>
                     </div>
                     
@@ -466,15 +402,9 @@
                        <span class="price-amount">€<%= Number(property.price || 0).toLocaleString('en-US') %></span>
                     </div>
                     
-                    <div class="property-footer">
-                      <div class="agent-info">
-                        <img src="<%= property.agent?.profile_picture || '/img/default-avatar.jpg' %>" 
-                             alt="<%= property.agent?.name || 'Agent' %>" class="agent-avatar" loading="lazy" decoding="async">
-                        <span class="agent-name"><%= property.agent?.name || 'Agent' %></span>
-                      </div>
-                      <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); compareProperty('<%= property.id %>')">
-                        Compare
-                      </button>
+                    <div class="property-footer property-footer--actions">
+                      <button type="button" class="btn-compare" onclick="event.stopPropagation(); compareProperty('<%= property.id %>')">Compare</button>
+                      <a href="/properties/<%= property.slug %>" class="btn-view-property">View Property</a>
                     </div>
                   </div>
                 </div>
@@ -500,21 +430,21 @@
             <% if (totalPages > 1) { %>
               <div class="pagination">
                 <% if (currentPage > 1) { %>
-                  <a href="?<%= new URLSearchParams({...locals.query, page: currentPage - 1}) %>" class="page-link">Previous</a>
+                  <a href="?<%= toQueryString(buildQueryParams({ page: currentPage - 1 })) %>" class="page-link">Previous</a>
                 <% } %>
                 
                 <% for (let i = 1; i <= totalPages; i++) { %>
                   <% if (i === currentPage) { %>
                     <span class="page-link active"><%= i %></span>
                   <% } else if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) { %>
-                    <a href="?<%= new URLSearchParams({...locals.query, page: i}) %>" class="page-link"><%= i %></a>
+                    <a href="?<%= toQueryString(buildQueryParams({ page: i })) %>" class="page-link"><%= i %></a>
                   <% } else if (i === currentPage - 3 || i === currentPage + 3) { %>
-                    <span class="page-link">...</span>
+                    <span class="page-link pagination-ellipsis">...</span>
                   <% } %>
                 <% } %>
                 
                 <% if (currentPage < totalPages) { %>
-                  <a href="?<%= new URLSearchParams({...locals.query, page: currentPage + 1}) %>" class="page-link">Next</a>
+                  <a href="?<%= toQueryString(buildQueryParams({ page: currentPage + 1 })) %>" class="page-link">Next</a>
                 <% } %>
               </div>
             <% } %>

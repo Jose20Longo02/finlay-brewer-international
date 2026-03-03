@@ -1,8 +1,9 @@
 // Home Page JavaScript
 document.addEventListener('DOMContentLoaded', function() {
-  console.log('=== JavaScript is loading! ===');
-  
-  // Get locations data from the page
+  initHeroDestinationTabs();
+  initFavoritePropertiesGallery();
+  initArticlesCarousel();
+
   window.locations = {};
   
   // Check if locations data is available in the global scope
@@ -27,24 +28,230 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
-  // Validate locations data structure
-  if (!window.locations || typeof window.locations !== 'object' || Object.keys(window.locations).length === 0) {
-    console.error('❌ Invalid or empty locations data:', window.locations);
-    return;
+  if (!window.locations || typeof window.locations !== 'object') {
+    window.locations = {};
   }
 
-  // Initialize city dropdown functionality
-  console.log('🚀 Initializing dropdowns...');
-  initializeCityDropdown();
-  
-  // Load featured properties
-  loadFeaturedProperties();
-  
-  // Initialize search form
+  // City dropdown only if we have locations (for pages that use #country, #city, #neighborhood)
+  if (Object.keys(window.locations).length > 0) {
+    initializeCityDropdown();
+  }
+
   initializeSearchForm();
-  
-  console.log('=== JavaScript initialization complete ===');
+  initContactForm();
+  initOfficeCardParallax();
 });
+
+function initOfficeCardParallax() {
+  const card = document.getElementById('contactOfficeCard');
+  if (!card) return;
+
+  const maxTilt = 8;
+
+  card.addEventListener('mousemove', function(e) {
+    const rect = card.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width - 0.5;
+    const y = (e.clientY - rect.top) / rect.height - 0.5;
+    const rotateY = x * maxTilt;
+    const rotateX = -y * maxTilt;
+    card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+  });
+
+  card.addEventListener('mouseleave', function() {
+    card.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg)';
+  });
+}
+
+function initContactForm() {
+  const form = document.getElementById('homeContactForm');
+  if (!form) return;
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+    const btn = form.querySelector('.contact-submit');
+    if (btn) btn.disabled = true;
+    const fd = new FormData(form);
+    const data = Object.fromEntries([...fd].filter(([, v]) => v !== ''));
+    fetch('/api/contact', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    })
+      .then(r => r.json())
+      .then(function(res) {
+        if (res.success) {
+          form.reset();
+          alert(res.message || 'Thank you! We will be in touch soon.');
+        } else {
+          alert(res.message || 'Something went wrong. Please try again.');
+        }
+      })
+      .catch(function() {
+        alert('Something went wrong. Please try again.');
+      })
+      .finally(function() {
+        if (btn) btn.disabled = false;
+      });
+  });
+}
+
+function initHeroDestinationTabs() {
+  const tabsContainer = document.querySelector('.hero-tabs');
+  const tabs = document.querySelectorAll('.hero-tab');
+  const indicator = document.querySelector('.hero-tab-indicator');
+  const heroBackgrounds = document.querySelectorAll('.hero-bg');
+  if (!tabsContainer || !tabs.length || !indicator) return;
+  // Ensure first background is visible on load (in case CSS hasn't applied yet)
+  if (heroBackgrounds.length) {
+    heroBackgrounds[0].classList.add('active');
+  }
+
+  function setActiveDestination(tab) {
+    const destId = tab.getAttribute('data-destination');
+    if (!destId) return;
+
+    // Switch hero background (smooth crossfade)
+    heroBackgrounds.forEach(function(bg) {
+      bg.classList.toggle('active', bg.getAttribute('data-destination') === destId);
+    });
+
+    // Update tab active state and indicator position
+    tabs.forEach(function(t) { t.classList.remove('active'); });
+    tab.classList.add('active');
+    var left = tab.offsetLeft;
+    var width = tab.offsetWidth;
+    indicator.style.left = left + 'px';
+    indicator.style.width = width + 'px';
+    indicator.style.opacity = '1';
+    // On mobile (scrollable tabs), scroll active tab into view
+    if (tabsContainer && tabsContainer.scrollWidth > tabsContainer.clientWidth) {
+      tab.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    }
+  }
+
+  function positionIndicator(tab) {
+    if (!tab) tab = document.querySelector('.hero-tab.active') || tabs[0];
+    if (!tab) return;
+    indicator.style.left = tab.offsetLeft + 'px';
+    indicator.style.width = tab.offsetWidth + 'px';
+    indicator.style.opacity = '1';
+  }
+
+  setActiveDestination(tabs[0]);
+
+  tabsContainer.addEventListener('click', function(e) {
+    var tab = e.target.closest('.hero-tab');
+    if (tab) {
+      e.preventDefault();
+      e.stopPropagation();
+      setActiveDestination(tab);
+    }
+  });
+
+  window.addEventListener('resize', function() {
+    positionIndicator(document.querySelector('.hero-tab.active') || tabs[0]);
+  });
+
+  // Auto-advance destinations every 3 seconds (respect reduced motion)
+  var prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!prefersReducedMotion && tabs.length > 1) {
+    setInterval(function() {
+      var active = document.querySelector('.hero-tab.active');
+      var idx = Array.prototype.indexOf.call(tabs, active);
+      var nextIdx = (idx + 1) % tabs.length;
+      setActiveDestination(tabs[nextIdx]);
+    }, 3000);
+  }
+}
+
+function initFavoritePropertiesGallery() {
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const galleryTrack = document.getElementById('favoritePropertiesTrack');
+  if (!galleryTrack || prefersReducedMotion) return;
+
+  const frames = galleryTrack.querySelectorAll('.gallery-frame--property');
+  if (!frames.length) return;
+
+  if (!galleryTrack.dataset.loopReady) {
+    const originalFrames = Array.from(frames);
+    originalFrames.forEach(function(frame) {
+      const clone = frame.cloneNode(true);
+      galleryTrack.appendChild(clone);
+    });
+    galleryTrack.dataset.loopReady = 'true';
+  }
+
+  let galleryOffset = 0;
+  const gallerySpeed = 1.2;
+  let resetThreshold = galleryTrack.scrollWidth / 2;
+  let isPaused = false;
+  let rafId = null;
+
+  function recalcThreshold() {
+    resetThreshold = galleryTrack.scrollWidth / 2;
+  }
+
+  function galleryLoop() {
+    if (!isPaused) {
+      galleryOffset -= gallerySpeed;
+      galleryTrack.style.transform = 'translateX(' + galleryOffset + 'px)';
+      if (Math.abs(galleryOffset) >= resetThreshold) {
+        galleryOffset = 0;
+      }
+    }
+    rafId = requestAnimationFrame(galleryLoop);
+  }
+
+  const strip = galleryTrack.closest('.gallery-strip');
+  if (strip) {
+    strip.addEventListener('mouseenter', function() {
+      isPaused = true;
+    });
+    strip.addEventListener('mouseleave', function() {
+      isPaused = false;
+    });
+  }
+
+  galleryLoop();
+  window.addEventListener('resize', recalcThreshold);
+}
+
+function initArticlesCarousel() {
+  const carousel = document.getElementById('articlesCarousel');
+  const prevBtn = document.querySelector('.articles-nav-prev');
+  const nextBtn = document.querySelector('.articles-nav-next');
+  if (!carousel || !prevBtn || !nextBtn) return;
+
+  const cards = Array.from(carousel.querySelectorAll('.article-card'));
+  const n = cards.length;
+  if (n === 0) return;
+
+  let activeIndex = 0;
+
+  var relToPos = { '-2': 2, '-1': 1, '0': 0, '1': 3, '2': 4 };
+
+  function updatePositions() {
+    cards.forEach(function(card, i) {
+      card.classList.remove('pos-0', 'pos-1', 'pos-2', 'pos-3', 'pos-4');
+      var rel = i - activeIndex;
+      if (rel > 2) rel -= n;
+      if (rel < -2) rel += n;
+      var pos = relToPos[String(rel)];
+      if (pos !== undefined) card.classList.add('pos-' + pos);
+    });
+  }
+
+  updatePositions();
+
+  prevBtn.addEventListener('click', function() {
+    activeIndex = (activeIndex - 1 + n) % n;
+    updatePositions();
+  });
+
+  nextBtn.addEventListener('click', function() {
+    activeIndex = (activeIndex + 1) % n;
+    updatePositions();
+  });
+}
 
 // Initialize city dropdown functionality
 function initializeCityDropdown() {
@@ -232,18 +439,20 @@ async function loadFeaturedProperties() {
       </div>
     `;
     
-    // Fetch featured properties from API
-    const response = await fetch('/api/properties/featured');
-    if (!response.ok) {
-      throw new Error('Failed to fetch featured properties');
+    // Fetch featured properties from API (always 200 with JSON array)
+    const response = await fetch('/api/featured');
+    let properties = [];
+    try {
+      const data = await response.json();
+      properties = Array.isArray(data) ? data : [];
+    } catch (_) {
+      properties = [];
     }
-    
-    const properties = await response.json();
     
     // Render properties
     if (properties.length > 0) {
       featuredContainer.innerHTML = properties.map(property => `
-        <div class="property-card" onclick="window.location.href='/properties/${property.slug}'">
+        <div class="property-card" onclick="window.location.href='${property.slug ? '/properties/' + property.slug : '/properties'}'">
           <div class="property-image">
             <img src="${property.photos && property.photos[0] ? property.photos[0] : '/img/property-placeholder.jpg'}" 
                  alt="${property.title}" loading="lazy" decoding="async"
@@ -337,16 +546,6 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
   });
 });
 
-// Add scroll effect to hero section
-window.addEventListener('scroll', function() {
-  const scrolled = window.pageYOffset;
-  const hero = document.querySelector('.hero');
-  if (hero) {
-    const rate = scrolled * -0.5;
-    hero.style.transform = `translateY(${rate}px)`;
-  }
-});
-
 // Add intersection observer for animations
 const observerOptions = {
   threshold: 0.1,
@@ -419,14 +618,14 @@ function calculateMortgage() {
   document.getElementById('totalInterest').textContent = `€${formatPrice(Math.round(totalInterest))}`;
   document.getElementById('totalCost').textContent = `€${formatPrice(Math.round(totalCost))}`;
   
-  // Show results
-  document.getElementById('calculatorResults').style.display = 'block';
-  
-  // Scroll to results
-  document.getElementById('calculatorResults').scrollIntoView({ 
-    behavior: 'smooth', 
-    block: 'start' 
-  });
+  // Hide form, show results (same centered spot)
+  document.getElementById('calculatorForm').classList.add('calculator-hidden');
+  document.getElementById('calculatorResults').classList.add('calculator-visible');
+}
+
+function resetMortgageCalculator() {
+  document.getElementById('calculatorResults').classList.remove('calculator-visible');
+  document.getElementById('calculatorForm').classList.remove('calculator-hidden');
 }
 
 // Add input validation for calculator

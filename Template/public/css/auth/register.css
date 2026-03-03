@@ -1,0 +1,203 @@
+/* Register Page – matches site design (#111, #1a1a1a) */
+
+/* Black header */
+body:has(.register-page) .site-header {
+  background: #111 !important;
+  min-height: 120px;
+}
+body:has(.register-page) .header-inner { padding: var(--spacing-5, 1.5rem) var(--page-side-gutter, 2rem); }
+body:has(.register-page) .header-logo-img { height: 64px; }
+body:has(.register-page) .header-logo--mobile .header-logo-img { height: 52px; }
+body:has(.register-page) .header-nav a { color: rgba(255, 255, 255, 0.9); }
+body:has(.register-page) .header-nav a:hover { color: #fff; }
+body:has(.register-page) .header-hamburger-bar { background: #fff; }
+@media (max-width: 1024px) {
+  body:has(.register-page) .site-header { min-height: auto; }
+  body:has(.register-page) .header-nav-panel { background: #111; }
+  body:has(.register-page) .header-nav-panel .header-nav a { color: rgba(255, 255, 255, 0.9); }
+  body:has(.register-page) .header-nav-panel .header-nav a:hover { color: #fff; }
+}
+
+/* Page layout */
+body.page-register main {
+  width: 100%;
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.register-page {
+  width: 100%;
+  padding-top: clamp(4rem, 10vw, 6rem);
+  padding-bottom: clamp(4rem, 10vw, 6rem);
+}
+
+.register-wrap {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+/* Form card - use !important to override any base styles */
+.register-page .auth-form {
+  width: 100% !important;
+  max-width: 480px !important;
+  background: #fff !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06) !important;
+  padding: 2.5rem 2rem !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 1.25rem !important;
+  margin: 0 auto !important;
+}
+
+.register-page .auth-form h1 {
+  margin: 0 0 0.25rem 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  letter-spacing: 0.02em;
+}
+
+/* Alerts */
+.register-page .auth-form .alert {
+  margin: 0;
+  padding: 0.875rem 1rem;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.register-page .auth-form .alert-error {
+  background-color: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
+/* Labels */
+.register-page .auth-form label {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #444;
+  margin-bottom: 0.35rem;
+  margin-top: 0;
+}
+
+.register-page .auth-form label:not(:first-of-type) {
+  margin-top: 0.5rem;
+}
+
+/* Inputs & selects */
+.register-page .auth-form input,
+.register-page .auth-form select {
+  width: 100% !important;
+  padding: 0.875rem 1.25rem !important;
+  border: 1px solid #e5e5e5 !important;
+  border-radius: 10px !important;
+  font-size: 1rem !important;
+  background: #fafafa !important;
+  transition: border-color 0.2s, background 0.2s !important;
+  box-sizing: border-box !important;
+}
+
+.register-page .auth-form input[type="file"] {
+  padding: 0.5rem;
+  background: #fff;
+}
+
+.register-page .auth-form select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  padding-right: 2.5rem;
+}
+
+.register-page .auth-form input:hover,
+.register-page .auth-form select:hover {
+  background: #fff;
+}
+
+.register-page .auth-form input:focus,
+.register-page .auth-form select:focus {
+  outline: none;
+  border-color: #111;
+  background: #fff;
+}
+
+.register-page .auth-form input::placeholder {
+  color: #999;
+}
+
+/* Error text */
+.register-page .error-text {
+  display: none;
+  margin-top: 0.25rem;
+  font-size: 0.85rem;
+  color: #b91c1c;
+}
+
+.register-page .error-text:not(:empty) {
+  display: block;
+  padding: 0.5rem;
+  background-color: #fef2f2;
+  border-radius: 8px;
+}
+
+/* Thumb preview */
+.register-page .thumb-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-top: 0.5rem;
+}
+
+.register-page .thumb-wrapper .thumb {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+/* Submit button */
+.register-page .auth-form button[type="submit"] {
+  margin-top: 0.5rem !important;
+  width: 100% !important;
+  padding: 1rem 1.5rem !important;
+  background: #111 !important;
+  color: #fff !important;
+  border: none !important;
+  border-radius: 12px !important;
+  font-size: 1rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.02em !important;
+  cursor: pointer !important;
+  transition: background 0.2s, transform 0.2s, box-shadow 0.2s !important;
+}
+
+.register-page .auth-form button[type="submit"]:hover {
+  background: #333;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+/* Login link */
+.register-page .auth-form p {
+  margin: 0.5rem 0 0 0;
+  font-size: 0.95rem;
+  color: #666;
+  text-align: center;
+}
+
+.register-page .auth-form a {
+  color: #111;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.register-page .auth-form a:hover {
+  text-decoration: underline;
+}

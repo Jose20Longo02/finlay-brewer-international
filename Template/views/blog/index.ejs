@@ -1,0 +1,121 @@
+<% 
+  title = typeof title !== 'undefined' ? title : 'Blog'; 
+  function buildPageUrl(pageNum) {
+    const params = new URLSearchParams();
+    if (typeof query !== 'undefined' && query) params.set('q', query);
+    if (typeof sort !== 'undefined' && sort && sort !== 'date_new') params.set('sort', sort);
+    if (pageNum > 1) params.set('page', pageNum);
+    const qs = params.toString();
+    return '/blog' + (qs ? '?' + qs : '');
+  }
+%>
+
+<div class="blog-page">
+  <!-- Blog Header -->
+  <section class="blog-header">
+    <div class="blog-header-inner">
+      <h1 class="blog-title">Blog</h1>
+      <p class="blog-subtitle">Insights, tips, and news about real estate and property investment</p>
+      
+      <form action="/blog" method="GET" class="blog-search-form">
+        <input type="hidden" name="sort" value="<%= typeof sort !== 'undefined' ? sort : 'date_new' %>">
+        <div class="blog-search-group">
+          <input type="search" name="q" placeholder="Search articles..." 
+                 value="<%= typeof query !== 'undefined' ? (query || '').replace(/"/g, '&quot;') : '' %>" 
+                 class="blog-search-input" aria-label="Search blog posts">
+          <button type="submit" class="blog-search-btn" aria-label="Search">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <circle cx="11" cy="11" r="8"></circle>
+              <path d="m21 21-4.35-4.35"></path>
+            </svg>
+          </button>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <div class="blog-container">
+    <!-- Results Bar -->
+    <div class="blog-results-bar">
+      <p class="blog-results-info">
+        <% if (typeof totalPosts !== 'undefined' && totalPosts > 0) { %>
+          <%= totalPosts %> article<%= totalPosts !== 1 ? 's' : '' %> found
+          <% if (typeof query !== 'undefined' && query) { %>
+            for "<%= query %>"
+          <% } %>
+        <% } else { %>
+          No articles found
+        <% } %>
+      </p>
+      <div class="blog-sort">
+        <label for="blogSort">Sort by:</label>
+        <form action="/blog" method="GET" id="blogSortForm" class="blog-sort-form">
+          <input type="hidden" name="q" value="<%= typeof query !== 'undefined' ? (query || '') : '' %>">
+          <select id="blogSort" name="sort" class="blog-sort-select" onchange="this.form.submit()">
+            <option value="date_new" <%= typeof sort !== 'undefined' && sort === 'date_new' ? 'selected' : '' %>>Newest First</option>
+            <option value="date_old" <%= typeof sort !== 'undefined' && sort === 'date_old' ? 'selected' : '' %>>Oldest First</option>
+            <option value="title_asc" <%= typeof sort !== 'undefined' && sort === 'title_asc' ? 'selected' : '' %>>Title: A–Z</option>
+            <option value="title_desc" <%= typeof sort !== 'undefined' && sort === 'title_desc' ? 'selected' : '' %>>Title: Z–A</option>
+          </select>
+        </form>
+      </div>
+    </div>
+
+    <!-- Posts Grid -->
+    <div class="blog-posts-grid">
+      <% if (typeof posts !== 'undefined' && posts.length > 0) { %>
+        <% posts.forEach(function(post) { %>
+          <article class="blog-card">
+            <a href="/blog/<%= post.slug %>" class="blog-card-link">
+              <div class="blog-card-image" style="background-image: url('<%= post.cover_image || '/img/property-placeholder.jpg' %>');"></div>
+              <div class="blog-card-content">
+                <time class="blog-card-date" datetime="<%= new Date(post.created_at).toISOString() %>">
+                  <%= new Date(post.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) %>
+                </time>
+                <h2 class="blog-card-title"><%= post.title %></h2>
+                <% if (post.excerpt) { %>
+                  <p class="blog-card-excerpt"><%= post.excerpt.length > 140 ? post.excerpt.substring(0, 140) + '...' : post.excerpt %></p>
+                <% } else if (post.content) { %>
+                  <p class="blog-card-excerpt"><%= post.content.replace(/<[^>]+>/g, '').substring(0, 140) %>...</p>
+                <% } %>
+                <span class="blog-card-read">Read Article →</span>
+              </div>
+            </a>
+          </article>
+        <% }); %>
+      <% } else { %>
+        <div class="blog-empty">
+          <div class="blog-empty-icon">📝</div>
+          <h2>No articles yet</h2>
+          <p>Check back soon for insights and updates on real estate and property investment.</p>
+          <a href="/blog" class="blog-empty-link">View all blog posts</a>
+        </div>
+      <% } %>
+    </div>
+
+    <!-- Pagination -->
+    <% if (typeof totalPages !== 'undefined' && totalPages > 1) { %>
+      <nav class="blog-pagination" aria-label="Blog pagination">
+        <% if (currentPage > 1) { %>
+          <a href="<%= buildPageUrl(currentPage - 1) %>" class="blog-page-link blog-page-prev" rel="prev">Previous</a>
+        <% } %>
+        
+        <div class="blog-page-numbers">
+          <% for (let i = 1; i <= totalPages; i++) { %>
+            <% if (i === currentPage) { %>
+              <span class="blog-page-link blog-page-current" aria-current="page"><%= i %></span>
+            <% } else if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) { %>
+              <a href="<%= buildPageUrl(i) %>" class="blog-page-link"><%= i %></a>
+            <% } else if (i === currentPage - 3 || i === currentPage + 3) { %>
+              <span class="blog-page-ellipsis">…</span>
+            <% } %>
+          <% } %>
+        </div>
+        
+        <% if (currentPage < totalPages) { %>
+          <a href="<%= buildPageUrl(currentPage + 1) %>" class="blog-page-link blog-page-next" rel="next">Next</a>
+        <% } %>
+      </nav>
+    <% } %>
+  </div>
+</div>

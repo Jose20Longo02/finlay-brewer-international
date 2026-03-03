@@ -1,6 +1,8 @@
 <% title = 'Register' %>
-<link rel="stylesheet" href="/css/register.css" />
+<link rel="stylesheet" href="/css/auth/register.css" />
 
+<div class="register-page">
+<div class="register-wrap">
 <form
   action="/auth/register"
   method="post"
@@ -57,6 +59,8 @@
     Already have an account? <a href="/auth/login">Log in here</a>
   </p>
 </form>
+</div>
+</div>
 
 <script>
   const areaRoles = <%- JSON.stringify(areaRoles) %>;

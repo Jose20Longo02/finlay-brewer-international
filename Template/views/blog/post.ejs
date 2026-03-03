@@ -1,0 +1,34 @@
+<% title = typeof post !== 'undefined' && post ? post.title : 'Blog Post'; %>
+
+<div class="blog-post-page">
+  <article class="blog-post-article">
+    <% if (typeof post !== 'undefined' && post) { %>
+      <header class="blog-post-header">
+        <a href="/blog" class="blog-post-back">← Back to Blog</a>
+        <time class="blog-post-date" datetime="<%= new Date(post.created_at).toISOString() %>">
+          <%= new Date(post.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) %>
+        </time>
+        <h1 class="blog-post-title"><%= post.title %></h1>
+        <% if (post.excerpt) { %>
+          <p class="blog-post-excerpt"><%= post.excerpt %></p>
+        <% } %>
+      </header>
+
+      <% if (post.cover_image) { %>
+        <div class="blog-post-cover" style="background-image: url('<%= post.cover_image %>');"></div>
+      <% } %>
+
+      <div class="blog-post-body">
+        <% if (post.content) { %>
+          <div class="blog-post-content"><%- post.content.replace(/\n/g, '<br>') %></div>
+        <% } else { %>
+          <p>No content available for this article.</p>
+        <% } %>
+      </div>
+
+      <footer class="blog-post-footer">
+        <a href="/blog" class="blog-post-back-link">← Back to all articles</a>
+      </footer>
+    <% } %>
+  </article>
+</div>
