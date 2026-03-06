@@ -1,67 +1,81 @@
-
 <% title = 'Edit Profile' %>
 <link rel="stylesheet" href="/css/admin/edit-profile.css" />
 
-<main class="form-page">
-  <div class="back-wrapper">
-    <a href="/admin/dashboard" class="back-dashboard">← Back to Dashboard</a>
+<main class="ap-page">
+  <div class="ap-back-wrap">
+    <a href="/admin/dashboard" class="ap-back">← Back to Dashboard</a>
   </div>
 
-  <section class="form-container">
-    <h1>Edit Profile</h1>
+  <div class="ap-container">
+    <header class="ap-header">
+      <h1>Edit profile</h1>
+      <p class="ap-subtitle">Update your account information and password.</p>
+    </header>
 
     <% if (error) { %>
-      <div class="alert alert-error"><%= error %></div>
+      <div class="ap-alert ap-alert--error"><%= error %></div>
     <% } %>
     <% if (success) { %>
-      <div class="alert alert-success"><%= success %></div>
+      <div class="ap-alert ap-alert--success"><%= success %></div>
     <% } %>
 
-    <form id="editProfileForm" action="/admin/dashboard/profile" method="post" enctype="multipart/form-data">
-      <div class="form-group">
-        <label for="name">Full Name</label>
-        <input id="name" name="name" type="text" value="<%= user.name %>" required />
-      </div>
+    <form id="editProfileForm" action="/admin/dashboard/profile" method="post" enctype="multipart/form-data" class="ap-form">
+      <section class="ap-section">
+        <h2 class="ap-section-title">Profile information</h2>
 
-      <div class="form-group">
-        <label for="email">Email</label>
-        <input id="email" name="email" type="email" value="<%= user.email %>" required />
-      </div>
-
-      <div class="form-group">
-        <label for="profile_picture">Profile Picture</label>
-        <div class="thumb-wrapper">
-          <% if (user.profile_picture) { %>
-            <img id="profilePreview" src="<%= user.profile_picture %>" class="thumb" />
-          <% } else { %>
-            <img id="profilePreview" class="thumb" style="display:none;" />
-          <% } %>
+        <div class="ap-profile-row">
+          <div class="ap-avatar-upload">
+            <label for="profile_picture" class="ap-avatar-label">
+              <span class="ap-avatar-preview">
+                <% if (user.profile_picture) { %>
+                  <img id="profilePreview" src="<%= user.profile_picture %>" alt="" />
+                <% } else { %>
+                  <img id="profilePreview" src="" alt="" style="display:none;" />
+                  <span id="profilePlaceholder" class="ap-avatar-placeholder">
+                    <span class="ap-avatar-icon">👤</span>
+                    <span class="ap-avatar-hint">Add photo</span>
+                  </span>
+                <% } %>
+              </span>
+              <input id="profile_picture" name="profile_picture" type="file" accept="image/*" class="ap-avatar-input" />
+            </label>
+          </div>
+          <div class="ap-fields">
+            <div class="ap-field">
+              <label for="name">Full name</label>
+              <input id="name" name="name" type="text" value="<%= user.name %>" required />
+            </div>
+            <div class="ap-field">
+              <label for="email">Email</label>
+              <input id="email" name="email" type="email" value="<%= user.email %>" required />
+            </div>
+          </div>
         </div>
-        <input id="profile_picture" name="profile_picture" type="file" accept="image/*" />
-      </div>
+      </section>
 
-      <hr />
+      <section class="ap-section">
+        <h2 class="ap-section-title">Change password</h2>
+        <p class="ap-section-hint">Leave blank to keep your current password.</p>
+        <div class="ap-field">
+          <label for="password">New password</label>
+          <input id="password" name="password" type="password" placeholder="••••••••" autocomplete="new-password" />
+        </div>
+        <div class="ap-field">
+          <label for="passwordConfirm">Confirm new password</label>
+          <input id="passwordConfirm" name="passwordConfirm" type="password" placeholder="••••••••" autocomplete="new-password" />
+          <div id="passwordError" class="ap-error"></div>
+        </div>
+      </section>
 
-      <div class="form-group">
-        <label for="password">New Password</label>
-        <input id="password" name="password" type="password" placeholder="••••••••" />
-      </div>
-
-      <div class="form-group">
-        <label for="passwordConfirm">Confirm New Password</label>
-        <input id="passwordConfirm" name="passwordConfirm" type="password" placeholder="••••••••" />
-        <div id="passwordError" class="error-text"></div>
-      </div>
-
-      <button type="submit" class="btn btn-primary">Save Changes</button>
+      <button type="submit" class="ap-submit">Save changes</button>
     </form>
-  </section>
+  </div>
 </main>
 
 <script>
-  // Live picture preview
   const picInput = document.getElementById('profile_picture');
   const picPreview = document.getElementById('profilePreview');
+  const placeholder = document.getElementById('profilePlaceholder');
   picInput.addEventListener('change', e => {
     const file = e.target.files[0];
     if (!file) return;
@@ -69,6 +83,7 @@
     reader.onload = ev => {
       picPreview.src = ev.target.result;
       picPreview.style.display = 'block';
+      if (placeholder) placeholder.style.display = 'none';
     };
     reader.readAsDataURL(file);
   });

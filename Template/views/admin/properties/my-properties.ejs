@@ -3,17 +3,19 @@
 
 <div id="mp-data" data-locations='<%- JSON.stringify(locations).replace(/'/g, '&#39;') %>'></div>
 
-<div class="page-wrap">
-  <header class="section-header">
-    <h1>My Properties</h1>
-    <div class="header-actions">
-      <a href="/admin/dashboard" class="link-home">← Return to dashboard</a>
-      <a href="/admin/properties/new" class="btn btn-primary">New Property</a>
+<div class="page-wrap myp-page">
+  <header class="myp-header">
+    <div>
+      <h1>My properties</h1>
+      <p class="myp-subtitle">View, filter, and manage your listings.</p>
+    </div>
+    <div class="myp-header-actions">
+      <a href="/admin/dashboard" class="myp-back">← Back to dashboard</a>
+      <a href="/admin/properties/new" class="btn btn-primary">New property</a>
     </div>
   </header>
 
-  <!-- Filters -->
-  <form id="filters" class="filters" method="get">
+  <form id="filters" class="myp-filters" method="get">
     <select id="countrySelect" name="country" onchange="this.form.submit()">
       <option value="">All Countries</option>
       <% countryOptions.forEach(c => { %>
@@ -42,80 +44,77 @@
       <% }) %>
     </select>
 
-    <input type="number" name="minPrice" placeholder="Min Price"
+    <input type="number" name="minPrice" placeholder="Min price"
            value="<%= filters.minPrice||'' %>"
-           onblur="this.form.submit()" />
+           onchange="this.form.submit()" />
 
-    <input type="number" name="maxPrice" placeholder="Max Price"
+    <input type="number" name="maxPrice" placeholder="Max price"
            value="<%= filters.maxPrice||'' %>"
-           onblur="this.form.submit()" />
+           onchange="this.form.submit()" />
 
     <% if (Object.values(filters).some(v => v)) { %>
-      <a class="link-reset" href="/admin/my-properties">Reset</a>
+      <a class="myp-reset" href="/admin/dashboard/my-properties">Reset</a>
     <% } %>
+    <button type="submit" class="btn myp-filter-btn">Filter</button>
   </form>
 
   <% if (!properties.length) { %>
-    <div class="empty-state">
-      <p>You don’t have any properties yet. Click <a href="/admin/properties/new">New Property</a> to get started.</p>
+    <div class="myp-empty">
+            <p class="myp-empty-title">No properties yet</p>
+      <p class="myp-empty-text">Create your first listing to get started.</p>
+      <a href="/admin/properties/new" class="btn btn-primary">New property</a>
     </div>
   <% } else { %>
-    <div class="cards-grid">
-      <% properties.forEach(p => { %>
-        <article class="prop-card">
-          <div class="flip">
-            <div class="front">
-              <div class="media">
-                <img class="thumb" src="<%= p.photos?.[0] || '/img/property-placeholder.png' %>" alt="<%= p.title %>">
-                <div class="badges">
+    <div class="myp-grid">
+      <% properties.forEach((p, i) => { %>
+        <article class="myp-card" style="animation-delay: <%= (i % 8) * 0.04 %>s">
+          <div class="myp-flip">
+            <div class="myp-front">
+              <div class="myp-media">
+                <img class="myp-thumb" src="<%= p.photos?.[0] || '/img/property-placeholder.png' %>" alt="">
+                <div class="myp-badges">
                   <% (p.status_tags || []).forEach(tag => { %>
-                    <span class="badge badge-status"><%= tag %></span>
+                    <span class="myp-badge"><%= tag %></span>
                   <% }) %>
                 </div>
-                <div class="type-badge"><%= p.type %></div>
-                <div class="price-badge"><%= p.price ? `$${Number(p.price).toLocaleString()}` : 'Price on request' %></div>
+                <span class="myp-type"><%= p.type %></span>
+                <span class="myp-price"><%= p.price ? `$${Number(p.price).toLocaleString()}` : 'Price on request' %></span>
               </div>
-              <div class="content">
-                <h3 class="title" title="<%= p.title %>"><%= p.title %></h3>
-                <p class="meta">
-                  <span class="loc-city"><%= p.city %></span>
-                  <% if (p.neighborhood) { %>
-                    <span class="dot">•</span>
-                    <span class="loc-hood"><%= p.neighborhood %></span>
-                  <% } %>
-                </p>
+              <div class="myp-content">
+                <h3 class="myp-title" title="<%= p.title %>"><%= p.title %></h3>
+                <p class="myp-meta"><%= p.city %><%= p.neighborhood ? ', ' + p.neighborhood : '' %></p>
               </div>
             </div>
-            <div class="back">
-              <div class="stat">
-                <span class="stat-num"><%= p.views_count != null ? p.views_count : 0 %></span>
-                <span class="stat-label">Views</span>
+            <div class="myp-back">
+              <div class="myp-stat">
+                <span class="myp-stat-num"><%= p.views_count != null ? p.views_count : 0 %></span>
+                <span class="myp-stat-label">Views</span>
               </div>
-              <div class="stat">
-                <span class="stat-num"><%= p.inquiry_count != null ? p.inquiry_count : 0 %></span>
-                <span class="stat-label">Contacts</span>
+              <div class="myp-stat">
+                <span class="myp-stat-num"><%= p.inquiry_count != null ? p.inquiry_count : 0 %></span>
+                <span class="myp-stat-label">Contacts</span>
               </div>
             </div>
           </div>
 
-          <div class="actions">
-            <form action="/properties/<%= p.id %>/delete?page=<%= currentPage %>" method="post" onsubmit="return confirm('Delete “<%= p.title %>”?');">
+          <div class="myp-actions">
+            <a href="/properties/<%= p.slug %>" class="btn btn-ghost">View</a>
+            <a href="/properties/<%= p.id %>/edit" class="btn btn-secondary">Edit</a>
+            <form action="/properties/<%= p.id %>/delete?page=<%= currentPage %>" method="post" onsubmit="return confirm('Delete this property?');" class="myp-delete-form">
               <button type="submit" class="btn btn-danger">Delete</button>
             </form>
-            <a class="btn btn-secondary" href="/properties/<%= p.id %>/edit">Edit</a>
           </div>
         </article>
       <% }) %>
     </div>
 
-    <!-- Pagination -->
-    <nav class="pagination">
+    <nav class="myp-pagination">
       <% if (currentPage > 1) { %>
-        <a class="page-link" href="?<%= new URLSearchParams({ ...filters, page: currentPage-1 }).toString() %>">« Prev</a>
+        <a class="myp-page-link" href="?<%= new URLSearchParams({ ...filters, page: currentPage-1 }).toString() %>">← Previous</a>
       <% } %>
-      <span class="page-info">Page <%= currentPage %> of <%= totalPages %></span>
+      <span class="myp-page-info">Page <%= currentPage %> of <%= totalPages %></span>
       <% if (currentPage < totalPages) { %>
-        <a class="page-link" href="?<%= new URLSearchParams({ ...filters, page: currentPage+1 }).toString() %>">Next »</a>
+        <a class="myp-page-link" href="?<%= new URLSearchParams({ ...filters, page: currentPage+1 }).toString() %>">Next →</a>
       <% } %>
     </nav>
   <% } %>

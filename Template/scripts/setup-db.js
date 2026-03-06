@@ -27,12 +27,14 @@ const migrations = [
   'create_leads.sql',
   'add_coordinates_to_properties.sql',
   'add_featured_column.sql',
+  'ensure_featured_status_properties.sql',
   'add_map_link_to_properties.sql',
   'fix_users_role_constraint.sql',
   'add_area_position_to_users.sql',
   'add_slug_to_projects.sql',
   'add_created_by_to_properties.sql',
   'add_views_inquiry_to_properties.sql',
+  'add_property_tax_energy_class.sql',
   'create_blog_posts.sql'
 ];
 

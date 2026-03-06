@@ -332,7 +332,7 @@ body.header-dark .search-results-page {
 
 /* Search results card: design match (white card, rounded corners, light shadow, clean structure) */
 .search-results-page .property-card {
-  cursor: default;
+  cursor: pointer;
   background: #fff;
   border-radius: 18px;
   overflow: hidden;
@@ -1204,7 +1204,7 @@ body.header-dark .search-results-page {
   margin-top: var(--spacing-6);
 }
 
-/* Country-Specific Property Cards */
+/* Country-Specific Property Cards (whole card is clickable) */
 .property-card {
   background: var(--white);
   border-radius: var(--radius-xl);
@@ -1213,6 +1213,15 @@ body.header-dark .search-results-page {
   transition: all var(--transition-normal);
   cursor: pointer;
   border: 2px solid transparent;
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+
+/* Ensure Compare button is clickable and doesn’t navigate */
+.property-card .btn-compare {
+  position: relative;
+  z-index: 1;
 }
 
 .property-card:hover {

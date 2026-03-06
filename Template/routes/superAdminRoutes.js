@@ -21,6 +21,9 @@ router.get('/profile',
   adminController.showSuperAdminProfile
 );
 
+// Projects removed – redirect any stale links to dashboard
+router.get('/projects', ensureSuperAdmin, (req, res) => res.redirect('/superadmin/dashboard'));
+
 router.post('/profile',
   ensureSuperAdmin,
   uploadProfilePic,

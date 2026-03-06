@@ -505,19 +505,24 @@ function initializeSearchForm() {
   searchForm.addEventListener('submit', function(e) {
     e.preventDefault();
     console.log('🔍 Search form submitted');
-    
+
     const formData = new FormData(this);
+    const country = (formData.get('country') || '').trim();
+
+    // UK searches redirect to Finlay Brewer UK site
+    if (country === 'UK' || country === 'United Kingdom') {
+      window.location.href = 'https://www.finlaybrewer.co.uk/';
+      return;
+    }
+
     const searchParams = new URLSearchParams();
-    
-    // Build search query
     for (let [key, value] of formData.entries()) {
       if (value && value.trim() !== '') {
         searchParams.append(key, value);
         console.log(`🔍 Adding search parameter: ${key} = ${value}`);
       }
     }
-    
-    // Redirect to properties page with search parameters
+
     const searchUrl = `/properties?${searchParams.toString()}`;
     console.log('🔍 Redirecting to:', searchUrl);
     window.location.href = searchUrl;

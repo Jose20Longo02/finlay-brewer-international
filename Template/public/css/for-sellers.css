@@ -225,6 +225,14 @@ body.header-dark .header-hamburger-bar { background: #fff; }
   transition: transform 0.35s ease, opacity 0.35s ease;
 }
 
+.fs-result-card-link {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  text-decoration: none;
+  color: inherit;
+}
+
 .fs-result-card.active {
   transform: scale(1);
   opacity: 1;

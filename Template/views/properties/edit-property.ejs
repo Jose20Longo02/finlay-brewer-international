@@ -2,8 +2,7 @@
 <link rel="stylesheet" href="/css/admin/new-property.css" />
 
 <div id="np-data"
-     data-locations='<%- JSON.stringify(locations).replace(/'/g, '&#39;') %>'
-     data-projects='<%- JSON.stringify(projects || []).replace(/'/g, '&#39;') %>'></div>
+     data-locations='<%- JSON.stringify(locations).replace(/'/g, '&#39;') %>'></div>
 
 <div class="new-prop-page">
   <header class="np-header">
@@ -12,13 +11,21 @@
       <p class="subtitle">Update listing details. Fields change based on property type.</p>
     </div>
     <div class="right">
-      <a href="/admin/dashboard/my-properties" class="btn btn-light">Back</a>
+      <a href="<%= currentUser && currentUser.role === 'SuperAdmin' ? '/superadmin/dashboard/properties' : '/admin/dashboard/my-properties' %>" class="btn btn-light">Back</a>
     </div>
   </header>
 
   <% if (error) { %>
     <div class="alert alert-error"><%= error %></div>
   <% } %>
+
+  <div id="propertySubmitOverlay" class="property-submit-overlay" aria-hidden="true">
+    <div class="property-submit-overlay-content">
+      <div class="property-submit-spinner" aria-hidden="true"></div>
+      <p class="property-submit-overlay-title">Saving changes…</p>
+      <p class="property-submit-overlay-hint">This might take a few minutes, please wait.</p>
+    </div>
+  </div>
 
   <form id="propertyForm" class="np-form" method="post" action="/properties/<%= property.id %>" enctype="multipart/form-data">
 
@@ -78,6 +85,14 @@
             <% }) %>
           </select>
         </div>
+        <div class="field">
+          <label for="listing_status">Status</label>
+          <select id="listing_status" name="listing_status">
+            <option value="active" <%= (property.status||'active')==='active'?'selected':'' %>>Active</option>
+            <option value="under_offer" <%= (property.status||'')==='under_offer'?'selected':'' %>>Under Offer</option>
+            <option value="sold" <%= (property.status||'')==='sold'?'selected':'' %>>Sold</option>
+          </select>
+        </div>
       </div>
       <div class="field">
         <label for="description">Description<span class="req">*</span></label>
@@ -88,6 +103,10 @@
           <label for="price_display">Price<span class="req">*</span></label>
           <input id="price_display" type="text" inputmode="decimal" placeholder="€0.00" required />
           <input id="price" name="price" type="hidden" value="<%= property.price||'' %>" />
+        </div>
+        <div class="field">
+          <label for="property_tax">Property tax</label>
+          <input id="property_tax" name="property_tax" type="number" min="0" step="0.01" placeholder="e.g. 1200" value="<%= property.property_tax ?? '' %>" />
         </div>
         <div class="field">
           <label>Status tags</label>
@@ -107,12 +126,28 @@
     <section class="card">
       <h2>Media</h2>
       <div class="field">
-        <label for="photos">Photos</label>
-        <input id="photos" name="photos" type="file" accept="image/*" multiple />
-        <small>Upload 1–20 images. Leave empty to keep existing order.</small>
-        <div class="preview-grid">
+        <label>Photos</label>
+        <div class="photos-upload-box">
+          <input id="photos" name="photos" type="file" accept="image/*" multiple class="photos-input-hidden" />
+          <label for="photos" class="photos-upload-trigger">
+            <span class="photos-upload-icon">🖼️</span>
+            <span class="photos-upload-text">Choose photos</span>
+            <span class="photos-upload-hint">Add more photos (they will be appended). Drag to reorder new ones, × to remove.</span>
+          </label>
+          <p class="photos-upload-status" id="photosUploadStatus"><%= (property.photos && property.photos.length) ? property.photos.length + ' current photo(s)' : 'No photos' %></p>
+        </div>
+        <div id="photoUrlsHidden" aria-hidden="true">
           <% (property.photos || []).forEach((ph) => { %>
-            <div class="item"><img class="thumb" src="<%= ph %>"></div>
+            <input type="hidden" name="existing_photos" value="<%= ph %>" />
+          <% }) %>
+        </div>
+        <input type="hidden" name="photo_order" id="photoOrderInput" value="" />
+        <div id="photoPreview" class="preview-grid">
+          <% (property.photos || []).forEach((ph) => { %>
+            <div class="item item-existing" data-url="<%= ph %>">
+              <button type="button" class="preview-item-remove" aria-label="Remove photo">&times;</button>
+              <img class="thumb" src="<%= ph %>" alt="" />
+            </div>
           <% }) %>
         </div>
       </div>
@@ -125,36 +160,24 @@
             <label class="chip"><input type="radio" name="video_source" id="videoSrcLink" value="link" /> <span>Link</span></label>
           </div>
         </div>
-        <div class="field" id="videoUploadWrap">
-          <label for="video">Upload new video</label>
-          <input id="video" name="video" type="file" accept="video/*" />
+        <div class="field video-source-field" id="videoUploadWrap">
+          <label>Upload new video</label>
+          <div class="video-upload-box">
+            <input id="video" name="video" type="file" accept="video/*" class="video-input-hidden" />
+            <label for="video" class="video-upload-trigger">
+              <span class="video-upload-icon">🎬</span>
+              <span class="video-upload-text">Choose video file</span>
+              <span class="video-upload-hint">MP4, WebM, or MOV</span>
+            </label>
+            <p class="video-upload-status" id="videoUploadStatus">No file selected</p>
+          </div>
         </div>
-        <div class="field" id="videoUrlWrap" hidden>
+        <div class="field video-source-field video-source-hidden" id="videoUrlWrap">
           <label for="video_url">Video URL</label>
           <input id="video_url" name="video_url" type="url" placeholder="https://..." value="" />
           <% if (property.video_url) { %>
             <small>Current: <a href="<%= property.video_url %>" target="_blank">Open</a></small>
           <% } %>
-        </div>
-      </div>
-    </section>
-
-    <!-- D. Project -->
-    <section class="card">
-      <h2>Project</h2>
-      <div class="grid-2">
-        <label class="checkbox">
-          <input type="checkbox" id="is_in_project" name="is_in_project" <%= property.is_in_project?'checked':'' %> />
-          <span>Part of a project</span>
-        </label>
-        <div class="field" id="projectWrap" hidden>
-          <label for="project_id">Project</label>
-          <select id="project_id" name="project_id" disabled>
-            <option value="">Select project</option>
-            <% (projects||[]).forEach(p => { %>
-              <option value="<%= p.id %>" <%= String(property.project_id||'')===String(p.id)?'selected':'' %>><%= p.title %></option>
-            <% }) %>
-          </select>
         </div>
       </div>
     </section>
@@ -177,8 +200,29 @@
             <input id="bathrooms_a" name="bathrooms" type="number" min="0" step="1" value="<%= property.bathrooms ?? '' %>" />
           </div>
           <div class="field">
-            <label for="floorplan">Floorplan image</label>
-            <input id="floorplan" name="floorplan" type="file" accept="image/*" />
+            <label for="year_built_a">Year built</label>
+            <input id="year_built_a" name="year_built" type="number" min="1800" max="2030" step="1" placeholder="e.g. 2020" value="<%= property.year_built ?? '' %>" />
+          </div>
+          <div class="field">
+            <label for="energy_class_a">Energy class</label>
+            <select id="energy_class_a" name="energy_class">
+              <option value="">Select</option>
+              <% ['A++','A+','A','B','C','D','E','F','G'].forEach(ec => { %>
+                <option value="<%= ec %>" <%= property.energy_class===ec?'selected':'' %>><%= ec %></option>
+              <% }) %>
+            </select>
+          </div>
+          <div class="field">
+            <label>Floorplan image</label>
+            <div class="image-upload-box">
+              <input id="floorplan" name="floorplan" type="file" accept="image/*" class="image-input-hidden" />
+              <label for="floorplan" class="image-upload-trigger">
+                <span class="image-upload-icon">📐</span>
+                <span class="image-upload-text">Choose floorplan image</span>
+                <span class="image-upload-hint">PNG, JPG</span>
+              </label>
+              <p class="image-upload-status" id="floorplanUploadStatus">No file selected</p>
+            </div>
             <% if (property.floorplan_url) { %>
               <div class="preview-grid"><div class="item"><img class="thumb" src="<%= property.floorplan_url %>"></div></div>
             <% } %>
@@ -205,8 +249,29 @@
             <input id="bathrooms_hv" name="bathrooms" type="number" min="0" step="1" value="<%= property.bathrooms ?? '' %>" />
           </div>
           <div class="field">
-            <label for="plan_photo_hv">Plan image</label>
-            <input id="plan_photo_hv" name="plan_photo" type="file" accept="image/*" />
+            <label for="year_built_hv">Year built</label>
+            <input id="year_built_hv" name="year_built" type="number" min="1800" max="2030" step="1" placeholder="e.g. 2020" value="<%= property.year_built ?? '' %>" />
+          </div>
+          <div class="field">
+            <label for="energy_class_hv">Energy class</label>
+            <select id="energy_class_hv" name="energy_class">
+              <option value="">Select</option>
+              <% ['A++','A+','A','B','C','D','E','F','G'].forEach(ec => { %>
+                <option value="<%= ec %>" <%= property.energy_class===ec?'selected':'' %>><%= ec %></option>
+              <% }) %>
+            </select>
+          </div>
+          <div class="field">
+            <label>Plan image</label>
+            <div class="image-upload-box">
+              <input id="plan_photo_hv" name="plan_photo" type="file" accept="image/*" class="image-input-hidden" />
+              <label for="plan_photo_hv" class="image-upload-trigger">
+                <span class="image-upload-icon">📐</span>
+                <span class="image-upload-text">Choose plan image</span>
+                <span class="image-upload-hint">PNG, JPG</span>
+              </label>
+              <p class="image-upload-status" id="planPhotoHVUploadStatus">No file selected</p>
+            </div>
             <% if (property.plan_photo_url) { %>
               <div class="preview-grid"><div class="item"><img class="thumb" src="<%= property.plan_photo_url %>"></div></div>
             <% } %>
@@ -221,8 +286,16 @@
             <input id="land_size" name="land_size" type="number" min="0" step="0.01" value="<%= property.land_size || '' %>" />
           </div>
           <div class="field">
-            <label for="plan_photo">Plan image</label>
-            <input id="plan_photo" name="plan_photo" type="file" accept="image/*" />
+            <label>Plan image</label>
+            <div class="image-upload-box">
+              <input id="plan_photo" name="plan_photo" type="file" accept="image/*" class="image-input-hidden" />
+              <label for="plan_photo" class="image-upload-trigger">
+                <span class="image-upload-icon">📐</span>
+                <span class="image-upload-text">Choose plan image</span>
+                <span class="image-upload-hint">PNG, JPG</span>
+              </label>
+              <p class="image-upload-status" id="planPhotoUploadStatus">No file selected</p>
+            </div>
             <% if (property.plan_photo_url) { %>
               <div class="preview-grid"><div class="item"><img class="thumb" src="<%= property.plan_photo_url %>"></div></div>
             <% } %>
@@ -248,9 +321,6 @@
   const citySel = document.getElementById('city');
   const hoodSel = document.getElementById('neighborhood');
   const typeSel = document.getElementById('type');
-  const isInProject = document.getElementById('is_in_project');
-  const projectWrap = document.getElementById('projectWrap');
-  const projectSelect = document.getElementById('project_id');
 
   function fillCities() {
     const cities = Object.keys((LOCATIONS[countrySel.value]||{}));
@@ -312,18 +382,9 @@
     if (landSize) landSize.required = land;
   }
 
-  function updateProjectVisibility() {
-    const on = !!isInProject.checked;
-    projectWrap.hidden = !on;
-    projectSelect.required = on;
-    projectSelect.disabled = !on;
-    if (!on) projectSelect.value = '';
-  }
-
   countrySel.addEventListener('change', fillCities);
   citySel.addEventListener('change', fillNeighborhoods);
   typeSel.addEventListener('change', updateTypeBlocks);
-  isInProject.addEventListener('change', updateProjectVisibility);
 
   // Init selects
   fillCities();
@@ -337,7 +398,6 @@
     fillNeighborhoods();
   })();
   updateTypeBlocks();
-  updateProjectVisibility();
 
   // Price Euro formatting
   const priceInputHidden = document.getElementById('price');
@@ -362,6 +422,240 @@
     }
     priceInputHidden.value = String(num.toFixed(2));
   });
+  // Video source toggle: Upload shows upload field, Link shows URL field
+  const videoSrcUpload = document.getElementById('videoSrcUpload');
+  const videoSrcLink   = document.getElementById('videoSrcLink');
+  const videoUploadWrap= document.getElementById('videoUploadWrap');
+  const videoUrlWrap   = document.getElementById('videoUrlWrap');
+  const videoInputEdit = document.getElementById('video');
+  const videoUrlInput  = document.getElementById('video_url');
+  const videoStatusEdit = document.getElementById('videoUploadStatus');
+
+  function updateVideoSource() {
+    const useUpload = videoSrcUpload && videoSrcUpload.checked;
+    if (videoUploadWrap) videoUploadWrap.classList.toggle('video-source-hidden', !useUpload);
+    if (videoUrlWrap) videoUrlWrap.classList.toggle('video-source-hidden', useUpload);
+    if (videoUrlInput) videoUrlInput.disabled = useUpload;
+    if (videoInputEdit) videoInputEdit.disabled = !useUpload;
+    if (useUpload && videoUrlInput) videoUrlInput.value = '';
+    if (!useUpload && videoInputEdit) videoInputEdit.value = '';
+  }
+  if (videoSrcUpload) videoSrcUpload.addEventListener('change', updateVideoSource);
+  if (videoSrcLink) videoSrcLink.addEventListener('change', updateVideoSource);
+  updateVideoSource(); // set initial state
+
+  // Floorplan & plan photo status
+  ['floorplan', 'plan_photo_hv', 'plan_photo'].forEach(id => {
+    const inp = document.getElementById(id);
+    const statusId = id === 'floorplan' ? 'floorplanUploadStatus' : id === 'plan_photo_hv' ? 'planPhotoHVUploadStatus' : 'planPhotoUploadStatus';
+    const statusEl = document.getElementById(statusId);
+    if (inp && statusEl) {
+      inp.addEventListener('change', () => {
+        const file = inp.files && inp.files[0];
+        statusEl.textContent = file ? file.name : 'No file selected';
+        statusEl.classList.toggle('has-file', !!file);
+      });
+    }
+  });
+
+  // Edit form: photo preview = existing (kept) + new files; drag and × to remove
+  const photosInputEdit = document.getElementById('photos');
+  const photosStatusEdit = document.getElementById('photosUploadStatus');
+  const photoPreviewEdit = document.getElementById('photoPreview');
+  const photoUrlsHidden = document.getElementById('photoUrlsHidden');
+  const photoOrderInput = document.getElementById('photoOrderInput');
+  let draggedItemEdit = null;
+
+  function syncExistingPhotosOrder() {
+    if (!photoPreviewEdit || !photoUrlsHidden) return;
+    const existingItems = photoPreviewEdit.querySelectorAll('.item-existing');
+    const order = Array.from(existingItems).map(el => el.dataset.url).filter(Boolean);
+    photoUrlsHidden.innerHTML = '';
+    order.forEach((url) => {
+      const inp = document.createElement('input');
+      inp.type = 'hidden';
+      inp.name = 'existing_photos';
+      inp.value = url;
+      photoUrlsHidden.appendChild(inp);
+    });
+  }
+
+  function rebuildEditPhotoPreview() {
+    if (!photoPreviewEdit || !photosInputEdit) return;
+    const files = Array.from(photosInputEdit.files);
+    const keptUrls = photoUrlsHidden ? Array.from(photoUrlsHidden.querySelectorAll('input[name="existing_photos"]')).map(inp => inp.value) : [];
+    photoPreviewEdit.innerHTML = '';
+    if (photosStatusEdit) {
+      const total = keptUrls.length + files.length;
+      photosStatusEdit.textContent = total === 0 ? 'No photos' : (keptUrls.length ? keptUrls.length + ' current' : '') + (keptUrls.length && files.length ? ' + ' : '') + (files.length ? files.length + ' new' : '') + ' (' + total + ' total)';
+      photosStatusEdit.classList.toggle('has-files', total > 0);
+    }
+    // 1) Existing (kept) photos – from hidden inputs, draggable to reorder
+    keptUrls.forEach((url) => {
+      const item = document.createElement('div');
+      item.className = 'item item-existing';
+      item.dataset.url = url;
+      item.draggable = true;
+      const removeBtn = document.createElement('button');
+      removeBtn.type = 'button';
+      removeBtn.className = 'preview-item-remove';
+      removeBtn.setAttribute('aria-label', 'Remove photo');
+      removeBtn.textContent = '×';
+      const img = document.createElement('img');
+      img.src = url;
+      img.className = 'thumb';
+      img.draggable = false;
+      img.onerror = () => { img.src = '/img/property-placeholder.jpg'; };
+      const handle = document.createElement('div');
+      handle.className = 'handle';
+      handle.textContent = 'drag';
+      handle.draggable = false;
+      item.appendChild(removeBtn);
+      item.appendChild(img);
+      item.appendChild(handle);
+      item.addEventListener('dragstart', (e) => {
+        draggedItemEdit = item;
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', '');
+      });
+      item.addEventListener('dragend', () => { draggedItemEdit = null; });
+      item.addEventListener('dragover', (e) => { e.preventDefault(); e.stopPropagation(); if (draggedItemEdit) e.dataTransfer.dropEffect = 'move'; });
+      item.addEventListener('drop', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!draggedItemEdit || draggedItemEdit === item) return;
+        photoPreviewEdit.insertBefore(draggedItemEdit, item);
+        syncExistingPhotosOrder();
+        draggedItemEdit = null;
+      });
+      photoPreviewEdit.appendChild(item);
+    });
+    // 2) New files (store File on item for submit-order; same drag/drop as existing)
+    files.forEach((file, index) => {
+      const url = URL.createObjectURL(file);
+      const item = document.createElement('div');
+      item.className = 'item item-new';
+      item.draggable = true;
+      item.dataset.fileIndex = String(index);
+      item._file = file;
+      const removeBtn = document.createElement('button');
+      removeBtn.type = 'button';
+      removeBtn.className = 'preview-item-remove';
+      removeBtn.setAttribute('aria-label', 'Remove photo');
+      removeBtn.textContent = '×';
+      removeBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const filesArr = Array.from(photosInputEdit.files);
+        const idx = parseInt(item.dataset.fileIndex, 10);
+        if (!Number.isNaN(idx) && idx >= 0 && idx < filesArr.length) {
+          filesArr.splice(idx, 1);
+          const dt = new DataTransfer();
+          filesArr.forEach(f => dt.items.add(f));
+          photosInputEdit.files = dt.files;
+          rebuildEditPhotoPreview();
+        }
+      });
+      const img = document.createElement('img');
+      img.src = url;
+      img.className = 'thumb';
+      img.draggable = false;
+      const handle = document.createElement('div');
+      handle.className = 'handle';
+      handle.textContent = 'drag';
+      handle.draggable = false;
+      item.appendChild(removeBtn);
+      item.appendChild(img);
+      item.appendChild(handle);
+      item.addEventListener('dragstart', (e) => {
+        draggedItemEdit = item;
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', '');
+      });
+      item.addEventListener('dragend', () => { draggedItemEdit = null; });
+      item.addEventListener('dragover', (e) => { e.preventDefault(); e.stopPropagation(); if (draggedItemEdit) e.dataTransfer.dropEffect = 'move'; });
+      item.addEventListener('drop', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!draggedItemEdit || draggedItemEdit === item) return;
+        photoPreviewEdit.insertBefore(draggedItemEdit, item);
+        syncExistingPhotosOrder();
+        draggedItemEdit = null;
+      });
+      photoPreviewEdit.appendChild(item);
+    });
+  }
+
+  function syncEditPhotoOrderForSubmit() {
+    if (!photoPreviewEdit || !photoUrlsHidden || !photosInputEdit) return;
+    const children = Array.from(photoPreviewEdit.children).filter(el => el.classList.contains('item-existing') || el.classList.contains('item-new'));
+    const existingOrder = [];
+    const newFilesOrder = [];
+    const photoOrder = [];
+    let ei = 0, ni = 0;
+    children.forEach((el) => {
+      if (el.classList.contains('item-existing')) {
+        const url = el.dataset.url;
+        if (url) { existingOrder.push(url); photoOrder.push('e' + ei); ei++; }
+      } else if (el.classList.contains('item-new') && el._file) {
+        newFilesOrder.push(el._file);
+        photoOrder.push('n' + ni);
+        ni++;
+      }
+    });
+    photoUrlsHidden.innerHTML = '';
+    existingOrder.forEach((url) => {
+      const inp = document.createElement('input');
+      inp.type = 'hidden';
+      inp.name = 'existing_photos';
+      inp.value = url;
+      photoUrlsHidden.appendChild(inp);
+    });
+    if (newFilesOrder.length) {
+      const dt = new DataTransfer();
+      newFilesOrder.forEach(f => dt.items.add(f));
+      photosInputEdit.files = dt.files;
+    }
+    if (photoOrderInput) photoOrderInput.value = photoOrder.join(',');
+  }
+
+  if (photosInputEdit) {
+    photosInputEdit.addEventListener('change', rebuildEditPhotoPreview);
+  }
+  rebuildEditPhotoPreview();
+
+  // X on existing (server) photos: remove from preview and from hidden inputs
+  if (photoPreviewEdit && photoUrlsHidden) {
+    photoPreviewEdit.addEventListener('click', (e) => {
+      const removeBtn = e.target.closest('.preview-item-remove');
+      if (!removeBtn) return;
+      const item = removeBtn.closest('.item-existing');
+      if (!item) return;
+      e.preventDefault();
+      const url = item.dataset.url;
+      if (url) {
+        const inputs = photoUrlsHidden.querySelectorAll('input[name="existing_photos"]');
+        inputs.forEach((inp) => { if (inp.value === url) inp.remove(); });
+        item.remove();
+      }
+      const remaining = photoUrlsHidden.querySelectorAll('input[name="existing_photos"]').length;
+      const newCount = (photosInputEdit && photosInputEdit.files) ? photosInputEdit.files.length : 0;
+      const total = remaining + newCount;
+      if (photosStatusEdit) {
+        photosStatusEdit.textContent = total === 0 ? 'No photos' : (remaining ? remaining + ' current' : '') + (remaining && newCount ? ' + ' : '') + (newCount ? newCount + ' new' : '') + ' (' + total + ' total)';
+        photosStatusEdit.classList.toggle('has-files', total > 0);
+      }
+    });
+  }
+
+  if (videoInputEdit && videoStatusEdit) {
+    videoInputEdit.addEventListener('change', () => {
+      const file = videoInputEdit.files && videoInputEdit.files[0];
+      videoStatusEdit.textContent = file ? file.name : 'No file selected';
+      videoStatusEdit.classList.toggle('has-file', !!file);
+    });
+  }
+
   priceInputDisplay.addEventListener('blur', () => {
     const num = parseNumeric(priceInputDisplay.value);
     if (num === null) {
@@ -372,5 +666,18 @@
     priceInputDisplay.value = euro.format(num);
     priceInputHidden.value = String(num.toFixed(2));
   });
+
+  // Loading overlay on submit – block interaction until page navigates
+  const propertyForm = document.getElementById('propertyForm');
+  const submitOverlay = document.getElementById('propertySubmitOverlay');
+  if (propertyForm && submitOverlay) {
+    propertyForm.addEventListener('submit', function() {
+      syncEditPhotoOrderForSubmit();
+      submitOverlay.classList.add('is-active');
+      submitOverlay.setAttribute('aria-hidden', 'false');
+      const btn = propertyForm.querySelector('button[type="submit"]');
+      if (btn) btn.disabled = true;
+    });
+  }
 </script>
 

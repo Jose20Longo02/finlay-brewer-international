@@ -49,42 +49,40 @@
 
     <!-- Two-column layout: gallery, characteristics, description, contact form -->
     <div class="property-content">
-        <!-- Image carousel -->
+        <!-- Image carousel: thumbnails left, main photo right -->
         <section class="photo-gallery property-content-gallery">
-          <div class="gallery-main">
-            <div class="main-photo" id="mainPhoto">
-              <% if (property.photos && property.photos.length > 0) { %>
-                <% if (property.has_main_variants && property.main_variant_base) { %>
-                  <picture>
-                    <source srcset="<%= property.main_variant_base %>-640.avif 640w, <%= property.main_variant_base %>-960.avif 960w, <%= property.main_variant_base %>-1280.avif 1280w, <%= property.main_variant_base %>-1920.avif 1920w" type="image/avif">
-                    <source srcset="<%= property.main_variant_base %>-640.webp 640w, <%= property.main_variant_base %>-960.webp 960w, <%= property.main_variant_base %>-1280.webp 1280w, <%= property.main_variant_base %>-1920.webp 1920w" type="image/webp">
-                    <img src="<%= property.photos[0] %>" alt="<%= property.title %>" id="mainPhotoImg"
-                         srcset="<%= property.main_variant_base %>-640.jpg 640w, <%= property.main_variant_base %>-960.jpg 960w, <%= property.main_variant_base %>-1280.jpg 1280w, <%= property.main_variant_base %>-1920.jpg 1920w"
-                         sizes="(max-width: 768px) 100vw, 960px"
-                         fetchpriority="high" decoding="async">
-                  </picture>
-                <% } else { %>
-                  <img src="<%= property.photos[0] %>" alt="<%= property.title %>" id="mainPhotoImg" loading="lazy" decoding="async">
-                <% } %>
-              <% } else { %>
-                <img src="/img/property-placeholder.jpg" alt="<%= property.title %>" id="mainPhotoImg" loading="lazy" decoding="async">
-              <% } %>
-              <div class="photo-overlay">
-                <button class="gallery-nav prev" onclick="previousPhoto()" aria-label="Previous photo">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="15,18 9,12 15,6"></polyline>
-                  </svg>
-                </button>
-                <button class="gallery-nav next" onclick="nextPhoto()" aria-label="Next photo">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="9,18 15,12 9,6"></polyline>
-                  </svg>
-                </button>
+          <% const galleryPhotos = (property.photos && property.photos.length > 0) ? property.photos : ['/img/property-placeholder.jpg']; %>
+          <div class="gallery-layout">
+            <% if (galleryPhotos.length > 1) { %>
+            <div class="gallery-thumbs" id="galleryThumbs" aria-label="Photo thumbnails">
+              <% galleryPhotos.forEach((photo, i) => { %>
+              <button type="button" class="gallery-thumb<%= i === 0 ? ' is-active' : '' %>" data-index="<%= i %>" aria-label="View photo <%= i + 1 %>">
+                <img src="<%= photo %>" alt="" loading="lazy" decoding="async" onerror="this.src='/img/property-placeholder.jpg'">
+              </button>
+              <% }); %>
+            </div>
+            <% } %>
+            <div class="gallery-main">
+              <div class="main-photo" id="mainPhoto">
+                <img src="<%= galleryPhotos[0] %>" alt="<%= property.title %>" id="mainPhotoImg"
+                     loading="lazy" decoding="async" fetchpriority="high">
+                <div class="photo-overlay">
+                  <button class="gallery-nav prev" onclick="previousPhoto()" aria-label="Previous photo">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="15,18 9,12 15,6"></polyline>
+                    </svg>
+                  </button>
+                  <button class="gallery-nav next" onclick="nextPhoto()" aria-label="Next photo">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="9,18 15,12 9,6"></polyline>
+                    </svg>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
           <div class="gallery-pagination" id="galleryPagination">
-            <span id="currentPhotoNum">1</span> of <span id="totalPhotos"><%= (property.photos && property.photos.length) || 1 %></span>
+            <span id="currentPhotoNum">1</span> of <span id="totalPhotos"><%= galleryPhotos.length %></span>
           </div>
         </section>
 
@@ -128,6 +126,15 @@
             <p><%= property.description || 'No description available for this property.' %></p>
           </div>
         </section>
+
+        <% const hasCoords = property.latitude != null && property.longitude != null && property.latitude !== '' && property.longitude !== ''; %>
+        <% if (hasCoords) { %>
+        <!-- Location map (only when coordinates are set) -->
+        <section class="property-detail-map-section property-content-desc" aria-label="Property location map">
+          <h2 class="property-detail-map-heading">Location</h2>
+          <div id="propertyDetailMap" class="property-detail-map" data-lat="<%= property.latitude %>" data-lng="<%= property.longitude %>"></div>
+        </section>
+        <% } %>
 
         <!-- Contact form -->
         <form id="contactForm" class="contact-form-inline property-content-form">

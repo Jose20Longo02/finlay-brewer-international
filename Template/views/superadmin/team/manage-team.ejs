@@ -1,58 +1,54 @@
-<head>
-  <link rel="stylesheet" href="/css/superadmin/manage-team.css" />
-</head>
-
-<!-- views/admin/team/list.ejs -->
 <% title = 'Team Management' %>
-
+<link rel="stylesheet" href="/css/superadmin/manage-team.css" />
 
 <div class="admin-panel">
   <div class="admin-body">
-    <!-- Sidebar -->
-     <%- include('../../partials/superadmin-sidebar', {
-      activePage: 'team',     // or 'projects', 'properties', etc.
-      pendingCount: pendingCount   // make sure you pass this in your controller
-    }) %>
+    <%- include('../../partials/superadmin-sidebar', { activePage: 'team', pendingCount: pendingCount }) %>
 
-    <!-- Main content -->
-    <main class="admin-content">
-      <section class="team-container">
-        <h1>Team Management</h1>
+    <main class="admin-content tm-content">
+      <section class="tm-container">
+        <header class="tm-header">
+          <h1>Team management</h1>
+          <p class="tm-subtitle">View and manage team members by area.</p>
+        </header>
 
-        <% Object.keys(areaRoles).forEach(function(area) { %>
-          <div class="team-area">
-            <h2><%= area %></h2>
-            <% const areaMembers = members.filter(m => m.area === area); %>
-
+        <% Object.keys(areaRoles).forEach(function(area, areaIndex) { %>
+          <% const areaMembers = members.filter(m => m.area === area); %>
+          <article class="tm-area" style="animation-delay: <%= areaIndex * 0.06 %>s">
+            <h2 class="tm-area-title"><%= area %></h2>
             <% if (areaMembers.length === 0) { %>
-              <p class="empty">No team members work in this area.</p>
+              <p class="tm-empty">No team members in this area.</p>
             <% } else { %>
-              <div class="members-grid">
-                <% areaMembers.forEach(function(member) { %>
-                  <div class="member-card">
-                    <img
-                      src="<%= member.profile_picture || '/img/default-avatar.png' %>"
-                      alt="<%= member.name %>"
-                      class="thumb"
-                    />
-                    <h3><%= member.name %></h3>
-                    <p class="position"><%= member.position %></p>
-
-                    <div class="actions">
+              <div class="tm-grid">
+                <% areaMembers.forEach(function(member, i) { %>
+                  <div class="tm-card" style="animation-delay: <%= (areaIndex * 0.08) + (i * 0.04) %>s">
+                    <div class="tm-card-avatar-wrap">
+                      <img
+                        src="<%= member.profile_picture || '/img/default-avatar.png' %>"
+                        alt=""
+                        class="tm-card-avatar"
+                      />
+                    </div>
+                    <div class="tm-card-body">
+                      <h3 class="tm-card-name"><%= member.name %></h3>
+                      <p class="tm-card-position"><%= member.position %></p>
                       <% if (member.id !== currentUser.id) { %>
-                        <form action="/superadmin/dashboard/team/<%= member.id %>/delete" method="post" onsubmit="return confirm('Are you sure you want to delete <%= member.name %>?');">
-                          <button type="submit" class="btn btn-danger">Delete</button>
-                        </form>
-                        <a href="/superadmin/dashboard/team/<%= member.id %>/edit" class="btn btn-secondary">Edit</a>
+                        <div class="tm-actions">
+                          <a href="/superadmin/dashboard/team/<%= member.id %>/edit" class="btn btn-secondary">Edit</a>
+                          <form action="/superadmin/dashboard/team/<%= member.id %>/delete" method="post" onsubmit="return confirm('Remove this team member?');" class="tm-delete-form">
+                            <button type="submit" class="btn btn-danger">Remove</button>
+                          </form>
+                        </div>
+                      <% } else { %>
+                        <span class="tm-badge-you">You</span>
                       <% } %>
                     </div>
                   </div>
                 <% }); %>
               </div>
             <% } %>
-          </div>
+          </article>
         <% }); %>
-
       </section>
     </main>
   </div>

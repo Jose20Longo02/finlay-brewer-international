@@ -4,11 +4,27 @@ const Lead = require('../models/Lead');
 const sendMail = require('../config/mailer');
 
 // Render for-sellers page
-exports.forSellersPage = (req, res) => {
-  res.render('for-sellers', {
-    title: 'For Sellers',
-    bodyClass: 'page-for-sellers header-dark'
-  });
+exports.forSellersPage = async (req, res, next) => {
+  try {
+    const soldResult = await query(
+      `SELECT id, title, slug, country, city, neighborhood, price, photos, type
+       FROM properties
+       WHERE COALESCE(status, 'active') = 'sold'
+       ORDER BY updated_at DESC NULLS LAST, created_at DESC
+       LIMIT 12`
+    );
+    const soldProperties = (soldResult && soldResult.rows ? soldResult.rows : []).map(p => ({
+      ...p,
+      photos: Array.isArray(p.photos) ? p.photos : (p.photos ? [p.photos] : [])
+    }));
+    res.render('for-sellers', {
+      title: 'For Sellers',
+      bodyClass: 'page-for-sellers header-dark',
+      soldProperties: soldProperties || []
+    });
+  } catch (err) {
+    next(err);
+  }
 };
 
 // Render about page

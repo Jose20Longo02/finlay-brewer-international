@@ -327,9 +327,11 @@
             
             <div class="properties-grid" id="propertiesGrid">
               <% properties.forEach(property => { %>
-                <div class="property-card country-<%= property.country.toLowerCase() %>" 
-                     data-country="<%= property.country %>"
-                     data-property-id="<%= property.id %>">
+                <a href="/properties/<%= property.slug %>" 
+                   class="property-card country-<%= property.country.toLowerCase() %>" 
+                   data-country="<%= property.country %>"
+                   data-property-id="<%= property.id %>"
+                   aria-label="View property: <%= property.title %>">
                   
                   <!-- Property Image -->
                   <div class="property-image">
@@ -403,11 +405,11 @@
                     </div>
                     
                     <div class="property-footer property-footer--actions">
-                      <button type="button" class="btn-compare" onclick="event.stopPropagation(); compareProperty('<%= property.id %>')">Compare</button>
-                      <a href="/properties/<%= property.slug %>" class="btn-view-property">View Property</a>
+                      <button type="button" class="btn-compare" onclick="event.preventDefault(); event.stopPropagation(); compareProperty('<%= property.id %>')">Compare</button>
+                      <span class="btn-view-property">View Property</span>
                     </div>
                   </div>
-                </div>
+                </a>
               <% }); %>
             </div>
             

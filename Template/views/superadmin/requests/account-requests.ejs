@@ -1,57 +1,64 @@
-<!-- views/admin/requests/list.ejs -->
 <% title = 'Account Requests' %>
 <link rel="stylesheet" href="/css/superadmin/account-requests.css" />
 
 <div class="admin-panel">
   <div class="admin-body">
-    <!-- Sidebar -->
-    <%- include('../../partials/superadmin-sidebar', {
-      activePage: 'requests',     // or 'projects', 'properties', etc.
-      pendingCount: pendingCount   // make sure you pass this in your controller
-    }) %>
+    <%- include('../../partials/superadmin-sidebar', { activePage: 'requests', pendingCount: pendingCount }) %>
 
-    <!-- Main content -->
-<main class="admin-content">
-      <section class="requests-container">
-        <h1>Pending Account Requests</h1>
+    <main class="admin-content ar-content">
+      <section class="ar-container">
+        <header class="ar-header">
+          <div>
+            <h1>Account requests</h1>
+            <p class="ar-subtitle">Review and approve or reject pending sign-ups.</p>
+          </div>
+          <% if (pendingCount > 0) { %>
+            <span class="ar-badge"><%= pendingCount %> pending</span>
+          <% } %>
+        </header>
 
         <% if (pendingCount === 0) { %>
-          <p class="empty">No pending account requests.</p>
+          <div class="ar-empty">
+            <p class="ar-empty-title">No pending requests</p>
+            <p class="ar-empty-text">New account requests will appear here.</p>
+          </div>
         <% } else { %>
-          <div class="requests-grid">
-            <% requests.forEach(function(req) { %>
-              <div class="request-card">
-                <!-- Role selector -->
-                <form
-                  action="/superadmin/dashboard/requests/<%= req.id %>/role"
-                  method="post"
-                  class="role-form"
-                >
-                  <select name="role" class="role-select" onchange="this.form.submit()">
-                    <option value="Admin"      <%= req.role === 'Admin'      ? 'selected' : '' %>>Admin</option>
-                    <option value="SuperAdmin" <%= req.role === 'SuperAdmin' ? 'selected' : '' %>>SuperAdmin</option>
-                  </select>
-                </form>
-
-                <img
-                  src="<%= req.profile_picture || '/img/default-avatar.png' %>"
-                  alt="<%= req.name %>"
-                  class="thumb"
-                />
-                <h3><%= req.name %></h3>
-                <p class="position"><%= req.position %> — <%= req.area %></p>
-
-                <% if (req.id !== currentUser.id) { %>
-                  <div class="actions">
-                    <form action="/superadmin/dashboard/requests/<%= req.id %>/approve" method="post">
-                      <button type="submit" class="btn btn-primary">Approve</button>
-                    </form>
-                    <form action="/superadmin/dashboard/requests/<%= req.id %>/reject" method="post">
-                      <button type="submit" class="btn btn-danger">Reject</button>
-                    </form>
+          <div class="ar-grid">
+            <% requests.forEach(function(req, i) { %>
+              <article class="ar-card" style="animation-delay: <%= (i % 10) * 0.04 %>s">
+                <div class="ar-card-top">
+                  <div class="ar-card-avatar-wrap">
+                    <img
+                      src="<%= req.profile_picture || '/img/default-avatar.png' %>"
+                      alt=""
+                      class="ar-card-avatar"
+                    />
                   </div>
-                <% } %>
-              </div>
+                  <form action="/superadmin/dashboard/requests/<%= req.id %>/role" method="post" class="ar-role-form">
+                    <label for="role-<%= req.id %>" class="ar-role-label">Role</label>
+                    <select id="role-<%= req.id %>" name="role" onchange="this.form.submit()">
+                      <option value="Admin" <%= req.role === 'Admin' ? 'selected' : '' %>>Admin</option>
+                      <option value="SuperAdmin" <%= req.role === 'SuperAdmin' ? 'selected' : '' %>>SuperAdmin</option>
+                    </select>
+                  </form>
+                </div>
+                <div class="ar-card-body">
+                  <h3 class="ar-card-name"><%= req.name %></h3>
+                  <p class="ar-card-meta"><%= req.position %> — <%= req.area %></p>
+                  <% if (req.id !== currentUser.id) { %>
+                    <div class="ar-actions">
+                      <form action="/superadmin/dashboard/requests/<%= req.id %>/approve" method="post" class="ar-action-form">
+                        <button type="submit" class="btn btn-primary">Approve</button>
+                      </form>
+                      <form action="/superadmin/dashboard/requests/<%= req.id %>/reject" method="post" class="ar-action-form">
+                        <button type="submit" class="btn btn-danger">Reject</button>
+                      </form>
+                    </div>
+                  <% } else { %>
+                    <span class="ar-badge-you">You</span>
+                  <% } %>
+                </div>
+              </article>
             <% }); %>
           </div>
         <% } %>

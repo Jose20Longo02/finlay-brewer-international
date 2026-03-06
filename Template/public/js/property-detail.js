@@ -18,7 +18,8 @@ class PropertyDetailPage {
       const photosEnc = data.getAttribute('data-photos');
       if (photosEnc) {
         try {
-          this.photos = JSON.parse(decodeURIComponent(photosEnc)) || [];
+          const parsed = JSON.parse(decodeURIComponent(photosEnc));
+          this.photos = Array.isArray(parsed) ? parsed : (parsed ? [parsed] : []);
         } catch (e) {
           this.photos = [];
         }
@@ -37,7 +38,28 @@ class PropertyDetailPage {
   init() {
     this.loadPhotos();
     this.loadSimilarProperties();
+    this.initLocationMap();
     this.bindEvents();
+  }
+
+  initLocationMap() {
+    const mapEl = document.getElementById('propertyDetailMap');
+    if (!mapEl || typeof L === 'undefined') return;
+    const lat = parseFloat(mapEl.getAttribute('data-lat'));
+    const lng = parseFloat(mapEl.getAttribute('data-lng'));
+    if (Number.isNaN(lat) || Number.isNaN(lng)) return;
+    try {
+      const map = L.map('propertyDetailMap', { center: [lat, lng], zoom: 15 });
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+      }).addTo(map);
+      L.marker([lat, lng]).addTo(map);
+      setTimeout(() => {
+        if (map) map.invalidateSize();
+      }, 100);
+    } catch (e) {
+      console.error('Property detail map init failed:', e);
+    }
   }
 
   loadPhotos() {
@@ -57,6 +79,16 @@ class PropertyDetailPage {
     if (numEl) numEl.textContent = String(index + 1);
     if (totalEl) totalEl.textContent = String(this.photos.length);
     this.currentPhotoIndex = index;
+
+    // Sync thumbnail focus: set is-active on current, scroll into view
+    const thumbs = document.querySelectorAll('.gallery-thumb');
+    thumbs.forEach((thumb, i) => {
+      thumb.classList.toggle('is-active', i === index);
+    });
+    const activeThumb = document.querySelector('.gallery-thumb.is-active');
+    if (activeThumb) {
+      activeThumb.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'smooth' });
+    }
   }
 
   loadSimilarProperties() {
@@ -173,6 +205,15 @@ class PropertyDetailPage {
     if (contactForm) {
       contactForm.addEventListener('submit', this.handleContactFormSubmit.bind(this));
     }
+    // Thumbnail clicks: go to that photo
+    document.querySelectorAll('.gallery-thumb').forEach((thumb) => {
+      thumb.addEventListener('click', () => {
+        const index = parseInt(thumb.getAttribute('data-index'), 10);
+        if (!Number.isNaN(index) && index >= 0 && index < this.photos.length) {
+          showPhoto(index);
+        }
+      });
+    });
   }
 
   handleContactFormSubmit(event) {

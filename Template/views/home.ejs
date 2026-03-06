@@ -70,7 +70,7 @@
       <span class="hero-tabs-line" aria-hidden="true"></span>
       <span class="hero-tab-indicator" aria-hidden="true"></span>
       <% heroDestinations.forEach((dest, i) => { %>
-      <span class="hero-tab <%= i === 0 ? 'active' : '' %>" data-destination="<%= dest.id %>" data-country="<%= dest.country %>"><a href="/properties?country=<%= encodeURIComponent(dest.country) %>"><%= dest.label %></a></span>
+      <span class="hero-tab <%= i === 0 ? 'active' : '' %>" data-destination="<%= dest.id %>" data-country="<%= dest.country %>"><a href="<%= dest.country === 'UK' ? 'https://www.finlaybrewer.co.uk/' : '/properties?country=' + encodeURIComponent(dest.country) %>"><%= dest.label %></a></span>
       <% }); %>
     </div>
   </div>
@@ -78,6 +78,8 @@
 
 <div class="container">
 
+<% const fp = typeof featuredProperties !== 'undefined' ? featuredProperties : []; %>
+<% if (fp.length >= 5) { %>
 <!-- Our Favorite Properties Section -->
 <section class="favorite-properties-section" id="favorite-properties">
   <div class="section-header-row">
@@ -93,34 +95,28 @@
 <div class="gallery-strip-wrapper">
   <div class="gallery-strip" data-autoplay="true">
     <div class="gallery-track" id="favoritePropertiesTrack">
-      <% const fp = typeof featuredProperties !== 'undefined' ? featuredProperties : []; %>
-      <% if (fp.length > 0) { %>
-        <% fp.forEach(property => { %>
-          <a href="<%= property.slug ? '/properties/' + property.slug : '/properties' %>" class="gallery-frame gallery-frame--property" data-index="<%= property.id %>">
-            <div class="gallery-frame-img">
-              <img src="<%= (property.photos && property.photos[0]) ? property.photos[0] : '/img/property-placeholder.jpg' %>" 
-                   alt="<%= property.title %>" loading="lazy" decoding="async"
-                   onerror="this.src='/img/property-placeholder.jpg'">
-            </div>
-            <div class="gallery-frame-content">
-              <h3 class="gallery-frame-title"><%= property.title %></h3>
-              <div class="gallery-frame-meta"><%= property.city %>, <%= property.country %></div>
-              <div class="gallery-frame-price">€<%= Number(property.price).toLocaleString('en-US', { maximumFractionDigits: 0 }) %></div>
-            </div>
-          </a>
-        <% }); %>
-      <% } else { %>
-        <div class="gallery-empty" style="padding: 48px; text-align: center; color: var(--gray-600); width: 100%;">
-          <p>No properties available. <a href="/properties">Browse all properties</a></p>
-        </div>
-      <% } %>
+      <% fp.forEach(property => { %>
+        <a href="<%= property.slug ? '/properties/' + property.slug : '/properties' %>" class="gallery-frame gallery-frame--property" data-index="<%= property.id %>">
+          <div class="gallery-frame-img">
+            <img src="<%= (property.photos && property.photos[0]) ? property.photos[0] : '/img/property-placeholder.jpg' %>" 
+                 alt="<%= property.title %>" loading="lazy" decoding="async"
+                 onerror="this.src='/img/property-placeholder.jpg'">
+          </div>
+          <div class="gallery-frame-content">
+            <h3 class="gallery-frame-title"><%= property.title %></h3>
+            <div class="gallery-frame-meta"><%= property.city %>, <%= property.country %></div>
+            <div class="gallery-frame-price">€<%= Number(property.price).toLocaleString('en-US', { maximumFractionDigits: 0 }) %></div>
+          </div>
+        </a>
+      <% }); %>
     </div>
   </div>
 </div>
+<% } %>
 
 <!-- About Finlay Brewer International Section -->
 <section class="about-section" id="about">
-  <div class="about-section-bg" style="background-image: url('/img/Montenegro.jpg');" aria-hidden="true"></div>
+  <div class="about-section-bg" style="background-image: url('/img/French-riviera-about-section-home-page.jpg');" aria-hidden="true"></div>
   <div class="about-section-overlay" aria-hidden="true"></div>
   <div class="about-section-content">
     <h2 class="about-section-title">About Finlay Brewer<br>International</h2>
@@ -271,7 +267,7 @@
   <h2 class="contact-section-title">Contact Us</h2>
   <div class="contact-inner">
     <div class="contact-office-card" id="contactOfficeCard">
-      <div class="contact-office-bg" style="background-image: url('/img/London.jpg');"></div>
+      <div class="contact-office-bg" style="background-image: url('/img/london-office.jpg');"></div>
       <div class="contact-office-overlay">
         <h3 class="contact-office-heading">Our Office</h3>
         <p class="contact-office-text">Office Addresse</p>

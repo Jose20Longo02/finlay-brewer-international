@@ -1,103 +1,270 @@
-/* public/css/admin/edit-profile.css */
+/* Admin Edit Profile – modern, engaging design */
 
-/* 1. Base reset + full-height */
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-html, body {
-  height: 100%;
-}
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
-/* 2. Center the page as a column */
-.form-page { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; padding:1rem; background: radial-gradient(1200px 800px at 10% -10%, rgba(0,0,0,0.05), transparent), radial-gradient(1200px 800px at 110% 110%, rgba(0,0,0,0.04), transparent), var(--color-light); }
-
-/* 3. Back-link wrapper */
-.back-wrapper {
-  width: 100%;
-  max-width: 500px;
-  margin-bottom: 1rem;         /* space between link & form */
-  text-align: right;
-}
-.back-dashboard {
-  text-decoration: none;
-  color: var(--color-secondary);
-  font-size: 0.9rem;
-  transition: color 0.2s;
-}
-.back-dashboard:hover {
-  color: var(--color-primary);
-}
-
-/* 4. Form container */
-.form-container { width:100%; max-width:520px; background:#fff; padding: 2rem; border-radius: var(--card-radius); box-shadow: var(--card-shadow); border:1px solid rgba(0,0,0,.08); }
-
-/* 5. Heading */
-.form-container h1 {
-  margin-bottom: 1.5rem;
-  color: var(--color-primary);
-  text-align: center;
-}
-
-/* 6. Alerts */
-.alert {
-  padding: 0.75rem 1rem;
-  border-radius: 4px;
-  margin-bottom: 1rem;
-}
-.alert-error {
-  background: #fdecea;
-  color: #b71c1c;
-}
-.alert-success {
-  background: #e8f5e9;
-  color: #2e7d32;
-}
-
-/* 7. Form groups */
-.form-group {
-  margin-bottom: 1rem;
+/* Page wrapper – gradient background, centered content */
+.ap-page {
+  min-height: 100vh;
+  padding: var(--spacing-6) var(--spacing-6) var(--spacing-12);
+  background: linear-gradient(180deg, #f8f9fb 0%, #f0f2f5 100%);
   display: flex;
   flex-direction: column;
+  align-items: center;
 }
-.form-group label {
-  margin-bottom: 0.5rem;
-  font-weight: 600;
-}
-.form-group input, .form-group select { padding: .7rem .9rem; border:1px solid rgba(0,0,0,.16); border-radius:12px; font-size:1rem; transition:border-color .15s, box-shadow .15s; }
-.form-group input:focus, .form-group select:focus { outline:none; border-color: var(--color-primary); box-shadow:0 0 0 4px rgba(0,0,0,.06); }
 
-/* 8. Thumbnail preview */
-.thumb-wrapper {
-  margin-bottom: 0.5rem;
-  text-align: center;
+.ap-back-wrap {
+  width: 100%;
+  max-width: 560px;
+  margin-bottom: 1.5rem;
+  text-align: left;
 }
-.thumb {
+
+.ap-back {
+  font-size: 0.9375rem;
+  color: #5c5c5c;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.ap-back:hover {
+  color: #111;
+}
+
+/* Main container */
+.ap-container {
+  width: 100%;
+  max-width: 560px;
+  animation: ap-fade-in 0.4s ease-out;
+}
+
+@keyframes ap-fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Header */
+.ap-header {
+  margin-bottom: var(--spacing-6);
+}
+
+.ap-header h1 {
+  font-size: clamp(1.5rem, 3.5vw, 2rem);
+  font-weight: 700;
+  color: #1a1a1a;
+  letter-spacing: -0.02em;
+  margin-bottom: 0.25rem;
+}
+
+.ap-subtitle {
+  font-size: 0.9375rem;
+  color: #5c5c5c;
+}
+
+/* Alerts */
+.ap-alert {
+  padding: 1rem 1.25rem;
+  border-radius: 12px;
+  margin-bottom: var(--spacing-5);
+  font-size: 0.9375rem;
+}
+
+.ap-alert--error {
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
+.ap-alert--success {
+  background: #f0fdf4;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+}
+
+/* Form */
+.ap-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* Sections */
+.ap-section {
+  background: #fff;
+  border-radius: var(--card-radius);
+  padding: var(--spacing-6);
+  margin-bottom: var(--spacing-5);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  border: 1px solid rgba(0,0,0,0.06);
+}
+
+.ap-section-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: var(--spacing-4);
+}
+
+.ap-section-hint {
+  font-size: 0.875rem;
+  color: #666;
+  margin-bottom: var(--spacing-4);
+}
+
+/* Profile row: avatar + fields */
+.ap-profile-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-6);
+}
+
+.ap-avatar-upload {
+  flex-shrink: 0;
+}
+
+.ap-avatar-label {
+  display: block;
+  cursor: pointer;
+}
+
+.ap-avatar-preview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 100px;
   height: 100px;
-  object-fit: cover;
   border-radius: 50%;
+  overflow: hidden;
+  background: #f0f2f5;
+  border: 2px dashed rgba(0,0,0,0.15);
+  transition: border-color 0.2s, background 0.2s;
 }
 
-/* 9. Password-error text */
-.error-text {
+.ap-avatar-label:hover .ap-avatar-preview {
+  border-color: rgba(0,0,0,0.3);
+  background: #e8eaed;
+}
+
+.ap-avatar-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ap-avatar-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  padding: 0.5rem;
+}
+
+.ap-avatar-icon {
+  font-size: 1.75rem;
+  opacity: 0.5;
+}
+
+.ap-avatar-hint {
+  font-size: 0.75rem;
+  color: #666;
+  font-weight: 500;
+}
+
+.ap-avatar-input {
+  position: absolute;
+  width: 0.1px;
+  height: 0.1px;
+  opacity: 0;
+  overflow: hidden;
+  z-index: -1;
+}
+
+/* Fields */
+.ap-fields {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+}
+
+.ap-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.ap-field label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.ap-field input,
+.ap-field select {
+  padding: 0.6rem 0.9rem;
+  border: 1px solid rgba(0,0,0,0.12);
+  border-radius: 10px;
+  font-size: 1rem;
+  font-family: inherit;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.ap-field input:focus,
+.ap-field select:focus {
+  outline: none;
+  border-color: #111;
+  box-shadow: 0 0 0 3px rgba(17,17,17,0.08);
+}
+
+.ap-field input::placeholder {
+  color: #999;
+}
+
+/* Password error */
+.ap-error {
+  font-size: 0.8125rem;
+  color: #b91c1c;
   margin-top: 0.25rem;
-  font-size: 0.875rem;
-  color: #b71c1c;
-  min-height: 1em;
+  min-height: 1.25em;
 }
 
-/* 10. Primary button */
-.btn-primary { width:100%; padding:.9rem; background:var(--color-primary); color:#fff; border:none; border-radius:999px; font-size:1rem; cursor:pointer; margin-top:1rem; box-shadow:0 8px 20px rgba(0,0,0,.12); transition: transform .16s, box-shadow .16s, opacity .16s; }
-.btn-primary:hover { transform: translateY(-1px); opacity:.95; box-shadow:0 12px 28px rgba(0,0,0,.16); }
+/* Submit button */
+.ap-submit {
+  width: 100%;
+  padding: 0.85rem 1.25rem;
+  background: #111;
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+}
 
-/* 11. Mobile tweaks */
-@media (max-width: 480px) {
-  .form-container {
-    padding: 1.5rem;
+.ap-submit:hover {
+  background: #333;
+  transform: translateY(-1px);
+}
+
+/* Responsive */
+@media (max-width: 560px) {
+  .ap-page {
+    padding: 1rem;
   }
-  .back-dashboard {
-    font-size: 0.85rem;
+
+  .ap-profile-row {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .ap-fields {
+    width: 100%;
+  }
+
+  .ap-section {
+    padding: 1.25rem;
   }
 }

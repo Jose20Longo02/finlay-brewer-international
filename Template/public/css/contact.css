@@ -77,7 +77,7 @@ body.header-dark .header-hamburger-bar { background: #fff; }
   left: 0;
   right: 0;
   padding: 3rem 1.5rem 2rem;
-  background: linear-gradient(to top, rgba(17, 17, 17, 0.98) 0%, rgba(17, 17, 17, 0.6) 40%, transparent 100%);
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.85) 35%, rgba(0, 0, 0, 0.6) 60%, rgba(0, 0, 0, 0.3) 85%, transparent 100%);
   color: #fff;
 }
 

@@ -8,12 +8,20 @@ const path        = require('path');
 const sendMail    = require('../config/mailer');
 const { generateVariants, SIZES } = require('../middleware/imageVariants');
 
+// Parse a cookie value from the request (no cookie-parser needed)
+function getCookie(req, name) {
+  const h = req.headers.cookie || '';
+  const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const m = h.match(new RegExp('(?:^|;)\\s*' + escaped + '=([^;]*)'));
+  return m ? decodeURIComponent(m[1].trim()) : null;
+}
+
 // Extract coordinates from common map link formats or raw "lat,lng"
 function extractCoordsFromLink(input) {
   if (!input || typeof input !== 'string') return { lat: null, lng: null };
   const text = input.trim();
-  // Google Maps deep link: @lat,lng
-  let m = text.match(/@\s*(-?\d+\.?\d*)\s*,\s*(-?\d+\.?\d*)/);
+  // Google Maps: @lat,lng (optional ,17z or /data= after)
+  let m = text.match(/@(-?\d+\.?\d*)\s*,\s*(-?\d+\.?\d*)/);
   if (m) return { lat: Number(m[1]), lng: Number(m[2]) };
   // Query parameters: q=lat,lng or ll=lat,lng
   m = text.match(/[?&](?:q|ll)=\s*(-?\d+\.?\d*)\s*,\s*(-?\d+\.?\d*)/);
@@ -22,6 +30,18 @@ function extractCoordsFromLink(input) {
   m = text.match(/(-?\d+\.?\d*)\s*,\s*(-?\d+\.?\d*)/);
   if (m) return { lat: Number(m[1]), lng: Number(m[2]) };
   return { lat: null, lng: null };
+}
+
+function getUploadedFileUrl(file, fallbackFolder = '/uploads/properties') {
+  if (!file) return null;
+  if (typeof file.path === 'string' && /^https?:\/\//i.test(file.path)) {
+    return file.path;
+  }
+  if (typeof file.secure_url === 'string' && /^https?:\/\//i.test(file.secure_url)) {
+    return file.secure_url;
+  }
+  if (file.filename) return `${fallbackFolder}/${file.filename}`;
+  return null;
 }
 
 //
@@ -56,6 +76,9 @@ exports.listPropertiesPublic = async (req, res, next) => {
     const whereConditions = [];
     const queryParams = [];
     let paramIndex = 1;
+
+    // Only show active listings on public list (sold/under_offer appear in "Our results" only)
+    whereConditions.push(`(COALESCE(p.status, 'active') = 'active')`);
 
     // Search query (title, description, location)
     if (q && q.trim()) {
@@ -359,7 +382,7 @@ exports.showProperty = async (req, res, next) => {
           ELSE NULL
         END as size,
         p.featured, p.created_at, p.description,
-        p.year_built, p.map_link,
+        p.year_built, p.map_link, p.latitude, p.longitude,
         u.name as agent_name, u.profile_picture as agent_profile_picture
       FROM properties p
       LEFT JOIN users u ON p.agent_id = u.id
@@ -399,6 +422,20 @@ exports.showProperty = async (req, res, next) => {
       }
     };
 
+    // View counter: realistic unique views, excluding staff
+    const isStaff = req.session?.user?.role === 'Admin' || req.session?.user?.role === 'SuperAdmin';
+    const cookieName = `pv_${p.id}`;
+    const alreadyViewed = getCookie(req, cookieName);
+    if (!isStaff && !alreadyViewed) {
+      await query('UPDATE properties SET views_count = COALESCE(views_count, 0) + 1 WHERE id = $1', [p.id]);
+      res.cookie(cookieName, '1', {
+        maxAge: 365 * 24 * 60 * 60 * 1000,
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/'
+      });
+    }
+
     res.render('properties/property-detail', {
       property,
       bodyClass: 'page-property-detail header-dark'
@@ -411,19 +448,15 @@ exports.showProperty = async (req, res, next) => {
 // Render “New Property” form
 exports.newPropertyForm = async (req, res, next) => {
   try {
-    const [{ rows: projects }, { rows: teamMembers }] = await Promise.all([
-      query('SELECT id, title FROM projects ORDER BY title'),
-      query(`
-        SELECT id, name
-          FROM users
-         WHERE role IN ('Admin','SuperAdmin')
-           AND approved = true
-         ORDER BY name
-      `)
-    ]);
+    const { rows: teamMembers } = await query(`
+      SELECT id, name
+        FROM users
+       WHERE role IN ('Admin','SuperAdmin')
+         AND approved = true
+       ORDER BY name
+    `);
     res.render('properties/new-property', {
       locations,
-      projects,
       teamMembers,
       error: null,
       form: {},
@@ -492,10 +525,6 @@ exports.createProperty = async (req, res, next) => {
       }
     }
 
-    // Project flags
-    const isInProject  = body.is_in_project === 'on' || body.is_in_project === 'true' || body.is_in_project === true;
-    const projectId    = isInProject ? toNum(body.project_id) : null;
-
     // Type specific
     const apartmentSize = type === 'Apartment' ? parseNumberField(body.apartment_size) : null;
     const bedrooms      = ['Apartment','House','Villa'].includes(type) ? parseNumberField(body.bedrooms) : null;
@@ -507,6 +536,12 @@ exports.createProperty = async (req, res, next) => {
     const livingSpace   = (type === 'House' || type === 'Villa') ? parseNumberField(body.living_space) : null;
     const landSize      = (type === 'House' || type === 'Villa' || type === 'Land') ? parseNumberField(body.land_size) : null;
     let planPhotoUrl  = null;
+
+    const propertyTax   = parseNumberField(body.property_tax);
+    const yearBuilt     = ['Apartment', 'House', 'Villa'].includes(type) ? parseNumberField(body.year_built) : null;
+    const energyClass   = ['Apartment', 'House', 'Villa'].includes(type) ? (body.energy_class?.trim() || null) : null;
+
+    const listingStatus = ['active', 'under_offer', 'sold'].includes(body.listing_status) ? body.listing_status : 'active';
 
     // Basic validation
     const errors = [];
@@ -531,11 +566,9 @@ exports.createProperty = async (req, res, next) => {
     if (type === 'Land') {
       if (!(landSize > 0))      errors.push('Land size is required and must be positive');
     }
-    if (isInProject && !projectId) errors.push('Project is required when "Part of a project" is checked');
-
     // Build photos from uploads OR provided URLs
     const uploadedPhotosFiles = (req.files && Array.isArray(req.files.photos)) ? req.files.photos : [];
-    let photos = uploadedPhotosFiles.map(f => '/uploads/properties/' + f.filename);
+    let photos = uploadedPhotosFiles.map(f => getUploadedFileUrl(f)).filter(Boolean);
     const urlPhotos = Array.isArray(body.photos) ? body.photos.filter(Boolean) : (body.photos ? [body.photos] : []);
     photos = [...photos, ...urlPhotos];
     if (photos.length < 1) errors.push('Please upload at least one photo');
@@ -545,35 +578,31 @@ exports.createProperty = async (req, res, next) => {
     let videoUrl = (body.video_source === 'link' ? (body.video_url?.trim() || null) : null);
     const uploadedVideoFile = (req.files && Array.isArray(req.files.video) && req.files.video[0]) ? req.files.video[0] : null;
     if (!videoUrl && uploadedVideoFile) {
-      videoUrl = '/uploads/properties/' + uploadedVideoFile.filename;
+      videoUrl = getUploadedFileUrl(uploadedVideoFile);
     }
 
     // Floorplan / plan photo uploads
     if (req.files) {
       if (type === 'Apartment' && Array.isArray(req.files.floorplan) && req.files.floorplan[0]) {
         const f = req.files.floorplan[0];
-        floorplanUrl = '/uploads/properties/' + f.filename;
+        floorplanUrl = getUploadedFileUrl(f);
       }
       if ((type === 'House' || type === 'Villa' || type === 'Land') && Array.isArray(req.files.plan_photo) && req.files.plan_photo[0]) {
         const p = req.files.plan_photo[0];
-        planPhotoUrl = '/uploads/properties/' + p.filename;
+        planPhotoUrl = getUploadedFileUrl(p);
       }
     }
 
     if (errors.length) {
-      const [{ rows: projects }, { rows: teamMembers }] = await Promise.all([
-        query('SELECT id, title FROM projects ORDER BY title'),
-        query(`
-          SELECT id, name
-            FROM users
-           WHERE role IN ('Admin','SuperAdmin')
-             AND approved = true
-           ORDER BY name
-        `)
-      ]);
+      const { rows: teamMembers } = await query(`
+        SELECT id, name
+          FROM users
+         WHERE role IN ('Admin','SuperAdmin')
+           AND approved = true
+         ORDER BY name
+      `);
       return res.status(400).render('properties/new-property', {
         locations,
-        projects,
         teamMembers,
         error: errors.join('. '),
         form,
@@ -607,7 +636,8 @@ exports.createProperty = async (req, res, next) => {
          apartment_size, bedrooms, bathrooms,
          total_size, living_space, land_size, plan_photo_url,
          is_in_project, project_id,
-         map_link,
+         map_link, property_tax, year_built, energy_class, status,
+         latitude, longitude,
          created_at
        ) VALUES (
          $1,$2,$3,$4,$5,$6,
@@ -615,7 +645,8 @@ exports.createProperty = async (req, res, next) => {
          $12,$13,$14,
          $15,$16,$17,$18,
          $19,$20,$21,$22,
-         $23,$24,
+         $23,$24,$25,$26,$27,$28,
+         $29,$30,
          NOW()
        ) RETURNING id`,
       [
@@ -624,14 +655,26 @@ exports.createProperty = async (req, res, next) => {
         floorplanUrl, agentId, req.session.user.id,
         apartmentSize, bedrooms, bathrooms,
         totalSize, livingSpace, landSize, planPhotoUrl,
-        isInProject, projectId,
-        mapLink
+        false, null,
+        mapLink, propertyTax, yearBuilt, energyClass, listingStatus,
+        (Number.isFinite(latitude) ? latitude : null),
+        (Number.isFinite(longitude) ? longitude : null)
       ]
     );
     const newId = insertRes.rows[0].id;
 
-    // Move uploaded files into a property-specific folder and update paths
+    // Move uploaded files into a property-specific folder and update paths (local disk only)
     try {
+      const allUploads = [
+        ...uploadedPhotosFiles,
+        ...(uploadedVideoFile ? [uploadedVideoFile] : []),
+        ...(req.files && Array.isArray(req.files.floorplan) ? req.files.floorplan : []),
+        ...(req.files && Array.isArray(req.files.plan_photo) ? req.files.plan_photo : [])
+      ];
+      const hasCloudUploads = allUploads.some(f => typeof f.path === 'string' && /^https?:\/\//i.test(f.path));
+      if (hasCloudUploads) {
+        throw new Error('skip-local-move');
+      }
       const propDir = path.join(__dirname, '../public/uploads/properties', String(newId));
       if (!fs.existsSync(propDir)) {
         fs.mkdirSync(propDir, { recursive: true });
@@ -694,8 +737,12 @@ exports.createProperty = async (req, res, next) => {
         [photos, videoUrl, floorplanUrl, planPhotoUrl, newId]
       );
     } catch (fileErr) {
+      if (fileErr && fileErr.message === 'skip-local-move') {
+        // Cloudinary uploads already have final URLs.
+      } else {
       // Non-fatal: log and continue
-      console.error('File move error:', fileErr);
+        console.error('File move error:', fileErr);
+      }
     }
 
     const role = req.session.user.role;
@@ -724,21 +771,16 @@ exports.editPropertyForm = async (req, res, next) => {
       return res.status(403).send('Forbidden – Not assigned to you');
     }
 
-    // Fetch options needed by the form
-    const [{ rows: projects }, { rows: teamMembers }] = await Promise.all([
-      query('SELECT id, title FROM projects ORDER BY title'),
-      query(`
-        SELECT id, name
-          FROM users
-         WHERE role IN ('Admin','SuperAdmin') AND approved = true
-         ORDER BY name
-      `)
-    ]);
+    const { rows: teamMembers } = await query(`
+      SELECT id, name
+        FROM users
+       WHERE role IN ('Admin','SuperAdmin') AND approved = true
+       ORDER BY name
+    `);
 
     res.render('properties/edit-property', {
       property,
       locations,
-      projects,
       teamMembers,
       currentUser: req.session.user,
       error: null
@@ -793,10 +835,6 @@ exports.updateProperty = async (req, res, next) => {
     let agentId = parseNumberField(body.agent_id);
     if (!agentId) agentId = existing.agent_id;
 
-    // Project flags
-    const isInProject  = body.is_in_project === 'on' || body.is_in_project === 'true' || body.is_in_project === true;
-    const projectId    = isInProject ? parseNumberField(body.project_id) : null;
-
     // Type specific
     const apartmentSize = type === 'Apartment' ? parseNumberField(body.apartment_size) : null;
     const bedrooms      = ['Apartment','House','Villa'].includes(type) ? parseNumberField(body.bedrooms) : null;
@@ -807,6 +845,12 @@ exports.updateProperty = async (req, res, next) => {
     const livingSpace   = (type === 'House' || type === 'Villa') ? parseNumberField(body.living_space) : null;
     const landSize      = (type === 'House' || type === 'Villa' || type === 'Land') ? parseNumberField(body.land_size) : null;
     let planPhotoUrl    = existing.plan_photo_url;
+
+    const propertyTax   = body.property_tax !== undefined ? parseNumberField(body.property_tax) : existing.property_tax;
+    const yearBuilt     = ['Apartment', 'House', 'Villa'].includes(type) ? parseNumberField(body.year_built) : null;
+    const energyClass   = ['Apartment', 'House', 'Villa'].includes(type) ? (body.energy_class?.trim() || null) : null;
+
+    const listingStatus = ['active', 'under_offer', 'sold'].includes(body.listing_status) ? body.listing_status : (existing.status || 'active');
 
     // Coordinates (optional) + map link parsing
     let latitude     = body.latitude !== undefined ? parseNumberField(body.latitude) : existing.latitude;
@@ -820,26 +864,45 @@ exports.updateProperty = async (req, res, next) => {
       }
     }
 
-    // Uploaded files
+    // Uploaded files: keep existing (body.existing_photos) and add new uploads; order by photo_order when present
     const uploadedPhotosFiles = (req.files && Array.isArray(req.files.photos)) ? req.files.photos : [];
-    let photos = uploadedPhotosFiles.length ? uploadedPhotosFiles.map(f => '/uploads/properties/' + f.filename) : existing.photos || [];
-    const urlPhotos = Array.isArray(body.photos) ? body.photos.filter(Boolean) : (body.photos ? [body.photos] : []);
-    if (!uploadedPhotosFiles.length && urlPhotos.length) photos = urlPhotos;
+    const existingPhotos = Array.isArray(body.existing_photos) ? body.existing_photos.filter(Boolean) : (body.existing_photos ? [body.existing_photos] : []);
+    const newPaths = uploadedPhotosFiles.length ? uploadedPhotosFiles.map(f => getUploadedFileUrl(f)).filter(Boolean) : [];
+    let photos;
+    const orderRaw = body.photo_order;
+    if (orderRaw && typeof orderRaw === 'string' && (existingPhotos.length || newPaths.length)) {
+      const order = orderRaw.split(',').map(s => s.trim()).filter(Boolean);
+      photos = order.map((ref) => {
+        if (ref.startsWith('e')) {
+          const i = parseInt(ref.slice(1), 10);
+          return Number.isInteger(i) && i >= 0 && i < existingPhotos.length ? existingPhotos[i] : null;
+        }
+        if (ref.startsWith('n')) {
+          const i = parseInt(ref.slice(1), 10);
+          return Number.isInteger(i) && i >= 0 && i < newPaths.length ? newPaths[i] : null;
+        }
+        return null;
+      }).filter(Boolean);
+    } else {
+      photos = existingPhotos.length || newPaths.length
+        ? [ ...existingPhotos, ...newPaths ]
+        : existing.photos || [];
+    }
 
     let videoUrl = (body.video_source === 'link' ? (body.video_url?.trim() || null) : null) || existing.video_url;
     const uploadedVideoFile = (req.files && Array.isArray(req.files.video) && req.files.video[0]) ? req.files.video[0] : null;
     if (!videoUrl && uploadedVideoFile) {
-      videoUrl = '/uploads/properties/' + uploadedVideoFile.filename;
+      videoUrl = getUploadedFileUrl(uploadedVideoFile);
     }
 
     if (req.files) {
       if (type === 'Apartment' && Array.isArray(req.files.floorplan) && req.files.floorplan[0]) {
         const f = req.files.floorplan[0];
-        floorplanUrl = '/uploads/properties/' + f.filename;
+        floorplanUrl = getUploadedFileUrl(f);
       }
       if ((type === 'House' || type === 'Villa' || type === 'Land') && Array.isArray(req.files.plan_photo) && req.files.plan_photo[0]) {
         const p = req.files.plan_photo[0];
-        planPhotoUrl = '/uploads/properties/' + p.filename;
+        planPhotoUrl = getUploadedFileUrl(p);
       }
     }
 
@@ -866,14 +929,10 @@ exports.updateProperty = async (req, res, next) => {
     }
 
     if (errors.length) {
-      const [{ rows: projects }, { rows: teamMembers }] = await Promise.all([
-        query('SELECT id, title FROM projects ORDER BY title'),
-        query(`SELECT id, name FROM users WHERE role IN ('Admin','SuperAdmin') AND approved = true ORDER BY name`)
-      ]);
+      const { rows: teamMembers } = await query(`SELECT id, name FROM users WHERE role IN ('Admin','SuperAdmin') AND approved = true ORDER BY name`);
       return res.status(400).render('properties/edit-property', {
         property: existing,
         locations,
-        projects,
         teamMembers,
         currentUser: req.session.user,
         error: errors.join('. ')
@@ -892,9 +951,9 @@ exports.updateProperty = async (req, res, next) => {
          land_size=$18, plan_photo_url=$19,
          is_in_project=$20, project_id=$21,
          agent_id=$22,
-         map_link=$23,
+         map_link=$23, property_tax=$24, year_built=$25, energy_class=$26, status=$27,
          updated_at=NOW()
-       WHERE id=$24`,
+       WHERE id=$28`,
       [
         country, city, neighborhood,
         title, slugify(title, { lower: true, strict: true }), description,
@@ -903,9 +962,9 @@ exports.updateProperty = async (req, res, next) => {
         apartmentSize, bedrooms, bathrooms, floorplanUrl,
         totalSize, livingSpace,
         landSize, planPhotoUrl,
-        isInProject, projectId,
+        false, null,
         agentId,
-        mapLinkRaw,
+        mapLinkRaw, propertyTax, yearBuilt, energyClass, listingStatus,
         propId
       ]
     );
@@ -1217,7 +1276,7 @@ exports.listMyProperties = async (req, res, next) => {
 // Get featured properties for home page (always 200, never 500)
 exports.getFeaturedProperties = async (req, res) => {
   try {
-    const sql = `SELECT id, title, slug, country, city, neighborhood, price, photos, type FROM properties ORDER BY created_at DESC LIMIT 6`;
+    const sql = `SELECT id, title, slug, country, city, neighborhood, price, photos, type FROM properties WHERE COALESCE(status, 'active') = 'active' ORDER BY created_at DESC LIMIT 6`;
     const result = await query(sql);
     const rows = result && result.rows ? result.rows : [];
     const list = rows.map(p => ({

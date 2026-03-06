@@ -2,11 +2,10 @@
 
 const express        = require('express');
 const session        = require('express-session');
+const PgSession      = require('connect-pg-simple')(session);
 const path           = require('path');
 const expressLayouts = require('express-ejs-layouts');
 const authRoutes     = require('./routes/authRoutes');
-const projectRoutes  = require('./routes/projectRoutes');
-const publicProjectRoutes = require('./routes/publicProjectRoutes');
 const adminUserRoutes    = require('./routes/adminUserRoutes');
 const superAdminRoutes   = require('./routes/superAdminRoutes');
 const { publicRouter: propertyRoutes, adminRouter: adminPropertyRoutes } = require('./routes/propertyRoutes');
@@ -109,17 +108,34 @@ function getSimilarProperties(country, city, excludeId, limit = 6) {
   }).catch(() => []);
 }
 
+/** Fetches sold properties for "Our results speak from themselves" (for-sellers, about). */
+function getSoldProperties(limit = 12) {
+  const sql = `SELECT id, title, slug, country, city, neighborhood, price, photos, type
+    FROM properties
+    WHERE COALESCE(status, 'active') = 'sold'
+    ORDER BY updated_at DESC NULLS LAST, created_at DESC
+    LIMIT $1`;
+  return query(sql, [limit]).then(result => {
+    const rows = result && result.rows ? result.rows : [];
+    return rows.map(p => ({
+      ...p,
+      photos: Array.isArray(p.photos) ? p.photos : (p.photos ? [p.photos] : [])
+    }));
+  }).catch(() => []);
+}
+
 /** Fetches Our Favorite Properties: featured first, then most viewed, then random. Fallback: placeholder data. */
 function getFavoriteProperties() {
   const sql = `SELECT id, title, slug, country, city, neighborhood, price, photos, type
     FROM properties
+    WHERE COALESCE(status, 'active') = 'active'
     ORDER BY (CASE WHEN COALESCE(featured, false) = true THEN 1 ELSE 2 END),
              COALESCE(views_count, 0) DESC,
              RANDOM()
     LIMIT 6`;
   return query(sql).then(result => {
     const rows = result && result.rows ? result.rows : [];
-    if (rows.length === 0) return getPlaceholderProperties();
+    if (rows.length === 0) return [];
     return rows.map(p => ({
       ...p,
       photos: Array.isArray(p.photos) ? p.photos : (p.photos ? [p.photos] : [])
@@ -181,10 +197,25 @@ app.use((req, res, next) => {
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
+if (process.env.NODE_ENV === 'production') {
+  app.set('trust proxy', 1);
+}
 app.use(session({
+  store: new PgSession({
+    conString: process.env.DATABASE_URL,
+    tableName: 'user_sessions',
+    createTableIfMissing: true,
+    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+  }),
   secret: process.env.SESSION_SECRET || 'supersecret',
   resave: false,
-  saveUninitialized: false
+  saveUninitialized: false,
+  cookie: {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 1000 * 60 * 60 * 24 * 7
+  }
 }));
 
 // 1) Set up EJS **first**
@@ -216,23 +247,29 @@ app.get('/', (req, res) => {
         bodyClass: 'page-home',
         user: req.session.user || null,
         locations,
-        featuredProperties: getPlaceholderProperties(),
+        featuredProperties: [],
         recentArticles: getPlaceholderArticles()
       });
     });
 });
 
 // About page – define early so it’s not caught by other routers
-app.get('/about', (req, res) => {
-  res.render('about', { title: 'About Us', bodyClass: 'page-about header-dark' });
+app.get('/about', (req, res, next) => {
+  getSoldProperties(12)
+    .then(soldProperties => {
+      res.render('about', {
+        title: 'About Us',
+        bodyClass: 'page-about header-dark',
+        soldProperties: soldProperties || []
+      });
+    })
+    .catch(next);
 });
 
 app.get('/blog', blogController.listPosts);
 
 // Routes
 app.use('/auth', authRoutes);
-app.use('/superadmin/dashboard/projects', projectRoutes);
-app.use('/projects', publicProjectRoutes);
 app.use('/admin/dashboard', adminUserRoutes);
 app.use('/superadmin/dashboard', superAdminRoutes); // SuperAdmin landing
 app.use('/', leadRoutes); // mount lead routes (public API + pages)

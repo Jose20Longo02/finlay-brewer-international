@@ -2,29 +2,32 @@
 <link rel="stylesheet" href="/css/admin/new-property.css" />
 
 <div id="np-data"
-     data-locations='<%- JSON.stringify(locations).replace(/'/g, '&#39;') %>'
-     data-projects='<%- JSON.stringify(projects || []).replace(/'/g, '&#39;') %>'></div>
+     data-locations='<%- JSON.stringify(locations).replace(/'/g, '&#39;') %>'></div>
 
 <div class="new-prop-page">
   <header class="np-header">
-    <div class="left">
-      <h1>Create New Property</h1>
-      <p class="subtitle">Add a listing with all required details. Fields change based on property type.</p>
-    </div>
-    <div class="right">
-      <a href="/admin/dashboard" class="btn btn-light">Cancel</a>
-    </div>
+    <h1>Create new property</h1>
+    <p class="np-subtitle">Add a listing with all required details. Fields change based on property type.</p>
+    <a href="<%= currentUser && currentUser.role === 'SuperAdmin' ? '/superadmin/dashboard/properties' : '/admin/dashboard/my-properties' %>" class="btn btn-light">Cancel</a>
   </header>
 
   <% if (error) { %>
     <div class="alert alert-error"><%= error %></div>
   <% } %>
 
+  <div id="propertySubmitOverlay" class="property-submit-overlay" aria-hidden="true">
+    <div class="property-submit-overlay-content">
+      <div class="property-submit-spinner" aria-hidden="true"></div>
+      <p class="property-submit-overlay-title">Submitting property…</p>
+      <p class="property-submit-overlay-hint">This might take a few minutes, please wait.</p>
+    </div>
+  </div>
+
   <form id="propertyForm" class="np-form" method="post" action="/properties" enctype="multipart/form-data">
 
     <!-- A. Location -->
-    <section class="card">
-      <h2>Location</h2>
+    <section class="np-card">
+      <h2 class="np-card-title">Location</h2>
       <div class="grid-3">
         <div class="field">
           <label for="country">Country<span class="req">*</span></label>
@@ -53,8 +56,8 @@
     </section>
 
     <!-- B. Basics -->
-    <section class="card">
-      <h2>Basics</h2>
+    <section class="np-card">
+      <h2 class="np-card-title">Basics</h2>
       <div class="grid-2">
         <div class="field">
           <label for="title">Title<span class="req">*</span></label>
@@ -79,6 +82,14 @@
             <% }) %>
           </select>
         </div>
+        <div class="field">
+          <label for="listing_status">Status</label>
+          <select id="listing_status" name="listing_status">
+            <option value="active" <%= (form.listing_status||'active')==='active'?'selected':'' %>>Active</option>
+            <option value="under_offer" <%= (form.listing_status||'')==='under_offer'?'selected':'' %>>Under Offer</option>
+            <option value="sold" <%= (form.listing_status||'')==='sold'?'selected':'' %>>Sold</option>
+          </select>
+        </div>
       </div>
       <div class="field">
         <label for="description">Description<span class="req">*</span></label>
@@ -89,6 +100,10 @@
           <label for="price_display">Price<span class="req">*</span></label>
           <input id="price_display" type="text" inputmode="decimal" placeholder="€0.00" required />
           <input id="price" name="price" type="hidden" value="<%= form.price||'' %>" />
+        </div>
+        <div class="field">
+          <label for="property_tax">Property tax</label>
+          <input id="property_tax" name="property_tax" type="number" min="0" step="0.01" placeholder="e.g. 1200" value="<%= form.property_tax||'' %>" />
         </div>
         <div class="field">
           <label>Status tags</label>
@@ -105,12 +120,19 @@
     </section>
 
     <!-- C. Media -->
-    <section class="card">
-      <h2>Media</h2>
+    <section class="np-card">
+      <h2 class="np-card-title">Media</h2>
       <div class="field">
-        <label for="photos">Photos<span class="req">*</span></label>
-        <input id="photos" name="photos" type="file" accept="image/*" multiple required />
-        <small>Upload 1–20 images. You can drag to reorder after upload.</small>
+        <label>Photos<span class="req">*</span></label>
+        <div class="photos-upload-box">
+          <input id="photos" name="photos" type="file" accept="image/*" multiple required class="photos-input-hidden" />
+          <label for="photos" class="photos-upload-trigger">
+            <span class="photos-upload-icon">🖼️</span>
+            <span class="photos-upload-text">Choose photos</span>
+            <span class="photos-upload-hint">Up to 20 images. Add more in batches; new selections are appended. Drag to reorder.</span>
+          </label>
+          <p class="photos-upload-status" id="photosUploadStatus">No photos selected</p>
+        </div>
         <div id="photoPreview" class="preview-grid"></div>
       </div>
       <div class="grid-3">
@@ -121,58 +143,67 @@
             <label class="chip"><input type="radio" name="video_source" id="videoSrcLink" value="link" /> <span>Link</span></label>
           </div>
         </div>
-        <div class="field" id="videoUploadWrap">
-          <label for="video">Upload video</label>
-          <input id="video" name="video" type="file" accept="video/*" />
+        <div class="field video-source-field" id="videoUploadWrap">
+          <label>Upload video</label>
+          <div class="video-upload-box">
+            <input id="video" name="video" type="file" accept="video/*" class="video-input-hidden" />
+            <label for="video" class="video-upload-trigger">
+              <span class="video-upload-icon">🎬</span>
+              <span class="video-upload-text">Choose video file</span>
+              <span class="video-upload-hint">MP4, WebM, or MOV</span>
+            </label>
+            <p class="video-upload-status" id="videoUploadStatus">No file selected</p>
+          </div>
           <div id="videoPreview" class="video-preview"></div>
         </div>
-        <div class="field" id="videoUrlWrap" hidden>
+        <div class="field video-source-field video-source-hidden" id="videoUrlWrap">
           <label for="video_url">Video URL</label>
           <input id="video_url" name="video_url" type="url" placeholder="https://..." value="<%= form.video_url||'' %>" />
         </div>
       </div>
     </section>
 
-    <!-- D. Project -->
-    <section class="card">
-      <h2>Project</h2>
-      <div class="grid-2">
-        <label class="checkbox">
-          <input type="checkbox" id="is_in_project" name="is_in_project" <%= form.is_in_project?'checked':'' %> />
-          <span>Part of a project</span>
-        </label>
-        <div class="field" id="projectWrap" hidden>
-          <label for="project_id">Project</label>
-          <select id="project_id" name="project_id" disabled>
-            <option value="">Select project</option>
-            <% (projects||[]).forEach(p => { %>
-              <option value="<%= p.id %>" <%= String(form.project_id||'')===String(p.id)?'selected':'' %>><%= p.title %></option>
-            <% }) %>
-          </select>
-        </div>
-      </div>
-    </section>
-
     <!-- E. Type-specific -->
-    <section class="card">
-      <h2>Type-specific</h2>
+    <section class="np-card">
+      <h2 class="np-card-title">Type-specific</h2>
       <div id="typeApartment" class="type-block" hidden>
         <div class="grid-4">
           <div class="field">
             <label for="apartment_size">Apartment size (sqm)<span class="req">*</span></label>
-            <input id="apartment_size" name="apartment_size" type="number" min="0" step="0.01" />
+            <input id="apartment_size" name="apartment_size" type="number" min="0" step="0.01" value="<%= form.apartment_size||'' %>" />
           </div>
           <div class="field">
             <label for="bedrooms_a">Bedrooms<span class="req">*</span></label>
-            <input id="bedrooms_a" name="bedrooms" type="number" min="0" step="1" />
+            <input id="bedrooms_a" name="bedrooms" type="number" min="0" step="1" value="<%= form.bedrooms||'' %>" />
           </div>
           <div class="field">
             <label for="bathrooms_a">Bathrooms<span class="req">*</span></label>
-            <input id="bathrooms_a" name="bathrooms" type="number" min="0" step="1" />
+            <input id="bathrooms_a" name="bathrooms" type="number" min="0" step="1" value="<%= form.bathrooms||'' %>" />
           </div>
           <div class="field">
-            <label for="floorplan">Floorplan image</label>
-            <input id="floorplan" name="floorplan" type="file" accept="image/*" />
+            <label for="year_built_a">Year built</label>
+            <input id="year_built_a" name="year_built" type="number" min="1800" max="2030" step="1" placeholder="e.g. 2020" value="<%= form.year_built||'' %>" />
+          </div>
+          <div class="field">
+            <label for="energy_class_a">Energy class</label>
+            <select id="energy_class_a" name="energy_class">
+              <option value="">Select</option>
+              <% ['A++','A+','A','B','C','D','E','F','G'].forEach(ec => { %>
+                <option value="<%= ec %>" <%= form.energy_class===ec?'selected':'' %>><%= ec %></option>
+              <% }) %>
+            </select>
+          </div>
+          <div class="field">
+            <label>Floorplan image</label>
+            <div class="image-upload-box">
+              <input id="floorplan" name="floorplan" type="file" accept="image/*" class="image-input-hidden" />
+              <label for="floorplan" class="image-upload-trigger">
+                <span class="image-upload-icon">📐</span>
+                <span class="image-upload-text">Choose floorplan image</span>
+                <span class="image-upload-hint">PNG, JPG</span>
+              </label>
+              <p class="image-upload-status" id="floorplanUploadStatus">No file selected</p>
+            </div>
             <div id="floorplanPreview" class="preview-grid"></div>
           </div>
         </div>
@@ -182,23 +213,44 @@
         <div class="grid-4">
           <div class="field">
             <label for="total_size">Total lot size (sqm)<span class="req">*</span></label>
-            <input id="total_size" name="total_size" type="number" min="0" step="0.01" />
+            <input id="total_size" name="total_size" type="number" min="0" step="0.01" value="<%= form.total_size||'' %>" />
           </div>
           <div class="field">
             <label for="living_space">Living space (sqm)</label>
-            <input id="living_space" name="living_space" type="number" min="0" step="0.01" />
+            <input id="living_space" name="living_space" type="number" min="0" step="0.01" value="<%= form.living_space||'' %>" />
           </div>
           <div class="field">
             <label for="bedrooms_hv">Bedrooms<span class="req">*</span></label>
-            <input id="bedrooms_hv" name="bedrooms" type="number" min="0" step="1" />
+            <input id="bedrooms_hv" name="bedrooms" type="number" min="0" step="1" value="<%= form.bedrooms||'' %>" />
           </div>
           <div class="field">
             <label for="bathrooms_hv">Bathrooms<span class="req">*</span></label>
-            <input id="bathrooms_hv" name="bathrooms" type="number" min="0" step="1" />
+            <input id="bathrooms_hv" name="bathrooms" type="number" min="0" step="1" value="<%= form.bathrooms||'' %>" />
           </div>
           <div class="field">
-            <label for="plan_photo_hv">Plan image</label>
-            <input id="plan_photo_hv" name="plan_photo" type="file" accept="image/*" />
+            <label for="year_built_hv">Year built</label>
+            <input id="year_built_hv" name="year_built" type="number" min="1800" max="2030" step="1" placeholder="e.g. 2020" value="<%= form.year_built||'' %>" />
+          </div>
+          <div class="field">
+            <label for="energy_class_hv">Energy class</label>
+            <select id="energy_class_hv" name="energy_class">
+              <option value="">Select</option>
+              <% ['A++','A+','A','B','C','D','E','F','G'].forEach(ec => { %>
+                <option value="<%= ec %>" <%= form.energy_class===ec?'selected':'' %>><%= ec %></option>
+              <% }) %>
+            </select>
+          </div>
+          <div class="field">
+            <label>Plan image</label>
+            <div class="image-upload-box">
+              <input id="plan_photo_hv" name="plan_photo" type="file" accept="image/*" class="image-input-hidden" />
+              <label for="plan_photo_hv" class="image-upload-trigger">
+                <span class="image-upload-icon">📐</span>
+                <span class="image-upload-text">Choose plan image</span>
+                <span class="image-upload-hint">PNG, JPG</span>
+              </label>
+              <p class="image-upload-status" id="planPhotoHVUploadStatus">No file selected</p>
+            </div>
             <div id="planPhotoPreviewHV" class="preview-grid"></div>
           </div>
         </div>
@@ -211,20 +263,25 @@
             <input id="land_size" name="land_size" type="number" min="0" step="0.01" />
           </div>
           <div class="field">
-            <label for="plan_photo">Plan image</label>
-            <input id="plan_photo" name="plan_photo" type="file" accept="image/*" />
+            <label>Plan image</label>
+            <div class="image-upload-box">
+              <input id="plan_photo" name="plan_photo" type="file" accept="image/*" class="image-input-hidden" />
+              <label for="plan_photo" class="image-upload-trigger">
+                <span class="image-upload-icon">📐</span>
+                <span class="image-upload-text">Choose plan image</span>
+                <span class="image-upload-hint">PNG, JPG</span>
+              </label>
+              <p class="image-upload-status" id="planPhotoUploadStatus">No file selected</p>
+            </div>
             <div id="planPhotoPreview" class="preview-grid"></div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- F. Submit -->
-    <section class="card">
-      <div class="actions">
-        <button type="submit" class="btn btn-primary">Save Property</button>
-      </div>
-    </section>
+    <div class="np-actions">
+      <button type="submit" class="btn btn-primary">Save property</button>
+    </div>
   </form>
 </div>
 
@@ -236,9 +293,6 @@
   const citySel = document.getElementById('city');
   const hoodSel = document.getElementById('neighborhood');
   const typeSel = document.getElementById('type');
-  const isInProject = document.getElementById('is_in_project');
-  const projectWrap = document.getElementById('projectWrap');
-  const projectSelect = document.getElementById('project_id');
 
   function fillCities() {
     const cities = Object.keys((LOCATIONS[countrySel.value]||{}));
@@ -302,56 +356,96 @@
     const landSize = document.getElementById('land_size');
     if (landSize) landSize.required = land;
   }
-  function updateProjectVisibility() {
-    const on = !!isInProject.checked;
-    projectWrap.hidden = !on;
-    projectSelect.required = on;
-    projectSelect.disabled = !on;
-    if (!on) projectSelect.value = '';
-  }
-
   countrySel.addEventListener('change', fillCities);
   citySel.addEventListener('change', fillNeighborhoods);
   typeSel.addEventListener('change', updateTypeBlocks);
-  isInProject.addEventListener('change', updateProjectVisibility);
 
-  // Photo preview
-  // Photo preview + drag to reorder
+  // Photo preview: accumulate files on each selection (append, don't replace), drag to reorder
   const photosInput = document.getElementById('photos');
   const preview = document.getElementById('photoPreview');
-  let dragIndex = null;
+  const photosStatusEl = document.getElementById('photosUploadStatus');
+  const MAX_PHOTOS = 20;
+  let accumulatedPhotoFiles = [];
+  let draggedItemNew = null;
+
+  function syncInputFromAccumulated() {
+    const dt = new DataTransfer();
+    accumulatedPhotoFiles.forEach(f => dt.items.add(f));
+    photosInput.files = dt.files;
+  }
+
+  function syncAccumulatedFromPreviewOrder() {
+    const items = Array.from(preview.children).filter(el => el.classList.contains('item'));
+    accumulatedPhotoFiles = items.map(el => el._file).filter(Boolean);
+    syncInputFromAccumulated();
+  }
+
   function rebuildPreview() {
     preview.innerHTML = '';
-    Array.from(photosInput.files).forEach((file, index) => {
+    if (photosStatusEl) {
+      const n = accumulatedPhotoFiles.length;
+      photosStatusEl.textContent = n === 0 ? 'No photos selected' : `${n} photo${n === 1 ? '' : 's'} selected`;
+      photosStatusEl.classList.toggle('has-files', n > 0);
+    }
+    accumulatedPhotoFiles.forEach((file) => {
       const url = URL.createObjectURL(file);
       const item = document.createElement('div');
       item.className = 'item';
       item.draggable = true;
+      item._file = file;
+      const removeBtn = document.createElement('button');
+      removeBtn.type = 'button';
+      removeBtn.className = 'preview-item-remove';
+      removeBtn.setAttribute('aria-label', 'Remove photo');
+      removeBtn.textContent = '×';
+      removeBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const idx = Array.from(preview.children).indexOf(item);
+        if (idx !== -1) {
+          accumulatedPhotoFiles.splice(idx, 1);
+          syncInputFromAccumulated();
+          rebuildPreview();
+        }
+      });
       const img = document.createElement('img');
-      img.src = url; img.className = 'thumb';
+      img.src = url;
+      img.className = 'thumb';
+      img.draggable = false;
       const handle = document.createElement('div');
       handle.className = 'handle';
       handle.textContent = 'drag';
+      handle.draggable = false;
+      item.appendChild(removeBtn);
       item.appendChild(img);
       item.appendChild(handle);
-      item.addEventListener('dragstart', () => { dragIndex = index; });
-      item.addEventListener('dragover', (e) => { e.preventDefault(); });
+      item.addEventListener('dragstart', (e) => {
+        draggedItemNew = item;
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', '');
+      });
+      item.addEventListener('dragend', () => { draggedItemNew = null; });
+      item.addEventListener('dragover', (e) => { e.preventDefault(); e.stopPropagation(); if (draggedItemNew) e.dataTransfer.dropEffect = 'move'; });
       item.addEventListener('drop', (e) => {
         e.preventDefault();
-        if (dragIndex === null) return;
-        const files = Array.from(photosInput.files);
-        const moved = files.splice(dragIndex, 1)[0];
-        files.splice(index, 0, moved);
-        const dt = new DataTransfer();
-        files.forEach(f => dt.items.add(f));
-        photosInput.files = dt.files;
-        dragIndex = null;
-        rebuildPreview();
+        e.stopPropagation();
+        if (!draggedItemNew || draggedItemNew === item) return;
+        preview.insertBefore(draggedItemNew, item);
+        syncAccumulatedFromPreviewOrder();
+        draggedItemNew = null;
       });
       preview.appendChild(item);
     });
   }
-  photosInput.addEventListener('change', rebuildPreview);
+
+  photosInput.addEventListener('change', () => {
+    const newFiles = Array.from(photosInput.files);
+    const space = Math.max(0, MAX_PHOTOS - accumulatedPhotoFiles.length);
+    const toAdd = newFiles.slice(0, space);
+    accumulatedPhotoFiles = [...accumulatedPhotoFiles, ...toAdd];
+    syncInputFromAccumulated();
+    rebuildPreview();
+  });
 
   // Video source toggle
   const videoSrcUpload = document.getElementById('videoSrcUpload');
@@ -364,8 +458,8 @@
 
   function updateVideoSource() {
     const useUpload = videoSrcUpload.checked;
-    videoUploadWrap.hidden = !useUpload;
-    videoUrlWrap.hidden    = useUpload;
+    videoUploadWrap.classList.toggle('video-source-hidden', !useUpload);
+    videoUrlWrap.classList.toggle('video-source-hidden', useUpload);
     if (useUpload) {
       videoUrlInput.value = '';
       videoUrlInput.disabled = true;
@@ -378,12 +472,19 @@
   }
   videoSrcUpload.addEventListener('change', updateVideoSource);
   videoSrcLink.addEventListener('change', updateVideoSource);
+  updateVideoSource(); // set initial state on load
 
   // Video preview when selecting a file
+  const videoUploadStatus = document.getElementById('videoUploadStatus');
   videoInput.addEventListener('change', () => {
     videoPreview.innerHTML = '';
-    if (videoInput.files && videoInput.files[0]) {
-      const url = URL.createObjectURL(videoInput.files[0]);
+    const file = videoInput.files && videoInput.files[0];
+    if (videoUploadStatus) {
+      videoUploadStatus.textContent = file ? file.name : 'No file selected';
+      videoUploadStatus.classList.toggle('has-file', !!file);
+    }
+    if (file) {
+      const url = URL.createObjectURL(file);
       const vid = document.createElement('video');
       vid.src = url; vid.controls = true; vid.playsInline = true;
       videoPreview.appendChild(vid);
@@ -393,11 +494,17 @@
   // Floorplan preview
   const floorplanInput = document.getElementById('floorplan');
   const floorplanPreview = document.getElementById('floorplanPreview');
+  const floorplanStatus = document.getElementById('floorplanUploadStatus');
   if (floorplanInput) {
     floorplanInput.addEventListener('change', () => {
       floorplanPreview.innerHTML = '';
-      if (floorplanInput.files && floorplanInput.files[0]) {
-        const url = URL.createObjectURL(floorplanInput.files[0]);
+      const file = floorplanInput.files && floorplanInput.files[0];
+      if (floorplanStatus) {
+        floorplanStatus.textContent = file ? file.name : 'No file selected';
+        floorplanStatus.classList.toggle('has-file', !!file);
+      }
+      if (file) {
+        const url = URL.createObjectURL(file);
         const img = document.createElement('img');
         img.src = url; img.className = 'thumb';
         const wrap = document.createElement('div'); wrap.className = 'item';
@@ -410,11 +517,17 @@
   // Plan photo previews (HV)
   const planPhotoHVInput = document.getElementById('plan_photo_hv');
   const planPhotoPreviewHV = document.getElementById('planPhotoPreviewHV');
+  const planPhotoHVStatus = document.getElementById('planPhotoHVUploadStatus');
   if (planPhotoHVInput) {
     planPhotoHVInput.addEventListener('change', () => {
       planPhotoPreviewHV.innerHTML = '';
-      if (planPhotoHVInput.files && planPhotoHVInput.files[0]) {
-        const url = URL.createObjectURL(planPhotoHVInput.files[0]);
+      const file = planPhotoHVInput.files && planPhotoHVInput.files[0];
+      if (planPhotoHVStatus) {
+        planPhotoHVStatus.textContent = file ? file.name : 'No file selected';
+        planPhotoHVStatus.classList.toggle('has-file', !!file);
+      }
+      if (file) {
+        const url = URL.createObjectURL(file);
         const img = document.createElement('img');
         img.src = url; img.className = 'thumb';
         const wrap = document.createElement('div'); wrap.className = 'item';
@@ -424,14 +537,20 @@
     });
   }
 
+  const planPhotoStatus = document.getElementById('planPhotoUploadStatus');
   // Plan photo previews (Land)
   const planPhotoInput = document.getElementById('plan_photo');
   const planPhotoPreview = document.getElementById('planPhotoPreview');
   if (planPhotoInput) {
     planPhotoInput.addEventListener('change', () => {
       planPhotoPreview.innerHTML = '';
-      if (planPhotoInput.files && planPhotoInput.files[0]) {
-        const url = URL.createObjectURL(planPhotoInput.files[0]);
+      const file = planPhotoInput.files && planPhotoInput.files[0];
+      if (planPhotoStatus) {
+        planPhotoStatus.textContent = file ? file.name : 'No file selected';
+        planPhotoStatus.classList.toggle('has-file', !!file);
+      }
+      if (file) {
+        const url = URL.createObjectURL(file);
         const img = document.createElement('img');
         img.src = url; img.className = 'thumb';
         const wrap = document.createElement('div'); wrap.className = 'item';
@@ -444,7 +563,6 @@
   // Init
   fillCities();
   updateTypeBlocks();
-  updateProjectVisibility();
 
   // Price input formatting (Euro)
   const priceInputHidden = document.getElementById('price');
@@ -482,5 +600,18 @@
     priceInputDisplay.value = euro.format(num);
     priceInputHidden.value = String(num.toFixed(2));
   });
+
+  // Loading overlay on submit – block interaction until page navigates
+  const propertyForm = document.getElementById('propertyForm');
+  const submitOverlay = document.getElementById('propertySubmitOverlay');
+  if (propertyForm && submitOverlay) {
+    propertyForm.addEventListener('submit', function() {
+      if (preview && typeof syncAccumulatedFromPreviewOrder === 'function') syncAccumulatedFromPreviewOrder();
+      submitOverlay.classList.add('is-active');
+      submitOverlay.setAttribute('aria-hidden', 'false');
+      const btn = propertyForm.querySelector('button[type="submit"]');
+      if (btn) btn.disabled = true;
+    });
+  }
 </script>
 

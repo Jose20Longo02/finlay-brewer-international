@@ -12,17 +12,19 @@
     }) %>
 
     <!-- Main Content -->
-    <main class="admin-content">
+    <main class="admin-content mp-content">
       <section class="properties-container">
 
-        <!-- Header + New Property Button -->
-        <div class="properties-header">
-          <h1>All Properties</h1>
-          <a href="/admin/properties/new" class="btn btn-primary">New Property</a>
-        </div>
+        <header class="mp-header">
+          <div>
+            <h1>All properties</h1>
+            <p class="mp-subtitle">Filter, assign agents, and manage your listings.</p>
+          </div>
+          <a href="/admin/properties/new" class="btn btn-primary">New property</a>
+        </header>
 
         <!-- Filters -->
-        <form class="properties-filters" id="filterForm" method="get">
+        <form class="mp-filters" id="filterForm" method="get">
           <select id="countrySelect" name="country">
             <option value="">All Countries</option>
             <% countryOptions.forEach(c => { %>
@@ -62,48 +64,39 @@
                  placeholder="Max Price"
                  value="<%= filters.maxPrice||'' %>"
                  onchange="filterForm.submit()" />
+          <button type="submit" class="btn btn-filter">Filter</button>
         </form>
 
         <!-- Properties Grid -->
-        <div class="properties-grid">
-          <% properties.forEach(prop => { %>
-            <div class="property-card">
-              <!-- UNASSIGNED WARNING -->
+        <div class="mp-grid">
+          <% properties.forEach((prop, i) => { %>
+            <article class="mp-card" style="animation-delay: <%= (i % 8) * 0.04 %>s">
               <% if (!prop.agent_id) { %>
-                <div class="unassigned-warning">
-                  ⚠️ Unassigned
-                </div>
+                <span class="mp-badge mp-badge--warning">Unassigned</span>
               <% } %>
 
-              <!-- Uploader avatar -->
-              <img
-                src="<%= prop.uploader_pic || '/img/default-avatar.png' %>"
-                class="uploader-thumb"
-              />
+              <div class="mp-card-image-wrap">
+                <img
+                  src="<%= prop.photos?.[0] || '/img/property-placeholder.png' %>"
+                  alt=""
+                  class="mp-card-thumb"
+                />
+                <img
+                  src="<%= prop.uploader_pic || '/img/default-avatar.png' %>"
+                  class="mp-uploader-avatar"
+                  alt=""
+                />
+              </div>
 
-              <!-- Property thumbnail -->
-              <img
-                src="<%= prop.photos?.[0] || '/img/property-placeholder.png' %>"
-                class="thumb"
-              />
+              <div class="mp-card-body">
+                <h3 class="mp-card-title"><%= prop.title %></h3>
+                <p class="mp-card-location"><%= prop.city %><%= prop.neighborhood ? ', ' + prop.neighborhood : '' %></p>
 
-              <h3><%= prop.title %></h3>
-              <p><%= prop.city %>, <%= prop.neighborhood %></p>
-
-              <!-- Agent assignment dropdown -->
-              <div class="assign-agent">
-                <label for="agent-<%= prop.id %>">Agent in charge:</label>
-                <form
-                  action="/superadmin/dashboard/properties/<%= prop.id %>/reassign"
-                  method="post"
-                  class="reassign-form"
-                >
-                  <select
-                    id="agent-<%= prop.id %>"
-                    name="agent_id"
-                    onchange="this.form.submit()"
-                  >
-                    <option value="">— Unassigned —</option>
+                <div class="mp-assign">
+                  <label for="agent-<%= prop.id %>">Agent</label>
+                  <form action="/superadmin/dashboard/properties/<%= prop.id %>/reassign" method="post" class="mp-reassign-form">
+                    <select id="agent-<%= prop.id %>" name="agent_id" onchange="this.form.submit()">
+                      <option value="">Unassigned</option>
                     <% allAgents.forEach(agent => { %>
                       <option
                         value="<%= agent.id %>"
@@ -114,8 +107,7 @@
                 </form>
               </div>
 
-              <!-- Action buttons -->
-              <div class="actions">
+                <div class="mp-actions">
                 <form
                   action="/admin/properties/<%= prop.id %>/delete?page=<%= currentPage %>"
                   method="post"
@@ -131,21 +123,19 @@
                   href="/properties/<%= prop.slug %>"
                   class="btn btn-secondary"
                 >View</a>
+                </div>
               </div>
-            </div>
+            </article>
           <% }) %>
         </div>
 
-        <!-- Pagination -->
-        <nav class="pagination">
+        <nav class="mp-pagination">
           <% if (currentPage > 1) { %>
-            <a href="?page=<%= currentPage - 1 %>" class="page-link">« Prev</a>
+            <a href="?page=<%= currentPage - 1 %>" class="mp-page-link">← Previous</a>
           <% } %>
-          <span class="page-info">
-            Page <%= currentPage %> of <%= totalPages %>
-          </span>
+          <span class="mp-page-info">Page <%= currentPage %> of <%= totalPages %></span>
           <% if (currentPage < totalPages) { %>
-            <a href="?page=<%= currentPage + 1 %>" class="page-link">Next »</a>
+            <a href="?page=<%= currentPage + 1 %>" class="mp-page-link">Next →</a>
           <% } %>
         </nav>
       </section>

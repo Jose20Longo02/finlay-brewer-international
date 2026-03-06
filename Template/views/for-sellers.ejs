@@ -4,7 +4,7 @@
 <div class="for-sellers-page">
   <!-- Hero -->
   <section class="fs-hero">
-    <div class="fs-hero-bg" style="background-image: url('/img/Costa%20Del%20Sol.jpg');"></div>
+    <div class="fs-hero-bg" style="background-image: url('/img/French-riviera-for-sellers-page.jpg');"></div>
     <div class="fs-hero-overlay"></div>
     <div class="fs-hero-content">
       <h1 class="fs-hero-title">
@@ -23,79 +23,28 @@
     </div>
   </section>
 
-  <!-- Our results -->
+  <% if (typeof soldProperties !== 'undefined' && Array.isArray(soldProperties) && soldProperties.length >= 4) { %>
+  <!-- Our results (sold properties from CMS) -->
   <section class="fs-results">
     <h2 class="fs-section-title">Our results speak from themselves</h2>
     <div class="fs-results-carousel-wrap">
       <div class="fs-results-track">
-        <div class="fs-result-card" data-index="0">
-          <div class="fs-result-image" style="background-image: url('/img/France.jpg');"></div>
+        <% const soldList = soldProperties; %>
+        <% for (let loop = 0; loop < 3; loop++) { soldList.forEach((prop, i) => { const idx = loop * soldList.length + i; const imgSrc = (prop.photos && prop.photos[0]) ? prop.photos[0] : '/img/France.jpg'; const loc = [prop.neighborhood, prop.city].filter(Boolean).join(', ') || prop.city || prop.country || 'Property'; const cardLoc = loc + (prop.country && loc !== prop.country ? ', ' + prop.country : ''); %>
+        <div class="fs-result-card<%= idx === 1 ? ' active' : '' %>" data-index="<%= idx %>">
+          <% if (prop.slug) { %><a href="/properties/<%= prop.slug %>" class="fs-result-card-link" aria-label="View sold property: <%= prop.title || loc %>"><% } %>
+          <div class="fs-result-image" style="background-image: url('<%= imgSrc %>');"></div>
           <div class="fs-result-overlay">
             <span class="fs-result-label">Recently Sold</span>
-            <span class="fs-result-location">Reinickendorf, Berlin</span>
+            <span class="fs-result-location"><%= cardLoc %></span>
           </div>
+          <% if (prop.slug) { %></a><% } %>
         </div>
-        <div class="fs-result-card active" data-index="1">
-          <div class="fs-result-image" style="background-image: url('/img/Monaco.jpg');"></div>
-          <div class="fs-result-overlay">
-            <span class="fs-result-label">Recently Sold</span>
-            <span class="fs-result-location">Monte Carlo, Monaco</span>
-          </div>
-        </div>
-        <div class="fs-result-card" data-index="2">
-          <div class="fs-result-image" style="background-image: url('/img/Montenegro.jpg');"></div>
-          <div class="fs-result-overlay">
-            <span class="fs-result-label">Recently Sold</span>
-            <span class="fs-result-location">Budva, Montenegro</span>
-          </div>
-        </div>
-        <!-- First set duplicated at end - for seamless infinite loop -->
-        <div class="fs-result-card" data-index="3">
-          <div class="fs-result-image" style="background-image: url('/img/France.jpg');"></div>
-          <div class="fs-result-overlay">
-            <span class="fs-result-label">Recently Sold</span>
-            <span class="fs-result-location">Reinickendorf, Berlin</span>
-          </div>
-        </div>
-        <div class="fs-result-card" data-index="4">
-          <div class="fs-result-image" style="background-image: url('/img/Monaco.jpg');"></div>
-          <div class="fs-result-overlay">
-            <span class="fs-result-label">Recently Sold</span>
-            <span class="fs-result-location">Monte Carlo, Monaco</span>
-          </div>
-        </div>
-        <div class="fs-result-card" data-index="5">
-          <div class="fs-result-image" style="background-image: url('/img/Montenegro.jpg');"></div>
-          <div class="fs-result-overlay">
-            <span class="fs-result-label">Recently Sold</span>
-            <span class="fs-result-location">Budva, Montenegro</span>
-          </div>
-        </div>
-        <!-- Extra set so track extends beyond viewport - never see the end -->
-        <div class="fs-result-card" data-index="6">
-          <div class="fs-result-image" style="background-image: url('/img/France.jpg');"></div>
-          <div class="fs-result-overlay">
-            <span class="fs-result-label">Recently Sold</span>
-            <span class="fs-result-location">Reinickendorf, Berlin</span>
-          </div>
-        </div>
-        <div class="fs-result-card" data-index="7">
-          <div class="fs-result-image" style="background-image: url('/img/Monaco.jpg');"></div>
-          <div class="fs-result-overlay">
-            <span class="fs-result-label">Recently Sold</span>
-            <span class="fs-result-location">Monte Carlo, Monaco</span>
-          </div>
-        </div>
-        <div class="fs-result-card" data-index="8">
-          <div class="fs-result-image" style="background-image: url('/img/Montenegro.jpg');"></div>
-          <div class="fs-result-overlay">
-            <span class="fs-result-label">Recently Sold</span>
-            <span class="fs-result-location">Budva, Montenegro</span>
-          </div>
-        </div>
+        <% }); } %>
       </div>
     </div>
   </section>
+  <% } %>
 
   <!-- Why work with us -->
   <section class="fs-why">
@@ -113,7 +62,7 @@
         </ul>
       </div>
       <div class="fs-why-image-wrap">
-        <div class="fs-why-image" style="background-image: url('/img/Costa%20Del%20Sol.jpg');"></div>
+        <div class="fs-why-image" style="background-image: url('/img/French-riviera.jpg');"></div>
       </div>
     </div>
   </section>

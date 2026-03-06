@@ -33,12 +33,10 @@ exports.dashboard = async (req, res, next) => {
     const [
       totalTeamRes,
       totalPropsRes,
-      totalProjectsRes,
       newListingsRes
     ] = await Promise.all([
       query("SELECT COUNT(*) FROM users WHERE role IN ('Admin','SuperAdmin') AND approved = true"),
       query('SELECT COUNT(*) FROM properties'),
-      query('SELECT COUNT(*) FROM projects'),
       query("SELECT COUNT(*) FROM properties WHERE created_at >= NOW() - INTERVAL '7 days'")
     ]);
 
@@ -97,7 +95,6 @@ exports.dashboard = async (req, res, next) => {
     res.render('superadmin/super-admin-dashboard', {
       totalTeamMembers: totalTeamRes.rows[0].count,
       totalProperties:  totalProps,
-      totalProjects:    totalProjectsRes.rows[0].count,
       newListings:      newListingsRes.rows[0].count,
       pendingCount,
       currentUser:      req.session.user,
@@ -225,11 +222,8 @@ exports.deleteTeamMember = async (req, res, next) => {
   }
 
   try {
-    // 1) “Orphan” all their properties and projects
-    await Promise.all([
-      query('UPDATE properties SET agent_id = NULL WHERE agent_id = $1', [memberId]),
-      query('UPDATE projects   SET agent_id = NULL WHERE agent_id = $1', [memberId])
-    ]);
+    // 1) “Orphan” their properties
+    await query('UPDATE properties SET agent_id = NULL WHERE agent_id = $1', [memberId]);
 
     // 2) Delete their profile picture file
     const { rows } = await query(
