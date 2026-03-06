@@ -2,7 +2,7 @@ services:
   - type: web
     name: real-estate-template
     env: node
-    rootDir: Template
+    rootDir: Main
     plan: starter
     buildCommand: npm install
     startCommand: npm start
