@@ -26,6 +26,7 @@ const migrations = [
   'create_properties.sql',
   'create_leads.sql',
   'add_coordinates_to_properties.sql',
+  'allow_null_property_coordinates.sql',
   'add_featured_column.sql',
   'ensure_featured_status_properties.sql',
   'add_map_link_to_properties.sql',
