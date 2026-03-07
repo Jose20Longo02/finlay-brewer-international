@@ -7,7 +7,7 @@ const fs          = require('fs');
 const path        = require('path');
 const sendMail    = require('../config/mailer');
 const { generateVariants, SIZES } = require('../middleware/imageVariants');
-const { isSpacesEnabled, moveObject } = require('../config/spaces');
+const { isSpacesEnabled, moveObject, normalizeSpacesUrl } = require('../config/spaces');
 
 // Parse a cookie value from the request (no cookie-parser needed)
 function getCookie(req, name) {
@@ -36,13 +36,13 @@ function extractCoordsFromLink(input) {
 function getUploadedFileUrl(file, fallbackFolder = '/uploads/properties') {
   if (!file) return null;
   if (typeof file.location === 'string' && /^https?:\/\//i.test(file.location)) {
-    return file.location;
+    return normalizeSpacesUrl(file.location);
   }
   if (typeof file.path === 'string' && /^https?:\/\//i.test(file.path)) {
-    return file.path;
+    return normalizeSpacesUrl(file.path);
   }
   if (typeof file.secure_url === 'string' && /^https?:\/\//i.test(file.secure_url)) {
-    return file.secure_url;
+    return normalizeSpacesUrl(file.secure_url);
   }
   if (file.filename) return `${fallbackFolder}/${file.filename}`;
   return null;
@@ -324,7 +324,8 @@ exports.listPropertiesPublic = async (req, res, next) => {
     // Normalize photos array and agent info for each property
     const publicDir = path.join(__dirname, '../public');
     const normalizedProperties = properties.map(p => {
-      const photos = Array.isArray(p.photos) ? p.photos : (p.photos ? [p.photos] : []);
+      const photosRaw = Array.isArray(p.photos) ? p.photos : (p.photos ? [p.photos] : []);
+      const photos = photosRaw.map((u) => normalizeSpacesUrl(u));
       let hasVariants = false;
       let variantBase = null;
       if (photos.length > 0) {
@@ -348,7 +349,7 @@ exports.listPropertiesPublic = async (req, res, next) => {
         variant_base: variantBase,
         agent: {
           name: p.agent_name || 'Agent',
-          profile_picture: p.agent_profile_picture || null
+          profile_picture: normalizeSpacesUrl(p.agent_profile_picture) || null
         }
       };
     });
@@ -413,7 +414,8 @@ exports.showProperty = async (req, res, next) => {
     if (!rows.length) return res.status(404).render('errors/404');
 
     const p = rows[0];
-    const photos = Array.isArray(p.photos) ? p.photos : (p.photos ? [p.photos] : []);
+    const photosRaw = Array.isArray(p.photos) ? p.photos : (p.photos ? [p.photos] : []);
+    const photos = photosRaw.map((u) => normalizeSpacesUrl(u));
     const publicDir = path.join(__dirname, '../public');
     let hasMainVariants = false;
     let mainVariantBase = null;
@@ -438,7 +440,7 @@ exports.showProperty = async (req, res, next) => {
       main_variant_base: mainVariantBase,
       agent: {
         name: p.agent_name || 'Agent',
-        profile_picture: p.agent_profile_picture || null
+        profile_picture: normalizeSpacesUrl(p.agent_profile_picture) || null
       }
     };
 
@@ -1105,10 +1107,15 @@ exports.listPropertiesAdmin = async (req, res, next) => {
       ORDER BY p.created_at DESC
       LIMIT $${idx} OFFSET $${idx+1}
     `;
-    const { rows: properties } = await query(
+    const { rows: rawProperties } = await query(
       dataQuery,
       [...values, limit, offset]
     );
+    const properties = rawProperties.map((p) => ({
+      ...p,
+      photos: (Array.isArray(p.photos) ? p.photos : (p.photos ? [p.photos] : [])).map((u) => normalizeSpacesUrl(u)),
+      uploader_pic: normalizeSpacesUrl(p.uploader_pic)
+    }));
 
     // 5) Dropdown data
     const countryOptions = Object.keys(locations);
@@ -1289,7 +1296,11 @@ exports.listMyProperties = async (req, res, next) => {
       ORDER BY p.created_at DESC
       LIMIT $${idx} OFFSET $${idx + 1}
     `;
-    const { rows: properties } = await query(dataSql, [...vals, limit, offset]);
+    const { rows: rawProperties } = await query(dataSql, [...vals, limit, offset]);
+    const properties = rawProperties.map((p) => ({
+      ...p,
+      photos: (Array.isArray(p.photos) ? p.photos : (p.photos ? [p.photos] : [])).map((u) => normalizeSpacesUrl(u))
+    }));
 
     // Filter dropdown data
     const countryOptions = Object.keys(locations);
@@ -1327,7 +1338,7 @@ exports.getFeaturedProperties = async (req, res) => {
     const rows = result && result.rows ? result.rows : [];
     const list = rows.map(p => ({
       ...p,
-      photos: Array.isArray(p.photos) ? p.photos : (p.photos ? [p.photos] : []),
+      photos: (Array.isArray(p.photos) ? p.photos : (p.photos ? [p.photos] : [])).map((u) => normalizeSpacesUrl(u)),
       agent: { name: 'Agent', profile_picture: null }
     }));
     return res.json(list);

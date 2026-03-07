@@ -29,6 +29,10 @@ function getSpacesClient() {
 function getPublicBaseUrl() {
   if (process.env.SPACES_CDN_URL) return process.env.SPACES_CDN_URL.replace(/\/+$/, '');
   if (process.env.SPACES_ORIGIN_URL) return process.env.SPACES_ORIGIN_URL.replace(/\/+$/, '');
+  const region = process.env.SPACES_REGION || (getEndpointHost().split('.')[0] || '');
+  if (region) {
+    return `https://${process.env.SPACES_BUCKET}.${region}.cdn.digitaloceanspaces.com`;
+  }
   const endpointHost = getEndpointHost();
   return `https://${process.env.SPACES_BUCKET}.${endpointHost}`;
 }
@@ -36,6 +40,26 @@ function getPublicBaseUrl() {
 function buildSpacesUrl(key) {
   const safeKey = String(key || '').replace(/^\/+/, '');
   return `${getPublicBaseUrl()}/${safeKey}`;
+}
+
+function normalizeSpacesUrl(url) {
+  if (!url || typeof url !== 'string' || !isSpacesEnabled()) return url;
+  const endpointHost = getEndpointHost();
+  const bucket = process.env.SPACES_BUCKET;
+  const region = process.env.SPACES_REGION || (endpointHost.split('.')[0] || '');
+  const originHost = `${bucket}.${endpointHost}`;
+  const cdnHost = region ? `${bucket}.${region}.cdn.digitaloceanspaces.com` : originHost;
+  try {
+    const u = new URL(url);
+    if (u.hostname === originHost || u.hostname.endsWith('.digitaloceanspaces.com')) {
+      u.hostname = cdnHost;
+      u.protocol = 'https:';
+      return u.toString();
+    }
+  } catch (_) {
+    return url;
+  }
+  return url;
 }
 
 async function moveObject(oldKey, newKey) {
@@ -59,5 +83,6 @@ module.exports = {
   isSpacesEnabled,
   getSpacesClient,
   buildSpacesUrl,
-  moveObject
+  moveObject,
+  normalizeSpacesUrl
 };

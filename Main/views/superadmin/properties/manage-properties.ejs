@@ -80,11 +80,15 @@
                   src="<%= prop.photos?.[0] || '/img/property-placeholder.png' %>"
                   alt=""
                   class="mp-card-thumb"
+                  loading="lazy"
+                  decoding="async"
                 />
                 <img
                   src="<%= prop.uploader_pic || '/img/default-avatar.png' %>"
                   class="mp-uploader-avatar"
                   alt=""
+                  loading="lazy"
+                  decoding="async"
                 />
               </div>
 

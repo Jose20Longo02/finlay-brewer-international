@@ -71,7 +71,7 @@
           <div class="myp-flip">
             <div class="myp-front">
               <div class="myp-media">
-                <img class="myp-thumb" src="<%= p.photos?.[0] || '/img/property-placeholder.png' %>" alt="">
+                <img class="myp-thumb" src="<%= p.photos?.[0] || '/img/property-placeholder.png' %>" alt="" loading="lazy" decoding="async">
                 <div class="myp-badges">
                   <% (p.status_tags || []).forEach(tag => { %>
                     <span class="myp-badge"><%= tag %></span>
