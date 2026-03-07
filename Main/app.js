@@ -146,7 +146,7 @@ function getFavoriteProperties() {
 // Featured API and favicon – handle first so nothing can intercept
 app.use((req, res, next) => {
   if (req.method === 'GET' && req.path === '/favicon.ico') {
-    return res.status(204).send();
+    return res.redirect(302, '/img/logo.png');
   }
   if (req.method === 'GET' && req.path === '/api/featured') {
     const send = (list) => {
