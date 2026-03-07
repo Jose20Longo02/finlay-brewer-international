@@ -2,34 +2,29 @@
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const { CloudinaryStorage } = require('multer-storage-cloudinary');
-const { v2: cloudinary } = require('cloudinary');
+const multerS3 = require('multer-s3');
+const { getSpacesClient, isSpacesEnabled } = require('../config/spaces');
 
-const hasCloudinary = !!(
-  process.env.CLOUDINARY_CLOUD_NAME &&
-  process.env.CLOUDINARY_API_KEY &&
-  process.env.CLOUDINARY_API_SECRET
-);
-
-if (hasCloudinary) {
-  cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET
-  });
-}
+const hasSpaces = isSpacesEnabled();
 
 let storage;
-if (hasCloudinary) {
-  storage = new CloudinaryStorage({
-    cloudinary,
-    params: async (req, file) => {
-      const isVideo = file.fieldname === 'video' || file.mimetype.startsWith('video/');
-      return {
-        folder: 'realestate/properties',
-        resource_type: isVideo ? 'video' : 'image',
-        public_id: `${Date.now()}-${(file.originalname || 'file').replace(/\s+/g, '-').replace(/[^\w.-]/g, '')}`
-      };
+if (hasSpaces) {
+  const s3 = getSpacesClient();
+  storage = multerS3({
+    s3,
+    bucket: process.env.SPACES_BUCKET,
+    acl: 'public-read',
+    contentType: multerS3.AUTO_CONTENT_TYPE,
+    key: (req, file, cb) => {
+      const safe = (file.originalname || 'file')
+        .replace(/\s+/g, '-')
+        .replace(/[^\w.-]/g, '');
+      const propertyId = req.params && req.params.id ? String(req.params.id) : null;
+      const ownerPart = (req.session && req.session.user && req.session.user.id) ? `user-${req.session.user.id}` : 'anonymous';
+      const folder = propertyId
+        ? `Properties/${propertyId}`
+        : `Properties/__temp__/${ownerPart}`;
+      cb(null, `${folder}/${file.fieldname}-${Date.now()}-${safe}`);
     }
   });
 } else {

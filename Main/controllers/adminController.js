@@ -7,6 +7,18 @@ const locations   = require('../config/locations');
 const fs   = require('fs');
 const path = require('path');
 
+function getUploadedProfileUrl(file) {
+  if (!file) return null;
+  if (typeof file.location === 'string' && /^https?:\/\//i.test(file.location)) return file.location;
+  if (typeof file.path === 'string' && /^https?:\/\//i.test(file.path)) return file.path;
+  if (file.filename) return '/uploads/profiles/' + file.filename;
+  return null;
+}
+
+function isRemoteUrl(value) {
+  return typeof value === 'string' && /^https?:\/\//i.test(value);
+}
+
 
 //SUPERADMIN
 
@@ -161,7 +173,7 @@ exports.updateSuperAdminProfile = async (req, res, next) => {
     }
 
     if (req.file) {
-      const picUrl = '/uploads/profiles/' + req.file.filename;
+      const picUrl = getUploadedProfileUrl(req.file);
       fields.push(`profile_picture = $${idx++}`); values.push(picUrl);
     }
 
@@ -231,7 +243,7 @@ exports.deleteTeamMember = async (req, res, next) => {
       [memberId]
     );
     const pic = rows[0]?.profile_picture;
-    if (pic) {
+    if (pic && !isRemoteUrl(pic)) {
       const fullPath = path.join(__dirname, '../public', pic);
       fs.unlink(fullPath, err => {
         if (err && err.code !== 'ENOENT') console.error('Failed to delete pic:', err);
@@ -346,7 +358,7 @@ exports.rejectRequest = async (req, res, next) => {
     await query('DELETE FROM users WHERE id = $1', [req.params.id]);
 
     // 3) Remove the file (if it exists)
-    if (user.profile_picture) {
+    if (user.profile_picture && !isRemoteUrl(user.profile_picture)) {
       const filePath = path.join(__dirname, '../public', user.profile_picture);
       fs.unlink(filePath, err => {
         if (err && err.code !== 'ENOENT') console.error('Failed to delete pic:', err);
@@ -474,7 +486,7 @@ exports.updateAdminProfile = async (req, res, next) => {
       fields.push(`password = $${idx++}`); values.push(hash);
     }
     if (req.file) {
-      const picUrl = '/uploads/profiles/' + req.file.filename;
+      const picUrl = getUploadedProfileUrl(req.file);
       fields.push(`profile_picture = $${idx++}`); values.push(picUrl);
     }
 

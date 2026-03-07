@@ -7,6 +7,7 @@ const fs          = require('fs');
 const path        = require('path');
 const sendMail    = require('../config/mailer');
 const { generateVariants, SIZES } = require('../middleware/imageVariants');
+const { isSpacesEnabled, moveObject } = require('../config/spaces');
 
 // Parse a cookie value from the request (no cookie-parser needed)
 function getCookie(req, name) {
@@ -34,6 +35,9 @@ function extractCoordsFromLink(input) {
 
 function getUploadedFileUrl(file, fallbackFolder = '/uploads/properties') {
   if (!file) return null;
+  if (typeof file.location === 'string' && /^https?:\/\//i.test(file.location)) {
+    return file.location;
+  }
   if (typeof file.path === 'string' && /^https?:\/\//i.test(file.path)) {
     return file.path;
   }
@@ -42,6 +46,22 @@ function getUploadedFileUrl(file, fallbackFolder = '/uploads/properties') {
   }
   if (file.filename) return `${fallbackFolder}/${file.filename}`;
   return null;
+}
+
+async function moveUploadedFileToPropertyFolder(file, propertyId) {
+  if (!file || !file.key || !isSpacesEnabled()) return file;
+  const key = String(file.key);
+  if (key.startsWith(`Properties/${propertyId}/`)) return file;
+  if (!key.startsWith('Properties/__temp__/')) return file;
+  const baseName = key.split('/').pop();
+  const newKey = `Properties/${propertyId}/${baseName}`;
+  const newUrl = await moveObject(key, newKey);
+  return {
+    ...file,
+    key: newKey,
+    location: newUrl,
+    path: newUrl
+  };
 }
 
 //
@@ -663,7 +683,9 @@ exports.createProperty = async (req, res, next) => {
     );
     const newId = insertRes.rows[0].id;
 
-    // Move uploaded files into a property-specific folder and update paths (local disk only)
+    // Move uploaded files into property-specific folder and update paths.
+    // - Spaces: move from temporary key to Properties/<propertyId>/
+    // - Local disk: keep existing behavior
     try {
       const allUploads = [
         ...uploadedPhotosFiles,
@@ -671,8 +693,32 @@ exports.createProperty = async (req, res, next) => {
         ...(req.files && Array.isArray(req.files.floorplan) ? req.files.floorplan : []),
         ...(req.files && Array.isArray(req.files.plan_photo) ? req.files.plan_photo : [])
       ];
-      const hasCloudUploads = allUploads.some(f => typeof f.path === 'string' && /^https?:\/\//i.test(f.path));
-      if (hasCloudUploads) {
+      const hasRemoteUploads = allUploads.some(f => {
+        const url = getUploadedFileUrl(f);
+        return !!url && /^https?:\/\//i.test(url);
+      });
+      if (hasRemoteUploads) {
+        const movedPhotosFiles = await Promise.all(uploadedPhotosFiles.map((f) => moveUploadedFileToPropertyFolder(f, newId)));
+        const movedVideoFile = uploadedVideoFile ? await moveUploadedFileToPropertyFolder(uploadedVideoFile, newId) : null;
+        const movedFloorplanFiles = (req.files && Array.isArray(req.files.floorplan)) ? await Promise.all(req.files.floorplan.map((f) => moveUploadedFileToPropertyFolder(f, newId))) : [];
+        const movedPlanPhotoFiles = (req.files && Array.isArray(req.files.plan_photo)) ? await Promise.all(req.files.plan_photo.map((f) => moveUploadedFileToPropertyFolder(f, newId))) : [];
+
+        photos = movedPhotosFiles.map((f) => getUploadedFileUrl(f)).filter(Boolean);
+        if (urlPhotos.length) photos = [...photos, ...urlPhotos];
+        if (!videoUrl && movedVideoFile) videoUrl = getUploadedFileUrl(movedVideoFile);
+        if (type === 'Apartment' && movedFloorplanFiles[0]) floorplanUrl = getUploadedFileUrl(movedFloorplanFiles[0]);
+        if ((type === 'House' || type === 'Villa' || type === 'Land') && movedPlanPhotoFiles[0]) planPhotoUrl = getUploadedFileUrl(movedPlanPhotoFiles[0]);
+
+        await query(
+          `UPDATE properties
+              SET photos = $1,
+                  video_url = $2,
+                  floorplan_url = $3,
+                  plan_photo_url = $4,
+                  updated_at = NOW()
+            WHERE id = $5`,
+          [photos, videoUrl, floorplanUrl, planPhotoUrl, newId]
+        );
         throw new Error('skip-local-move');
       }
       const propDir = path.join(__dirname, '../public/uploads/properties', String(newId));
@@ -738,7 +784,7 @@ exports.createProperty = async (req, res, next) => {
       );
     } catch (fileErr) {
       if (fileErr && fileErr.message === 'skip-local-move') {
-        // Cloudinary uploads already have final URLs.
+        // Remote uploads (Spaces) already have final URLs.
       } else {
       // Non-fatal: log and continue
         console.error('File move error:', fileErr);

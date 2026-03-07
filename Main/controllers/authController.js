@@ -3,8 +3,26 @@ const User = require('../models/User');
 const bcrypt = require('bcrypt');
 const areaRoles = require('../config/roles');
 const { query } = require('../config/db');
-const fs        = require('fs');
-const path      = require('path');
+const { isSpacesEnabled, moveObject, buildSpacesUrl } = require('../config/spaces');
+
+function getUploadedProfileUrl(file) {
+  if (!file) return null;
+  if (typeof file.location === 'string' && /^https?:\/\//i.test(file.location)) return file.location;
+  if (typeof file.path === 'string' && /^https?:\/\//i.test(file.path)) return file.path;
+  if (file.filename) return '/uploads/profiles/' + file.filename;
+  return null;
+}
+
+async function moveProfileUploadToUserFolder(file, userId) {
+  if (!file || !file.key || !isSpacesEnabled()) return getUploadedProfileUrl(file);
+  const key = String(file.key);
+  if (key.startsWith(`Profiles/${userId}/`)) return getUploadedProfileUrl(file);
+  if (!key.startsWith('Profiles/__temp__/')) return getUploadedProfileUrl(file);
+  const baseName = key.split('/').pop();
+  const newKey = `Profiles/${userId}/${baseName}`;
+  await moveObject(key, newKey);
+  return buildSpacesUrl(newKey);
+}
 
 // controllers/authController.js
 
@@ -173,12 +191,11 @@ exports.register = async (req, res, next) => {
     const fields = ['name','email','password','role','approved','area','position'];
     const values = [name, email, hash, role, false, area, position];
 
-    // Handle optional profile picture
-    let tempFilename;
+    // Handle optional profile picture (Spaces URL or local fallback path)
     if (req.file) {
-      tempFilename = req.file.filename;
+      const picUrl = getUploadedProfileUrl(req.file);
       fields.push('profile_picture');
-      values.push('/uploads/profiles/' + tempFilename);
+      values.push(picUrl);
     }
 
     // Perform INSERT and get new ID
@@ -189,19 +206,14 @@ exports.register = async (req, res, next) => {
     );
     const newId = insertRes.rows[0].id;
 
-    // Rename temp file to final {profile-newId.ext}
-    if (tempFilename) {
-      const uploadDir = path.join(__dirname, '../public/uploads/profiles');
-      const ext       = path.extname(tempFilename);
-      const oldPath   = path.join(uploadDir, tempFilename);
-      const newName   = `profile-${newId}${ext}`;
-      const newPath   = path.join(uploadDir, newName);
-      fs.renameSync(oldPath, newPath);
-      // Update user record with final path
-      await query(
-        'UPDATE users SET profile_picture = $1 WHERE id = $2',
-        ['/uploads/profiles/' + newName, newId]
-      );
+    if (req.file) {
+      const movedPicUrl = await moveProfileUploadToUserFolder(req.file, newId);
+      if (movedPicUrl && movedPicUrl !== values[values.length - 1]) {
+        await query(
+          'UPDATE users SET profile_picture = $1 WHERE id = $2',
+          [movedPicUrl, newId]
+        );
+      }
     }
 
     // Redirect to login with success param

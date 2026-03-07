@@ -2,24 +2,45 @@
 const multer  = require('multer');
 const path    = require('path');
 const fs      = require('fs');
+const multerS3 = require('multer-s3');
+const { getSpacesClient, isSpacesEnabled } = require('../config/spaces');
 
-// ensure upload folder exists
-const uploadDir = path.join(__dirname, '../public/uploads/profiles');
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
+const hasSpaces = isSpacesEnabled();
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    // if we have a logged-in user, use their ID; otherwise fall back to timestamp
-    const idOrTimestamp = req.session.user?.id || Date.now();
-    cb(null, `profile-${idOrTimestamp}${ext}`);
+let storage;
+if (hasSpaces) {
+  const s3 = getSpacesClient();
+  storage = multerS3({
+    s3,
+    bucket: process.env.SPACES_BUCKET,
+    acl: 'public-read',
+    contentType: multerS3.AUTO_CONTENT_TYPE,
+    key: (req, file, cb) => {
+      const ext = path.extname(file.originalname) || '.jpg';
+      const userId = req.session && req.session.user && req.session.user.id ? String(req.session.user.id) : null;
+      const folder = userId
+        ? `Profiles/${userId}`
+        : 'Profiles/__temp__';
+      cb(null, `${folder}/profile-${Date.now()}${ext}`);
+    }
+  });
+} else {
+  // ensure upload folder exists
+  const uploadDir = path.join(__dirname, '../public/uploads/profiles');
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
   }
-});
+  storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+      cb(null, uploadDir);
+    },
+    filename: (req, file, cb) => {
+      const ext = path.extname(file.originalname);
+      const idOrTimestamp = req.session.user?.id || Date.now();
+      cb(null, `profile-${idOrTimestamp}${ext}`);
+    }
+  });
+}
 
 const fileFilter = (req, file, cb) => {
   if (file.mimetype.startsWith('image/')) cb(null, true);
