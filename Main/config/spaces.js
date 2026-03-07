@@ -1,4 +1,4 @@
-const { S3Client, CopyObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
+const { S3Client, CopyObjectCommand, DeleteObjectCommand, ListObjectsV2Command, DeleteObjectsCommand } = require('@aws-sdk/client-s3');
 
 function isSpacesEnabled() {
   return !!(
@@ -79,10 +79,34 @@ async function moveObject(oldKey, newKey) {
   return buildSpacesUrl(newKey);
 }
 
+async function deletePropertyFolder(propertyId) {
+  if (!isSpacesEnabled() || !propertyId) return;
+  const client = getSpacesClient();
+  const bucket = process.env.SPACES_BUCKET;
+  const prefix = `Properties/${propertyId}/`;
+  let continuationToken;
+  do {
+    const listRes = await client.send(new ListObjectsV2Command({
+      Bucket: bucket,
+      Prefix: prefix,
+      ContinuationToken: continuationToken
+    }));
+    const keys = (listRes.Contents || []).map((o) => o.Key).filter(Boolean);
+    if (keys.length > 0) {
+      await client.send(new DeleteObjectsCommand({
+        Bucket: bucket,
+        Delete: { Objects: keys.map((Key) => ({ Key })), Quiet: true }
+      }));
+    }
+    continuationToken = listRes.IsTruncated ? listRes.NextContinuationToken : undefined;
+  } while (continuationToken);
+}
+
 module.exports = {
   isSpacesEnabled,
   getSpacesClient,
   buildSpacesUrl,
   moveObject,
-  normalizeSpacesUrl
+  normalizeSpacesUrl,
+  deletePropertyFolder
 };

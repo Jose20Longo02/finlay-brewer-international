@@ -7,7 +7,7 @@ const fs          = require('fs');
 const path        = require('path');
 const sendMail    = require('../config/mailer');
 const { generateVariants, SIZES } = require('../middleware/imageVariants');
-const { isSpacesEnabled, moveObject, normalizeSpacesUrl } = require('../config/spaces');
+const { isSpacesEnabled, moveObject, normalizeSpacesUrl, deletePropertyFolder } = require('../config/spaces');
 
 // Parse a cookie value from the request (no cookie-parser needed)
 function getCookie(req, name) {
@@ -1030,7 +1030,13 @@ exports.updateProperty = async (req, res, next) => {
 // Delete a property (agent)
 exports.deleteProperty = async (req, res, next) => {
   try {
-    await query(`DELETE FROM properties WHERE id = $1`, [req.params.id]);
+    const propertyId = req.params.id;
+    try {
+      await deletePropertyFolder(propertyId);
+    } catch (e) {
+      // Don't block delete if Spaces cleanup fails
+    }
+    await query(`DELETE FROM properties WHERE id = $1`, [propertyId]);
     res.redirect('/properties');
   } catch (err) {
     next(err);
@@ -1233,7 +1239,13 @@ exports.reassignProperty = async (req, res, next) => {
 // Delete any property (SuperAdmin)
 exports.deletePropertyAdmin = async (req, res, next) => {
   try {
-    await query(`DELETE FROM properties WHERE id = $1`, [req.params.id]);
+    const propertyId = req.params.id;
+    try {
+      await deletePropertyFolder(propertyId);
+    } catch (e) {
+      // Don't block delete if Spaces cleanup fails
+    }
+    await query(`DELETE FROM properties WHERE id = $1`, [propertyId]);
     res.redirect('/superadmin/properties?page=' + (req.query.page||1));
   } catch (err) {
     next(err);
