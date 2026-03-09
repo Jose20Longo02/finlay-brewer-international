@@ -101,11 +101,20 @@
             <img src="<%= (property.photos && property.photos[0]) ? property.photos[0] : '/img/property-placeholder.jpg' %>" 
                  alt="<%= property.title %>" loading="lazy" decoding="async"
                  onerror="this.src='/img/property-placeholder.jpg'">
+            <% if (property.type) { %>
+            <span class="gallery-frame-badge"><%= property.type %></span>
+            <% } %>
           </div>
           <div class="gallery-frame-content">
             <h3 class="gallery-frame-title"><%= property.title %></h3>
-            <div class="gallery-frame-meta"><%= property.city %>, <%= property.country %></div>
-            <div class="gallery-frame-price">€<%= Number(property.price).toLocaleString('en-US', { maximumFractionDigits: 0 }) %></div>
+            <div class="gallery-frame-meta">
+              <svg class="gallery-frame-pin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+              <%= property.city %>, <%= property.country %>
+            </div>
+            <div class="gallery-frame-footer">
+              <span class="gallery-frame-price">€<%= Number(property.price).toLocaleString('en-US', { maximumFractionDigits: 0 }) %></span>
+              <span class="gallery-frame-cta">View details →</span>
+            </div>
           </div>
         </a>
       <% }); %>
