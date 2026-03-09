@@ -231,18 +231,15 @@ exports.listPropertiesPublic = async (req, res, next) => {
       paramIndex++;
     }
 
-    // Features filter (if features table exists)
+    // Features filter (uses characteristics array - Apartment, House, Villa)
     if (features) {
-      // Handle both single string and array values
       const featuresArray = Array.isArray(features) ? features : [features];
-      if (featuresArray.length > 0 && featuresArray[0] !== '') {
-        // This would require a features table or JSON field
-        // For now, we'll implement basic feature filtering
-        featuresArray.forEach(feature => {
-          whereConditions.push(`LOWER(p.description) LIKE LOWER($${paramIndex})`);
-          queryParams.push(`%${feature.toLowerCase()}%`);
-          paramIndex++;
-        });
+      const validFeatures = featuresArray.filter(f => f && CHARACTERISTIC_SLUGS.has(String(f)));
+      if (validFeatures.length > 0) {
+        // Property must contain ALL selected characteristics
+        whereConditions.push(`(p.characteristics IS NOT NULL AND p.characteristics @> $${paramIndex}::text[])`);
+        queryParams.push(validFeatures);
+        paramIndex++;
       }
     }
 
@@ -398,6 +395,7 @@ exports.listPropertiesPublic = async (req, res, next) => {
       properties: normalizedProperties,
       locations,
       filters,
+      propertyCharacteristics: PROPERTY_CHARACTERISTICS,
       query: q,
       sort,
       currentPage: parseInt(page),

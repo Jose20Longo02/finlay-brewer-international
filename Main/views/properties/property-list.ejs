@@ -273,31 +273,13 @@
                 <span class="checkmark"></span>
                 New Listings (7 days)
               </label>
+              <% (propertyCharacteristics || []).forEach(function(c) { %>
               <label class="checkbox-label">
-                <input type="checkbox" name="features" value="garden" <%= locals.filters?.features?.includes('garden') ? 'checked' : '' %>>
+                <input type="checkbox" name="features" value="<%= c.slug %>" <%= locals.filters?.features?.includes(c.slug) ? 'checked' : '' %>>
                 <span class="checkmark"></span>
-                Garden
+                <%= c.label %>
               </label>
-              <label class="checkbox-label">
-                <input type="checkbox" name="features" value="balcony" <%= locals.filters?.features?.includes('balcony') ? 'checked' : '' %>>
-                <span class="checkmark"></span>
-                Balcony
-              </label>
-              <label class="checkbox-label">
-                <input type="checkbox" name="features" value="parking" <%= locals.filters?.features?.includes('parking') ? 'checked' : '' %>>
-                <span class="checkmark"></span>
-                Parking
-              </label>
-              <label class="checkbox-label">
-                <input type="checkbox" name="features" value="elevator" <%= locals.filters?.features?.includes('elevator') ? 'checked' : '' %>>
-                <span class="checkmark"></span>
-                Elevator
-              </label>
-              <label class="checkbox-label">
-                <input type="checkbox" name="features" value="air_conditioning" <%= locals.filters?.features?.includes('air_conditioning') ? 'checked' : '' %>>
-                <span class="checkmark"></span>
-                Air Conditioning
-              </label>
+              <% }) %>
             </div>
           </div>
 
