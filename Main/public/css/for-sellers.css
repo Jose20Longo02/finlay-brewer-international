@@ -103,11 +103,11 @@ body.header-dark .header-hamburger-bar { background: #fff; }
 
 .fs-hero-cta {
   display: inline-block;
-  padding: 0.875rem 2rem;
+  padding: 1.125rem 2.5rem;
   background: #fff;
   color: #000;
   font-weight: 600;
-  font-size: 1rem;
+  font-size: 1.125rem;
   text-decoration: none;
   border-radius: 8px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
@@ -607,8 +607,8 @@ body.header-dark .header-hamburger-bar { background: #fff; }
   }
 
   .fs-hero-cta {
-    padding: 0.875rem 1.5rem;
-    font-size: 0.95rem;
+    padding: 1rem 2rem;
+    font-size: 1.0625rem;
   }
 
   .fs-hero-trust {
