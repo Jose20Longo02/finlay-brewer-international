@@ -197,17 +197,6 @@
             <label for="parking_a">Parking</label>
             <input id="parking_a" name="parking" type="number" min="0" step="1" placeholder="No. of spaces" value="<%= form.parking||'' %>" />
           </div>
-          <div class="field np-characteristics-field">
-            <label>Characteristics</label>
-            <div class="chips">
-              <% (propertyCharacteristics || []).forEach(function(c) { %>
-                <label class="chip">
-                  <input type="checkbox" name="characteristics" value="<%= c.slug %>" <%= (form.characteristics||[]).includes(c.slug)?'checked':'' %> />
-                  <span><%= c.label %></span>
-                </label>
-              <% }) %>
-            </div>
-          </div>
           <div class="field">
             <label>Floorplan image</label>
             <div class="image-upload-box">
@@ -220,6 +209,17 @@
               <p class="image-upload-status" id="floorplanUploadStatus">No file selected</p>
             </div>
             <div id="floorplanPreview" class="preview-grid"></div>
+          </div>
+        </div>
+        <div id="characteristicsApartment" class="np-characteristics-section">
+          <h3 class="np-characteristics-heading">Characteristics</h3>
+          <div class="np-characteristics-list">
+            <% (propertyCharacteristics || []).forEach(function(c) { %>
+              <label class="np-characteristic-item">
+                <input type="checkbox" name="characteristics" value="<%= c.slug %>" <%= (form.characteristics||[]).includes(c.slug)?'checked':'' %> />
+                <span><%= c.label %></span>
+              </label>
+            <% }) %>
           </div>
         </div>
       </div>
@@ -259,17 +259,6 @@
             <label for="parking_hv">Parking</label>
             <input id="parking_hv" name="parking" type="number" min="0" step="1" placeholder="No. of spaces" value="<%= form.parking||'' %>" />
           </div>
-          <div class="field np-characteristics-field">
-            <label>Characteristics</label>
-            <div class="chips">
-              <% (propertyCharacteristics || []).forEach(function(c) { %>
-                <label class="chip">
-                  <input type="checkbox" name="characteristics" value="<%= c.slug %>" <%= (form.characteristics||[]).includes(c.slug)?'checked':'' %> />
-                  <span><%= c.label %></span>
-                </label>
-              <% }) %>
-            </div>
-          </div>
           <div class="field">
             <label>Plan image</label>
             <div class="image-upload-box">
@@ -282,6 +271,17 @@
               <p class="image-upload-status" id="planPhotoHVUploadStatus">No file selected</p>
             </div>
             <div id="planPhotoPreviewHV" class="preview-grid"></div>
+          </div>
+        </div>
+        <div id="characteristicsHouseVilla" class="np-characteristics-section">
+          <h3 class="np-characteristics-heading">Characteristics</h3>
+          <div class="np-characteristics-list">
+            <% (propertyCharacteristics || []).forEach(function(c) { %>
+              <label class="np-characteristic-item">
+                <input type="checkbox" name="characteristics" value="<%= c.slug %>" <%= (form.characteristics||[]).includes(c.slug)?'checked':'' %> />
+                <span><%= c.label %></span>
+              </label>
+            <% }) %>
           </div>
         </div>
       </div>

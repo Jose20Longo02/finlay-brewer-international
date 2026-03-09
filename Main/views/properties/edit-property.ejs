@@ -216,18 +216,6 @@
             <label for="parking_a">Parking</label>
             <input id="parking_a" name="parking" type="number" min="0" step="1" placeholder="No. of spaces" value="<%= property.parking ?? '' %>" />
           </div>
-          <div class="field np-characteristics-field">
-            <label>Characteristics</label>
-            <div class="chips">
-              <% const propChars = Array.isArray(property.characteristics) ? property.characteristics : (property.characteristics ? [property.characteristics] : []); %>
-              <% (propertyCharacteristics || []).forEach(function(c) { %>
-                <label class="chip">
-                  <input type="checkbox" name="characteristics" value="<%= c.slug %>" <%= propChars.includes(c.slug)?'checked':'' %> />
-                  <span><%= c.label %></span>
-                </label>
-              <% }) %>
-            </div>
-          </div>
           <div class="field">
             <label>Floorplan image</label>
             <div class="image-upload-box">
@@ -242,6 +230,18 @@
             <% if (property.floorplan_url) { %>
               <div class="preview-grid"><div class="item"><img class="thumb" src="<%= property.floorplan_url %>"></div></div>
             <% } %>
+          </div>
+        </div>
+        <div id="characteristicsApartment" class="np-characteristics-section">
+          <h3 class="np-characteristics-heading">Characteristics</h3>
+          <div class="np-characteristics-list">
+            <% const propChars = Array.isArray(property.characteristics) ? property.characteristics : (property.characteristics ? [property.characteristics] : []); %>
+            <% (propertyCharacteristics || []).forEach(function(c) { %>
+              <label class="np-characteristic-item">
+                <input type="checkbox" name="characteristics" value="<%= c.slug %>" <%= propChars.includes(c.slug)?'checked':'' %> />
+                <span><%= c.label %></span>
+              </label>
+            <% }) %>
           </div>
         </div>
       </div>
@@ -281,18 +281,6 @@
             <label for="parking_hv">Parking</label>
             <input id="parking_hv" name="parking" type="number" min="0" step="1" placeholder="No. of spaces" value="<%= property.parking ?? '' %>" />
           </div>
-          <div class="field np-characteristics-field">
-            <label>Characteristics</label>
-            <div class="chips">
-              <% const propCharsHV = Array.isArray(property.characteristics) ? property.characteristics : (property.characteristics ? [property.characteristics] : []); %>
-              <% (propertyCharacteristics || []).forEach(function(c) { %>
-                <label class="chip">
-                  <input type="checkbox" name="characteristics" value="<%= c.slug %>" <%= propCharsHV.includes(c.slug)?'checked':'' %> />
-                  <span><%= c.label %></span>
-                </label>
-              <% }) %>
-            </div>
-          </div>
           <div class="field">
             <label>Plan image</label>
             <div class="image-upload-box">
@@ -307,6 +295,18 @@
             <% if (property.plan_photo_url) { %>
               <div class="preview-grid"><div class="item"><img class="thumb" src="<%= property.plan_photo_url %>"></div></div>
             <% } %>
+          </div>
+        </div>
+        <div id="characteristicsHouseVilla" class="np-characteristics-section">
+          <h3 class="np-characteristics-heading">Characteristics</h3>
+          <div class="np-characteristics-list">
+            <% const propCharsHV = Array.isArray(property.characteristics) ? property.characteristics : (property.characteristics ? [property.characteristics] : []); %>
+            <% (propertyCharacteristics || []).forEach(function(c) { %>
+              <label class="np-characteristic-item">
+                <input type="checkbox" name="characteristics" value="<%= c.slug %>" <%= propCharsHV.includes(c.slug)?'checked':'' %> />
+                <span><%= c.label %></span>
+              </label>
+            <% }) %>
           </div>
         </div>
       </div>
