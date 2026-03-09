@@ -359,13 +359,22 @@
                         <img src="/img/property-placeholder.jpg" alt="<%= property.title %>" loading="lazy" decoding="async">
                     <% } %>
                     
-                    <!-- Property Badges -->
+                    <!-- Property Badges (left) -->
                     <div class="property-badges">
                       <% if (property.featured) { %>
                         <span class="badge badge-featured">Featured</span>
                       <% } %>
                       <span class="badge badge-type"><%= property.type %></span>
                     </div>
+                    <!-- Status Tags (top right) -->
+                    <% const statusTags = Array.isArray(property.status_tags) ? property.status_tags : (property.status_tags ? [property.status_tags] : []); %>
+                    <% if (statusTags.length > 0) { %>
+                    <div class="property-badges-status">
+                      <% statusTags.forEach(tag => { %>
+                        <span class="badge badge-status badge-status-<%= tag.toLowerCase() %>"><%= tag %></span>
+                      <% }); %>
+                    </div>
+                    <% } %>
                   </div>
                   
                   <!-- Property Content -->

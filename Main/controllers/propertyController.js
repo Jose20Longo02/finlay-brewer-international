@@ -277,7 +277,7 @@ exports.listPropertiesPublic = async (req, res, next) => {
           WHEN p.type = 'Land' THEN p.land_size
           ELSE NULL
         END as size,
-        COALESCE(p.featured, false) as featured, p.created_at, p.description,
+        COALESCE(p.featured, false) as featured, p.status_tags, p.created_at, p.description,
         p.year_built, p.map_link,
         u.name as agent_name, u.profile_picture as agent_profile_picture
       FROM properties p
