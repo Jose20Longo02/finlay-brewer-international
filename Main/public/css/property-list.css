@@ -1331,51 +1331,76 @@ body.header-dark .search-results-page {
   color: var(--white);
 }
 
-/* Status tags – top right, modern & engaging */
+/* Status tags – top right, engaging premium design */
 .property-badges-status {
   position: absolute;
   top: var(--spacing-3);
   right: var(--spacing-3);
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 8px;
   justify-content: flex-end;
-  max-width: 60%;
+  max-width: 65%;
 }
 
 .badge-status {
-  padding: 6px 12px;
-  border-radius: 10px;
+  position: relative;
+  padding: 8px 14px 8px 18px;
+  border-radius: 8px;
   font-size: 0.7rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  backdrop-filter: blur(10px);
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.18);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  letter-spacing: 0.1em;
+  color: #fff;
+  overflow: hidden;
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.15),
+    0 1px 2px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.badge-status::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: rgba(255, 255, 255, 0.4);
+  border-radius: 8px 0 0 8px;
 }
 
 .property-card:hover .badge-status {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.22);
+  transform: translateY(-2px) scale(1.02);
+  box-shadow:
+    0 6px 20px rgba(0, 0, 0, 0.18),
+    0 2px 6px rgba(0, 0, 0, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
 .badge-status-new {
-  background: #475569;
-  color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: linear-gradient(160deg, #52687a 0%, #475569 50%, #3d4d5c 100%);
+}
+
+.badge-status-new::before {
+  background: rgba(148, 163, 184, 0.9);
 }
 
 .badge-status-reduced {
-  background: #78716c;
-  color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: linear-gradient(160deg, #8b8279 0%, #78716c 50%, #67605a 100%);
+}
+
+.badge-status-reduced::before {
+  background: rgba(214, 211, 209, 0.9);
 }
 
 .badge-status-exclusive {
-  background: #1e3a5f;
-  color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: linear-gradient(160deg, #254066 0%, #1e3a5f 50%, #182d4d 100%);
+}
+
+.badge-status-exclusive::before {
+  background: rgba(147, 197, 253, 0.7);
 }
 
 /* Removed favorite button styles (no favorites system) */
