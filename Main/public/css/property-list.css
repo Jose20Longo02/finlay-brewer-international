@@ -1380,27 +1380,27 @@ body.header-dark .search-results-page {
 }
 
 .badge-status-new {
-  background: linear-gradient(160deg, #52687a 0%, #475569 50%, #3d4d5c 100%);
+  background: linear-gradient(160deg, #6b7280 0%, #4b5563 50%, #374151 100%);
 }
 
 .badge-status-new::before {
-  background: rgba(148, 163, 184, 0.9);
+  background: rgba(209, 213, 219, 0.9);
 }
 
 .badge-status-reduced {
-  background: linear-gradient(160deg, #8b8279 0%, #78716c 50%, #67605a 100%);
+  background: linear-gradient(160deg, #52525b 0%, #3f3f46 50%, #27272a 100%);
 }
 
 .badge-status-reduced::before {
-  background: rgba(214, 211, 209, 0.9);
+  background: rgba(161, 161, 170, 0.9);
 }
 
 .badge-status-exclusive {
-  background: linear-gradient(160deg, #254066 0%, #1e3a5f 50%, #182d4d 100%);
+  background: linear-gradient(160deg, #27272a 0%, #18181b 50%, #111 100%);
 }
 
 .badge-status-exclusive::before {
-  background: rgba(147, 197, 253, 0.7);
+  background: rgba(255, 255, 255, 0.4);
 }
 
 /* Removed favorite button styles (no favorites system) */
