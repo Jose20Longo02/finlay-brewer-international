@@ -24,6 +24,7 @@
     if (locals.filters?.bedrooms?.length) locals.filters.bedrooms.forEach(b => { if (!p.bedrooms) p.bedrooms = []; p.bedrooms.push(b); });
     if (locals.filters?.type?.length) locals.filters.type.forEach(t => { if (!p.type) p.type = []; p.type.push(t); });
     if (locals.filters?.features?.length) locals.filters.features.forEach(f => { if (!p.features) p.features = []; p.features.push(f); });
+    if (locals.filters?.status_tags?.length) locals.filters.status_tags.forEach(t => { if (!p.status_tags) p.status_tags = []; p.status_tags.push(t); });
     if (locals.filters?.featured) p.featured = locals.filters.featured;
     if (locals.filters?.new_listing) p.new_listing = locals.filters.new_listing;
     return p;
@@ -256,6 +257,28 @@
                        min="1800" max="<%= new Date().getFullYear() %>"
                        value="<%= locals.filters?.year_built_max || '' %>" class="form-input">
               </div>
+            </div>
+          </div>
+
+          <!-- Status Tags -->
+          <div class="filter-group">
+            <h4>Status Tag</h4>
+            <div class="checkbox-group">
+              <label class="checkbox-label">
+                <input type="checkbox" name="status_tags" value="New" <%= locals.filters?.status_tags?.includes('New') ? 'checked' : '' %>>
+                <span class="checkmark"></span>
+                New
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" name="status_tags" value="Reduced" <%= locals.filters?.status_tags?.includes('Reduced') ? 'checked' : '' %>>
+                <span class="checkmark"></span>
+                Reduced
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" name="status_tags" value="Exclusive" <%= locals.filters?.status_tags?.includes('Exclusive') ? 'checked' : '' %>>
+                <span class="checkmark"></span>
+                Exclusive
+              </label>
             </div>
           </div>
 

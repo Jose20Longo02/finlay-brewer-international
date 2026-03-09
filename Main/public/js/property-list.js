@@ -178,6 +178,16 @@ function removeFilter(filterType, value = null) {
         currentUrl.searchParams.delete('features');
       }
       break;
+    case 'status_tags':
+      if (value) {
+        const tags = currentUrl.searchParams.getAll('status_tags');
+        const newTags = tags.filter(t => t !== value);
+        currentUrl.searchParams.delete('status_tags');
+        newTags.forEach(t => currentUrl.searchParams.append('status_tags', t));
+      } else {
+        currentUrl.searchParams.delete('status_tags');
+      }
+      break;
     case 'featured':
       currentUrl.searchParams.delete('featured');
       break;
@@ -939,13 +949,13 @@ function updateFilters() {
   // Clear existing filter params
   const filterParams = ['country', 'city', 'neighborhood', 'type', 'min_price', 'max_price', 
                        'bedrooms', 'bathrooms', 'featured', 'new_listing', 'min_size', 'max_size',
-                       'year_built_min', 'year_built_max', 'features'];
+                       'year_built_min', 'year_built_max', 'features', 'status_tags'];
   filterParams.forEach(param => currentUrl.searchParams.delete(param));
   
   // Add new filter params
   for (let [key, value] of formData.entries()) {
     if (value && value.trim() !== '') {
-      if (key === 'type' || key === 'bedrooms' || key === 'features') {
+      if (key === 'type' || key === 'bedrooms' || key === 'features' || key === 'status_tags') {
         currentUrl.searchParams.append(key, value);
       } else {
         currentUrl.searchParams.set(key, value);

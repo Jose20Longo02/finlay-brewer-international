@@ -106,6 +106,7 @@ exports.listPropertiesPublic = async (req, res, next) => {
       year_built_min = '',
       year_built_max = '',
       features = [],
+      status_tags = [],
       featured = '',
       new_listing = '',
       sort = 'relevance',
@@ -239,6 +240,18 @@ exports.listPropertiesPublic = async (req, res, next) => {
         // Property must contain ALL selected characteristics
         whereConditions.push(`(p.characteristics IS NOT NULL AND p.characteristics @> $${paramIndex}::text[])`);
         queryParams.push(validFeatures);
+        paramIndex++;
+      }
+    }
+
+    // Status tags filter (New, Reduced, Exclusive) – property must have ANY selected tag
+    const statusTagOptions = ['New', 'Reduced', 'Exclusive'];
+    if (status_tags) {
+      const tagsArray = Array.isArray(status_tags) ? status_tags : [status_tags];
+      const validTags = tagsArray.filter(t => t && statusTagOptions.includes(String(t)));
+      if (validTags.length > 0) {
+        whereConditions.push(`(p.status_tags IS NOT NULL AND p.status_tags && $${paramIndex}::text[])`);
+        queryParams.push(validTags);
         paramIndex++;
       }
     }
@@ -386,6 +399,7 @@ exports.listPropertiesPublic = async (req, res, next) => {
       year_built_min,
       year_built_max,
       features: Array.isArray(features) ? features : (features ? [features] : []),
+      status_tags: Array.isArray(status_tags) ? status_tags : (status_tags ? [status_tags] : []),
       featured,
       new_listing
     };
