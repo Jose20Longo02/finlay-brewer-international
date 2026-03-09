@@ -36,6 +36,7 @@ const migrations = [
   'add_created_by_to_properties.sql',
   'add_views_inquiry_to_properties.sql',
   'add_property_tax_energy_class.sql',
+  'add_parking_to_properties.sql',
   'create_blog_posts.sql'
 ];
 

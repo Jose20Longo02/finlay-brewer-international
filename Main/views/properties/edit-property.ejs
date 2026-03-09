@@ -213,6 +213,10 @@
             </select>
           </div>
           <div class="field">
+            <label for="parking_a">Parking</label>
+            <input id="parking_a" name="parking" type="number" min="0" step="1" placeholder="No. of spaces" value="<%= property.parking ?? '' %>" />
+          </div>
+          <div class="field">
             <label>Floorplan image</label>
             <div class="image-upload-box">
               <input id="floorplan" name="floorplan" type="file" accept="image/*" class="image-input-hidden" />
@@ -260,6 +264,10 @@
                 <option value="<%= ec %>" <%= property.energy_class===ec?'selected':'' %>><%= ec %></option>
               <% }) %>
             </select>
+          </div>
+          <div class="field">
+            <label for="parking_hv">Parking</label>
+            <input id="parking_hv" name="parking" type="number" min="0" step="1" placeholder="No. of spaces" value="<%= property.parking ?? '' %>" />
           </div>
           <div class="field">
             <label>Plan image</label>

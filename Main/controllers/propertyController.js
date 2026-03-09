@@ -404,6 +404,7 @@ exports.showProperty = async (req, res, next) => {
         END as size,
         p.featured, p.created_at, p.description,
         p.year_built, p.map_link, p.latitude, p.longitude,
+        p.property_tax, p.energy_class, p.parking,
         u.name as agent_name, u.profile_picture as agent_profile_picture
       FROM properties p
       LEFT JOIN users u ON p.agent_id = u.id
@@ -562,6 +563,7 @@ exports.createProperty = async (req, res, next) => {
     const propertyTax   = parseNumberField(body.property_tax);
     const yearBuilt     = ['Apartment', 'House', 'Villa'].includes(type) ? parseNumberField(body.year_built) : null;
     const energyClass   = ['Apartment', 'House', 'Villa'].includes(type) ? (body.energy_class?.trim() || null) : null;
+    const parking       = ['Apartment', 'House', 'Villa'].includes(type) ? (parseInt(body.parking, 10) || null) : null;
 
     const listingStatus = ['active', 'under_offer', 'sold'].includes(body.listing_status) ? body.listing_status : 'active';
 
@@ -658,7 +660,7 @@ exports.createProperty = async (req, res, next) => {
          apartment_size, bedrooms, bathrooms,
          total_size, living_space, land_size, plan_photo_url,
          is_in_project, project_id,
-         map_link, property_tax, year_built, energy_class, status,
+         map_link, property_tax, year_built, energy_class, parking, status,
          latitude, longitude,
          created_at
        ) VALUES (
@@ -667,8 +669,8 @@ exports.createProperty = async (req, res, next) => {
          $12,$13,$14,
          $15,$16,$17,$18,
          $19,$20,$21,$22,
-         $23,$24,$25,$26,$27,$28,
-         $29,$30,
+         $23,$24,$25,$26,$27,$28,$29,
+         $30,$31,
          NOW()
        ) RETURNING id`,
       [
@@ -678,7 +680,7 @@ exports.createProperty = async (req, res, next) => {
         apartmentSize, bedrooms, bathrooms,
         totalSize, livingSpace, landSize, planPhotoUrl,
         false, null,
-        mapLink, propertyTax, yearBuilt, energyClass, listingStatus,
+        mapLink, propertyTax, yearBuilt, energyClass, parking, listingStatus,
         (Number.isFinite(latitude) ? latitude : null),
         (Number.isFinite(longitude) ? longitude : null)
       ]
@@ -897,6 +899,7 @@ exports.updateProperty = async (req, res, next) => {
     const propertyTax   = body.property_tax !== undefined ? parseNumberField(body.property_tax) : existing.property_tax;
     const yearBuilt     = ['Apartment', 'House', 'Villa'].includes(type) ? parseNumberField(body.year_built) : null;
     const energyClass   = ['Apartment', 'House', 'Villa'].includes(type) ? (body.energy_class?.trim() || null) : null;
+    const parking       = ['Apartment', 'House', 'Villa'].includes(type) ? (body.parking !== undefined ? (parseInt(body.parking, 10) || null) : existing.parking) : null;
 
     const listingStatus = ['active', 'under_offer', 'sold'].includes(body.listing_status) ? body.listing_status : (existing.status || 'active');
 
@@ -999,9 +1002,9 @@ exports.updateProperty = async (req, res, next) => {
          land_size=$18, plan_photo_url=$19,
          is_in_project=$20, project_id=$21,
          agent_id=$22,
-         map_link=$23, property_tax=$24, year_built=$25, energy_class=$26, status=$27,
+         map_link=$23, property_tax=$24, year_built=$25, energy_class=$26, parking=$27, status=$28,
          updated_at=NOW()
-       WHERE id=$28`,
+       WHERE id=$29`,
       [
         country, city, neighborhood,
         title, slugify(title, { lower: true, strict: true }), description,
@@ -1012,7 +1015,7 @@ exports.updateProperty = async (req, res, next) => {
         landSize, planPhotoUrl,
         false, null,
         agentId,
-        mapLinkRaw, propertyTax, yearBuilt, energyClass, listingStatus,
+        mapLinkRaw, propertyTax, yearBuilt, energyClass, parking, listingStatus,
         propId
       ]
     );

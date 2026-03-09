@@ -108,14 +108,28 @@
               <span>Built in <%= property.year_built %></span>
             </li>
             <% } %>
+            <% if (property.energy_class && ['Apartment','House','Villa'].includes(property.type)) { %>
+            <li>
+              <svg class="char-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"></path><path d="M2 17l10 5 10-5"></path></svg>
+              <span>Energy class: <%= property.energy_class %></span>
+            </li>
+            <% } %>
+            <% if (property.property_tax != null && property.property_tax !== '') { %>
+            <li>
+              <svg class="char-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line><path d="M12 15h4"></path></svg>
+              <span>Property tax: €<%= Number(property.property_tax).toLocaleString('en-US', { minimumFractionDigits: 2 }) %>/yr</span>
+            </li>
+            <% } %>
             <li>
               <svg class="char-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 9V7a2 2 0 0 0-2-2h-2V3a2 2 0 0 0-4 0v2H8a2 2 0 0 0-2 2v2"></path><path d="M2 11v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-9"></path><path d="M4 18V9"></path><path d="M20 18V9"></path></svg>
               <span>Furnished</span>
             </li>
+            <% if (property.parking != null && property.parking > 0 && ['Apartment','House','Villa'].includes(property.type)) { %>
             <li>
               <svg class="char-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
-              <span>Parking for 2 cars</span>
+              <span>Parking for <%= property.parking %> car<%= property.parking !== 1 ? 's' : '' %></span>
             </li>
+            <% } %>
           </ul>
         </div>
 
