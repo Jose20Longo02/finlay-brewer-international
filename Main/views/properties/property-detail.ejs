@@ -120,10 +120,15 @@
               <span>Property tax: €<%= Number(property.property_tax).toLocaleString('en-US', { minimumFractionDigits: 2 }) %>/yr</span>
             </li>
             <% } %>
+            <% if (property.characteristics && property.characteristics.length && (propertyCharacteristics || []).length) { %>
+              <% const charMap = {}; (propertyCharacteristics || []).forEach(c => { charMap[c.slug] = c.label; }); %>
+              <% property.characteristics.forEach(function(slug) { const label = charMap[slug]; if (!label) return; %>
             <li>
-              <svg class="char-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 9V7a2 2 0 0 0-2-2h-2V3a2 2 0 0 0-4 0v2H8a2 2 0 0 0-2 2v2"></path><path d="M2 11v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-9"></path><path d="M4 18V9"></path><path d="M20 18V9"></path></svg>
-              <span>Furnished</span>
+              <svg class="char-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+              <span><%= label %></span>
             </li>
+              <% }); %>
+            <% } %>
             <% if (property.parking != null && property.parking > 0 && ['Apartment','House','Villa'].includes(property.type)) { %>
             <li>
               <svg class="char-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>

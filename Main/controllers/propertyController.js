@@ -9,6 +9,26 @@ const sendMail    = require('../config/mailer');
 const { generateVariants, SIZES } = require('../middleware/imageVariants');
 const { isSpacesEnabled, moveObject, normalizeSpacesUrl, deletePropertyFolder } = require('../config/spaces');
 
+// Allowed property characteristics (Apartment, House, Villa). Slug -> display label for detail page.
+const PROPERTY_CHARACTERISTICS = [
+  { slug: 'sea_views', label: 'Sea views' },
+  { slug: 'city_views', label: 'City views' },
+  { slug: 'panoramic_views', label: 'Panoramic views' },
+  { slug: 'furnished', label: 'Furnished' },
+  { slug: 'garden', label: 'Garden' },
+  { slug: 'terrace', label: 'Terrace' },
+  { slug: 'pool', label: 'Pool' },
+  { slug: 'air_conditioning', label: 'Air conditioning' }
+];
+const CHARACTERISTIC_SLUGS = new Set(PROPERTY_CHARACTERISTICS.map(c => c.slug));
+
+function parseCharacteristics(body) {
+  const raw = body.characteristics;
+  if (!raw) return [];
+  const arr = Array.isArray(raw) ? raw : [raw];
+  return arr.filter(Boolean).map(String).filter(s => CHARACTERISTIC_SLUGS.has(s));
+}
+
 // Parse a cookie value from the request (no cookie-parser needed)
 function getCookie(req, name) {
   const h = req.headers.cookie || '';
@@ -404,7 +424,7 @@ exports.showProperty = async (req, res, next) => {
         END as size,
         p.featured, p.created_at, p.description,
         p.year_built, p.map_link, p.latitude, p.longitude,
-        p.property_tax, p.energy_class, p.parking,
+        p.property_tax, p.energy_class, p.parking, p.characteristics,
         u.name as agent_name, u.profile_picture as agent_profile_picture
       FROM properties p
       LEFT JOIN users u ON p.agent_id = u.id
@@ -459,8 +479,13 @@ exports.showProperty = async (req, res, next) => {
       });
     }
 
+    const propertyWithCharacteristics = {
+      ...property,
+      characteristics: Array.isArray(property.characteristics) ? property.characteristics : (property.characteristics ? [property.characteristics] : [])
+    };
     res.render('properties/property-detail', {
-      property,
+      property: propertyWithCharacteristics,
+      propertyCharacteristics: PROPERTY_CHARACTERISTICS,
       bodyClass: 'page-property-detail header-dark'
     });
   } catch (err) {
@@ -481,6 +506,7 @@ exports.newPropertyForm = async (req, res, next) => {
     res.render('properties/new-property', {
       locations,
       teamMembers,
+      propertyCharacteristics: PROPERTY_CHARACTERISTICS,
       error: null,
       form: {},
       currentUser: req.session.user
@@ -564,6 +590,7 @@ exports.createProperty = async (req, res, next) => {
     const yearBuilt     = ['Apartment', 'House', 'Villa'].includes(type) ? parseNumberField(body.year_built) : null;
     const energyClass   = ['Apartment', 'House', 'Villa'].includes(type) ? (body.energy_class?.trim() || null) : null;
     const parking       = ['Apartment', 'House', 'Villa'].includes(type) ? (parseInt(body.parking, 10) || null) : null;
+    const characteristics = ['Apartment', 'House', 'Villa'].includes(type) ? parseCharacteristics(body) : [];
 
     const listingStatus = ['active', 'under_offer', 'sold'].includes(body.listing_status) ? body.listing_status : 'active';
 
@@ -628,6 +655,7 @@ exports.createProperty = async (req, res, next) => {
       return res.status(400).render('properties/new-property', {
         locations,
         teamMembers,
+        propertyCharacteristics: PROPERTY_CHARACTERISTICS,
         error: errors.join('. '),
         form,
         currentUser: req.session.user
@@ -660,7 +688,7 @@ exports.createProperty = async (req, res, next) => {
          apartment_size, bedrooms, bathrooms,
          total_size, living_space, land_size, plan_photo_url,
          is_in_project, project_id,
-         map_link, property_tax, year_built, energy_class, parking, status,
+         map_link, property_tax, year_built, energy_class, parking, characteristics, status,
          latitude, longitude,
          created_at
        ) VALUES (
@@ -669,8 +697,8 @@ exports.createProperty = async (req, res, next) => {
          $12,$13,$14,
          $15,$16,$17,$18,
          $19,$20,$21,$22,
-         $23,$24,$25,$26,$27,$28,$29,
-         $30,$31,
+         $23,$24,$25,$26,$27,$28,$29,$30,
+         $31,$32,
          NOW()
        ) RETURNING id`,
       [
@@ -680,7 +708,7 @@ exports.createProperty = async (req, res, next) => {
         apartmentSize, bedrooms, bathrooms,
         totalSize, livingSpace, landSize, planPhotoUrl,
         false, null,
-        mapLink, propertyTax, yearBuilt, energyClass, parking, listingStatus,
+        mapLink, propertyTax, yearBuilt, energyClass, parking, characteristics, listingStatus,
         (Number.isFinite(latitude) ? latitude : null),
         (Number.isFinite(longitude) ? longitude : null)
       ]
@@ -832,6 +860,7 @@ exports.editPropertyForm = async (req, res, next) => {
       property,
       locations,
       teamMembers,
+      propertyCharacteristics: PROPERTY_CHARACTERISTICS,
       currentUser: req.session.user,
       error: null
     });
@@ -900,6 +929,7 @@ exports.updateProperty = async (req, res, next) => {
     const yearBuilt     = ['Apartment', 'House', 'Villa'].includes(type) ? parseNumberField(body.year_built) : null;
     const energyClass   = ['Apartment', 'House', 'Villa'].includes(type) ? (body.energy_class?.trim() || null) : null;
     const parking       = ['Apartment', 'House', 'Villa'].includes(type) ? (body.parking !== undefined ? (parseInt(body.parking, 10) || null) : existing.parking) : null;
+    const characteristics = ['Apartment', 'House', 'Villa'].includes(type) ? (body.characteristics !== undefined ? parseCharacteristics(body) : (existing.characteristics || [])) : [];
 
     const listingStatus = ['active', 'under_offer', 'sold'].includes(body.listing_status) ? body.listing_status : (existing.status || 'active');
 
@@ -985,6 +1015,7 @@ exports.updateProperty = async (req, res, next) => {
         property: existing,
         locations,
         teamMembers,
+        propertyCharacteristics: PROPERTY_CHARACTERISTICS,
         currentUser: req.session.user,
         error: errors.join('. ')
       });
@@ -1002,9 +1033,9 @@ exports.updateProperty = async (req, res, next) => {
          land_size=$18, plan_photo_url=$19,
          is_in_project=$20, project_id=$21,
          agent_id=$22,
-         map_link=$23, property_tax=$24, year_built=$25, energy_class=$26, parking=$27, status=$28,
+         map_link=$23, property_tax=$24, year_built=$25, energy_class=$26, parking=$27, characteristics=$28, status=$29,
          updated_at=NOW()
-       WHERE id=$29`,
+       WHERE id=$30`,
       [
         country, city, neighborhood,
         title, slugify(title, { lower: true, strict: true }), description,
@@ -1015,7 +1046,7 @@ exports.updateProperty = async (req, res, next) => {
         landSize, planPhotoUrl,
         false, null,
         agentId,
-        mapLinkRaw, propertyTax, yearBuilt, energyClass, parking, listingStatus,
+        mapLinkRaw, propertyTax, yearBuilt, energyClass, parking, characteristics, listingStatus,
         propId
       ]
     );
