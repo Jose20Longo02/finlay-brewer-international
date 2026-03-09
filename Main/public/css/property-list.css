@@ -1361,22 +1361,21 @@ body.header-dark .search-results-page {
 }
 
 .badge-status-new {
-  background: #2d3748;
+  background: #475569;
   color: #fff;
   border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .badge-status-reduced {
-  background: #4a5568;
+  background: #78716c;
   color: #fff;
   border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .badge-status-exclusive {
-  background: #111;
+  background: #1e3a5f;
   color: #fff;
-  border: 1px solid rgba(229, 184, 64, 0.5);
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(229, 184, 64, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 /* Removed favorite button styles (no favorites system) */
