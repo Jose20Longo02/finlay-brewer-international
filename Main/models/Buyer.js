@@ -35,13 +35,15 @@ function propertyMatchesInterests(property, interests) {
     const max = parseFloat(i.max_price);
     if (!isNaN(max) && (property.price == null || property.price > max)) return false;
   }
-  if (i.min_bedrooms != null && i.min_bedrooms !== '') {
-    const min = parseInt(i.min_bedrooms, 10);
-    if (!isNaN(min) && (property.bedrooms == null || property.bedrooms < min)) return false;
-  }
-  if (i.min_bathrooms != null && i.min_bathrooms !== '') {
-    const min = parseInt(i.min_bathrooms, 10);
-    if (!isNaN(min) && (property.bathrooms == null || property.bathrooms < min)) return false;
+  if (property.type !== 'Land') {
+    if (i.min_bedrooms != null && i.min_bedrooms !== '') {
+      const min = parseInt(i.min_bedrooms, 10);
+      if (!isNaN(min) && (property.bedrooms == null || property.bedrooms < min)) return false;
+    }
+    if (i.min_bathrooms != null && i.min_bathrooms !== '') {
+      const min = parseInt(i.min_bathrooms, 10);
+      if (!isNaN(min) && (property.bathrooms == null || property.bathrooms < min)) return false;
+    }
   }
 
   const propSize = property.type === 'Apartment' ? property.apartment_size

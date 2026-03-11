@@ -49,7 +49,7 @@ const BUYER_INTEREST_SCHEMA = [
     key: 'types',
     label: 'Property types',
     type: 'multi-select',
-    options: PROPERTY_TYPES.filter(t => t !== 'Land'),
+    options: PROPERTY_TYPES,
     propertyField: 'type'
   },
   {
@@ -128,12 +128,23 @@ function getNeighborhoods(country, city) {
   return c[city] || [];
 }
 
+// Country -> [cities] for dynamic city filtering in buyer form
+function getCountryToCities() {
+  const map = {};
+  for (const [country, citiesObj] of Object.entries(locations)) {
+    if (citiesObj && typeof citiesObj === 'object') {
+      map[country] = Object.keys(citiesObj);
+    }
+  }
+  return map;
+}
+
 function getBuyerInterestSchema() {
   const cities = getAllCities();
   return [
     { key: 'countries', label: 'Countries', type: 'multi-select', options: Object.keys(locations), propertyField: 'country' },
     { key: 'cities', label: 'Cities', type: 'multi-select', options: cities, propertyField: 'city' },
-    { key: 'types', label: 'Property types', type: 'multi-select', options: PROPERTY_TYPES.filter(t => t !== 'Land'), propertyField: 'type' },
+    { key: 'types', label: 'Property types', type: 'multi-select', options: PROPERTY_TYPES, propertyField: 'type' },
     { key: 'min_price', label: 'Min budget (€)', type: 'number', propertyField: 'price', matchOp: 'gte' },
     { key: 'max_price', label: 'Max budget (€)', type: 'number', propertyField: 'price', matchOp: 'lte' },
     { key: 'min_bedrooms', label: 'Min bedrooms', type: 'number', propertyField: 'bedrooms', matchOp: 'gte' },
@@ -154,5 +165,6 @@ module.exports = {
   getBuyerInterestSchema,
   getAllCities,
   getNeighborhoods,
+  getCountryToCities,
   locations
 };

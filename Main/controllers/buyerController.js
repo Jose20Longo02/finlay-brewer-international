@@ -1,7 +1,7 @@
 const { query } = require('../config/db');
 const Buyer = require('../models/Buyer');
 const Lead = require('../models/Lead');
-const { getBuyerInterestSchema } = require('../config/propertyCriteria');
+const { getBuyerInterestSchema, getCountryToCities } = require('../config/propertyCriteria');
 
 const allowStaff = (req) =>
   req.session?.user?.role === 'Admin' || req.session?.user?.role === 'SuperAdmin';
@@ -48,6 +48,7 @@ exports.newBuyerForm = async (req, res, next) => {
     }
     res.render('admin/buyers/new-buyer', {
       schema,
+      countryToCities: getCountryToCities(),
       currentUser: req.session.user,
       isSuperAdmin,
       pendingCount,
@@ -75,6 +76,7 @@ exports.newBuyerFromLeadForm = async (req, res, next) => {
     }
     res.render('admin/buyers/new-buyer', {
       schema,
+      countryToCities: getCountryToCities(),
       currentUser: req.session.user,
       isSuperAdmin,
       pendingCount,
@@ -96,6 +98,7 @@ exports.createBuyer = async (req, res, next) => {
       const schema = getBuyerInterestSchema();
       return res.render('admin/buyers/new-buyer', {
         schema,
+        countryToCities: getCountryToCities(),
         currentUser: req.session.user,
         isSuperAdmin: req.session?.user?.role === 'SuperAdmin',
         pendingCount: 0,
@@ -136,6 +139,7 @@ exports.editBuyerForm = async (req, res, next) => {
       buyer,
       schema,
       interests,
+      countryToCities: getCountryToCities(),
       currentUser: req.session.user,
       isSuperAdmin,
       pendingCount,
@@ -160,6 +164,7 @@ exports.updateBuyer = async (req, res, next) => {
         buyer: { ...buyer, name: name || buyer.name, email: email || buyer.email, phone: phone || buyer.phone },
         schema,
         interests,
+        countryToCities: getCountryToCities(),
         currentUser: req.session.user,
         isSuperAdmin: req.session?.user?.role === 'SuperAdmin',
         pendingCount: 0,

@@ -47,9 +47,18 @@
       <h2 class="np-card-title">Property interests</h2>
       <p class="np-subtitle" style="margin-bottom: 1rem;">Set criteria for matching properties. Leave empty for “any”.</p>
       <div class="buyer-interests-grid">
+        <% 
+          let cityToCountry = {};
+          if (typeof countryToCities === 'object') {
+            for (const [country, cities] of Object.entries(countryToCities)) {
+              for (const city of (cities || [])) cityToCountry[city] = country;
+            }
+          }
+          const buildingOnlyKeys = ['min_bedrooms', 'min_bathrooms'];
+        %>
         <% (schema || []).forEach(function(field) { %>
           <% if (field.type === 'multi-select') { %>
-            <div class="field buyer-field-multi">
+            <div class="field buyer-field-multi" data-buyer-field="<%= field.key %>">
               <label><%= field.label %></label>
               <div class="chips">
                 <% 
@@ -61,7 +70,7 @@
                   const val = typeof opt === 'object' ? opt.value : opt;
                   const lab = typeof opt === 'object' ? opt.label : opt;
                 %>
-                  <label class="chip">
+                  <label class="chip"<%= field.key === 'cities' ? ' data-city-country="' + (cityToCountry[val] || '') + '"' : '' %>>
                     <input type="checkbox" name="<%= field.key %>" value="<%= val %>" <%= currentArr.includes(val) ? 'checked' : '' %> />
                     <span><%= lab %></span>
                   </label>
@@ -69,7 +78,7 @@
               </div>
             </div>
           <% } else if (field.type === 'number') { %>
-            <div class="field">
+            <div class="field" data-buyer-field="<%= field.key %>" <%= buildingOnlyKeys.includes(field.key) ? 'data-buyer-building-only' : '' %>>
               <label for="int-<%= field.key %>"><%= field.label %></label>
               <input id="int-<%= field.key %>" name="<%= field.key %>" type="number" min="0" step="<%= field.key.includes('price') ? '1000' : '1' %>" 
                      placeholder="" value="<%= (form && form.interests && form.interests[field.key]) || '' %>" />
@@ -90,3 +99,53 @@
   </div>
 </div>
 <% } %>
+
+<script>
+(function() {
+  const countryToCities = <%- JSON.stringify(countryToCities || {}) %>;
+  const cityChips = () => document.querySelectorAll('[data-buyer-field="cities"] .chip');
+  const countryInputs = () => document.querySelectorAll('[data-buyer-field="countries"] input[name="countries"]');
+  const typeInputs = () => document.querySelectorAll('[data-buyer-field="types"] input[name="types"]');
+  const buildingOnlyFields = () => document.querySelectorAll('[data-buyer-building-only]');
+
+  function filterCities() {
+    const selected = Array.from(countryInputs()).filter(i => i.checked).map(i => i.value);
+    const allowed = new Set();
+    selected.forEach(c => (countryToCities[c] || []).forEach(ct => allowed.add(ct)));
+    cityChips().forEach(chip => {
+      const input = chip.querySelector('input');
+      if (!input) return;
+      const city = input.value;
+      if (selected.length === 0) {
+        chip.style.display = '';
+      } else if (allowed.has(city)) {
+        chip.style.display = '';
+      } else {
+        chip.style.display = 'none';
+        input.checked = false;
+      }
+    });
+  }
+
+  function updateBuildingFields() {
+    const selected = Array.from(typeInputs()).filter(i => i.checked).map(i => i.value);
+    const onlyLand = selected.length > 0 && selected.every(t => t === 'Land');
+    buildingOnlyFields().forEach(el => {
+      el.style.display = onlyLand ? 'none' : '';
+      if (onlyLand) {
+        const inp = el.querySelector('input');
+        if (inp) inp.value = '';
+      }
+    });
+  }
+
+  function init() {
+    countryInputs().forEach(i => i.addEventListener('change', filterCities));
+    typeInputs().forEach(i => i.addEventListener('change', updateBuildingFields));
+    filterCities();
+    updateBuildingFields();
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+})();
+</script>
