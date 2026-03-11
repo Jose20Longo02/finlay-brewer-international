@@ -4,6 +4,7 @@
 <% 
   const exportPath = '/superadmin/dashboard/leads/export';
   const basePath = '/superadmin/dashboard/leads';
+  const buyersPath = '/superadmin/dashboard/buyers';
   const buildQuery = (overrides) => {
     const q = { ...filters, ...overrides };
     return '?' + Object.entries(q).filter(([,v]) => v).map(([k,v]) => k + '=' + encodeURIComponent(v)).join('&');
@@ -161,6 +162,7 @@
                       <div class="lead-actions">
                         <a href="mailto:<%= lead.email %>" class="btn-icon">✉ Email</a>
                         <% if (lead.phone) { %><a href="tel:<%= lead.phone %>" class="btn-icon">📞 Call</a><% } %>
+                        <a href="<%= buyersPath %>/from-lead/<%= lead.id %>" class="btn-icon">👤 Add to Our Buyers</a>
                         <button type="button" class="btn-icon" data-detail="<%= lead.id %>">View</button>
                         <button type="button" class="btn-icon" data-toggle-notes="<%= lead.id %>">Notes</button>
                       </div>

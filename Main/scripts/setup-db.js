@@ -38,7 +38,8 @@ const migrations = [
   'add_property_tax_energy_class.sql',
   'add_parking_to_properties.sql',
   'add_characteristics_to_properties.sql',
-  'create_blog_posts.sql'
+  'create_blog_posts.sql',
+  'create_buyers.sql'
 ];
 
 const mitigationsDir = path.join(__dirname, '..', 'mitigations');

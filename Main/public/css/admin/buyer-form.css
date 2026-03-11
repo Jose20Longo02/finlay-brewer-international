@@ -1,0 +1,4 @@
+/* Buyer interest form */
+.buyer-form-page .np-form-actions { display: flex; gap: 1rem; margin-top: 1.5rem; }
+.buyer-interests-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1.25rem; }
+.buyer-field-multi .chips { flex-wrap: wrap; }

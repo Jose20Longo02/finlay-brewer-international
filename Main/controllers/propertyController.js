@@ -2,24 +2,16 @@
 
 const { query }  = require('../config/db');
 const locations   = require('../config/locations');
+const { PROPERTY_CHARACTERISTICS: PROPERTY_CHARACTERISTICS_IMPORT } = require('../config/propertyCriteria');
 const slugify     = require('slugify');
 const fs          = require('fs');
 const path        = require('path');
 const sendMail    = require('../config/mailer');
+const Buyer       = require('../models/Buyer');
 const { generateVariants, SIZES } = require('../middleware/imageVariants');
 const { isSpacesEnabled, moveObject, normalizeSpacesUrl, deletePropertyFolder } = require('../config/spaces');
 
-// Allowed property characteristics (Apartment, House, Villa). Slug -> display label for detail page.
-const PROPERTY_CHARACTERISTICS = [
-  { slug: 'sea_views', label: 'Sea views' },
-  { slug: 'city_views', label: 'City views' },
-  { slug: 'panoramic_views', label: 'Panoramic views' },
-  { slug: 'furnished', label: 'Furnished' },
-  { slug: 'garden', label: 'Garden' },
-  { slug: 'terrace', label: 'Terrace' },
-  { slug: 'pool', label: 'Pool' },
-  { slug: 'air_conditioning', label: 'Air conditioning' }
-];
+const PROPERTY_CHARACTERISTICS = PROPERTY_CHARACTERISTICS_IMPORT;
 const CHARACTERISTIC_SLUGS = new Set(PROPERTY_CHARACTERISTICS.map(c => c.slug));
 
 function parseCharacteristics(body) {
@@ -834,6 +826,40 @@ exports.createProperty = async (req, res, next) => {
         console.error('File move error:', fileErr);
       }
     }
+
+    setImmediate(async () => {
+      try {
+        const { rows } = await query(
+          `SELECT id, title, slug, country, city, neighborhood, type, price, bedrooms, bathrooms,
+                  apartment_size, living_space, land_size, energy_class, characteristics
+           FROM properties WHERE id = $1`,
+          [newId]
+        );
+        if (!rows.length) return;
+        const prop = rows[0];
+        const baseUrl = process.env.APP_URL || '';
+        const propUrl = baseUrl ? `${baseUrl}/properties/${prop.slug}` : `/properties/${prop.slug}`;
+        const matching = await Buyer.findMatchingBuyers(prop);
+        for (const b of matching) {
+          try {
+            await sendMail({
+              to: b.email,
+              subject: `New property matching your criteria: ${prop.title}`,
+              html: `
+                <p>Hi ${b.name},</p>
+                <p>A new property has been added that matches your search criteria:</p>
+                <p><strong>${prop.title}</strong></p>
+                <p>${prop.city}${prop.country ? ', ' + prop.country : ''}</p>
+                <p>€${Number(prop.price || 0).toLocaleString()}</p>
+                <p><a href="${propUrl}">View this property →</a></p>
+                <p>Best regards,<br/>${process.env.APP_NAME || 'Real Estate Team'}</p>
+              `,
+              text: `Hi ${b.name},\n\nA new property matching your criteria: ${prop.title}\n${prop.city}${prop.country ? ', ' + prop.country : ''}\n€${Number(prop.price || 0).toLocaleString()}\nView: ${propUrl}\n\nBest regards,\n${process.env.APP_NAME || 'Real Estate Team'}`
+            });
+          } catch (e) { console.warn('Buyer notify failed:', b.email, e.message); }
+        }
+      } catch (e) { console.warn('Buyer notification error:', e.message); }
+    });
 
     const role = req.session.user.role;
     if (role === 'SuperAdmin') {

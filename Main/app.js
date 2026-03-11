@@ -276,6 +276,7 @@ app.use('/admin/dashboard', adminUserRoutes);
 app.use('/admin/dashboard/blogs', blogAdminRoutes);
 app.use('/superadmin/dashboard', superAdminRoutes); // SuperAdmin landing
 app.use('/superadmin/dashboard/blogs', blogAdminRoutes);
+app.use('/', require('./routes/buyerRoutes'));
 app.use('/', leadRoutes); // mount lead routes (public API + pages)
 
 app.use('/', blogRoutes); // blog/:slug

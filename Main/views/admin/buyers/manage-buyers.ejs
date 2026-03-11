@@ -1,0 +1,105 @@
+<% title = 'Our Buyers' %>
+<link rel="stylesheet" href="/css/superadmin/leads.css" />
+<link rel="stylesheet" href="/css/admin/buyer-form.css" />
+
+<% 
+  const basePath = isSuperAdmin ? '/superadmin/dashboard/buyers' : '/admin/dashboard/buyers';
+  const dashboardUrl = isSuperAdmin ? '/superadmin/dashboard' : '/admin/dashboard';
+  const leadsUrl = isSuperAdmin ? '/superadmin/dashboard/leads' : '/admin/dashboard/leads';
+%>
+
+<% if (isSuperAdmin) { %>
+<div class="admin-panel">
+  <div class="admin-body">
+    <%- include('../../partials/superadmin-sidebar', { activePage: 'buyers', pendingCount: pendingCount || 0 }) %>
+    <main class="admin-content">
+<% } else { %>
+<div class="admin-leads-page">
+<% } %>
+
+  <header class="leads-header">
+    <div>
+      <h1>Our Buyers</h1>
+      <p class="subtitle">People with saved search criteria. They receive emails when matching properties are added.</p>
+    </div>
+    <div class="leads-header-actions">
+      <a href="<%= dashboardUrl %>" class="btn btn-light">← Dashboard</a>
+      <a href="<%= basePath %>/new" class="btn btn-primary">Add buyer</a>
+    </div>
+  </header>
+
+  <section class="leads-filters-card">
+    <form method="get" class="leads-filters">
+      <div>
+        <label>Search</label>
+        <input type="text" name="q" placeholder="Name, email, phone" value="<%= filters.q || '' %>" />
+      </div>
+      <div>
+        <button type="submit" class="btn btn-primary">Filter</button>
+      </div>
+    </form>
+  </section>
+
+  <section class="leads-table-card">
+    <div class="leads-table-wrap">
+      <table class="leads-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Interests</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if (!buyers || buyers.length === 0) { %>
+            <tr><td colspan="5" style="text-align:center; padding: 3rem;">No buyers yet. Add one or convert a lead.</td></tr>
+          <% } else { %>
+            <% buyers.forEach(b => { 
+              let int = {};
+              try { int = typeof b.interests === 'string' ? JSON.parse(b.interests || '{}') : (b.interests || {}); } catch(e) {}
+              const parts = [];
+              if (int.countries && int.countries.length) parts.push(int.countries.join(', '));
+              if (int.cities && int.cities.length) parts.push(int.cities.join(', '));
+              if (int.types && int.types.length) parts.push(int.types.join(', '));
+              if (int.min_price || int.max_price) parts.push('€' + (int.min_price || 0).toLocaleString() + '–' + (int.max_price || '∞'));
+              if (int.min_bedrooms) parts.push(int.min_bedrooms + '+ beds');
+              if (int.characteristics && int.characteristics.length) parts.push(int.characteristics.join(', '));
+              const summary = parts.length ? parts.join(' · ') : 'No criteria';
+            %>
+              <tr>
+                <td data-label="Name"><strong><%= b.name %></strong></td>
+                <td data-label="Email"><a href="mailto:<%= b.email %>"><%= b.email %></a></td>
+                <td data-label="Phone"><%= b.phone || '—' %></td>
+                <td data-label="Interests"><span class="lead-msg" title="<%= summary.replace(/"/g, '&quot;') %>"><%= summary.length > 60 ? summary.substring(0, 60) + '…' : summary %></span></td>
+                <td data-label="Actions">
+                  <a href="mailto:<%= b.email %>" class="btn-icon">✉ Email</a>
+                  <% if (b.phone) { %><a href="tel:<%= b.phone %>" class="btn-icon">📞 Call</a><% } %>
+                  <a href="<%= basePath %>/<%= b.id %>/edit" class="btn-icon">Edit</a>
+                  <form action="<%= basePath %>/<%= b.id %>/delete" method="post" style="display:inline;" onsubmit="return confirm('Remove this buyer?');">
+                    <button type="submit" class="btn-icon" style="color:#b91c1c;">Delete</button>
+                  </form>
+                </td>
+              </tr>
+            <% }); %>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+    <% if (totalPages > 1) { %>
+    <div class="leads-pagination">
+      <span class="leads-pagination-info"><%= total %> buyers · Page <%= currentPage %> of <%= totalPages %></span>
+      <div class="leads-pagination-links">
+        <% if (currentPage > 1) { %><a href="?page=<%= currentPage - 1 %>&q=<%= encodeURIComponent(filters.q || '') %>">← Prev</a><% } %>
+        <% if (currentPage < totalPages) { %><a href="?page=<%= currentPage + 1 %>&q=<%= encodeURIComponent(filters.q || '') %>">Next →</a><% } %>
+      </div>
+    </div>
+    <% } %>
+  </section>
+</div>
+<% if (isSuperAdmin) { %>
+    </main>
+  </div>
+</div>
+<% } %>

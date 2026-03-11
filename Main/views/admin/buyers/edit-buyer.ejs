@@ -1,0 +1,90 @@
+<% title = 'Edit buyer' %>
+<link rel="stylesheet" href="/css/admin/new-property.css" />
+<link rel="stylesheet" href="/css/admin/buyer-form.css" />
+
+<% 
+  const basePath = isSuperAdmin ? '/superadmin/dashboard/buyers' : '/admin/dashboard/buyers';
+  const backUrl = basePath;
+%>
+
+<% if (isSuperAdmin) { %>
+<div class="admin-panel">
+  <div class="admin-body">
+    <%- include('../../partials/superadmin-sidebar', { activePage: 'buyers', pendingCount: pendingCount || 0 }) %>
+    <main class="admin-content">
+<% } %>
+<div class="new-prop-page buyer-form-page">
+  <header class="np-header">
+    <h1>Edit buyer</h1>
+    <p class="np-subtitle">Update contact and property interests.</p>
+    <a href="<%= backUrl %>" class="btn btn-light">Cancel</a>
+  </header>
+
+  <% if (error) { %><div class="alert alert-error"><%= error %></div><% } %>
+
+  <form class="np-form" method="post" action="<%= basePath %>/<%= buyer.id %>">
+    <section class="np-card">
+      <h2 class="np-card-title">Contact</h2>
+      <div class="grid-3">
+        <div class="field">
+          <label for="name">Name<span class="req">*</span></label>
+          <input id="name" name="name" type="text" required value="<%= buyer.name %>" />
+        </div>
+        <div class="field">
+          <label for="email">Email<span class="req">*</span></label>
+          <input id="email" name="email" type="email" required value="<%= buyer.email %>" />
+        </div>
+        <div class="field">
+          <label for="phone">Phone</label>
+          <input id="phone" name="phone" type="tel" value="<%= buyer.phone || '' %>" />
+        </div>
+      </div>
+    </section>
+
+    <section class="np-card">
+      <h2 class="np-card-title">Property interests</h2>
+      <p class="np-subtitle" style="margin-bottom: 1rem;">Criteria for matching properties. Leave empty for “any”.</p>
+      <div class="buyer-interests-grid">
+        <% (schema || []).forEach(function(field) { %>
+          <% if (field.type === 'multi-select') { %>
+            <div class="field buyer-field-multi">
+              <label><%= field.label %></label>
+              <div class="chips">
+                <% 
+                  const opts = field.options || [];
+                  const current = (interests && interests[field.key]) || [];
+                  const currentArr = Array.isArray(current) ? current : [current];
+                %>
+                <% opts.forEach(function(opt) {
+                  const val = typeof opt === 'object' ? opt.value : opt;
+                  const lab = typeof opt === 'object' ? opt.label : opt;
+                %>
+                  <label class="chip">
+                    <input type="checkbox" name="<%= field.key %>" value="<%= val %>" <%= currentArr.includes(val) ? 'checked' : '' %> />
+                    <span><%= lab %></span>
+                  </label>
+                <% }); %>
+              </div>
+            </div>
+          <% } else if (field.type === 'number') { %>
+            <div class="field">
+              <label for="int-<%= field.key %>"><%= field.label %></label>
+              <input id="int-<%= field.key %>" name="<%= field.key %>" type="number" min="0" step="<%= field.key.includes('price') ? '1000' : '1' %>" 
+                     value="<%= (interests && interests[field.key]) || '' %>" />
+            </div>
+          <% } %>
+        <% }); %>
+      </div>
+    </section>
+
+    <div class="np-form-actions">
+      <a href="<%= backUrl %>" class="btn btn-light">Cancel</a>
+      <button type="submit" class="btn btn-primary">Save changes</button>
+    </div>
+  </form>
+</div>
+<% if (isSuperAdmin) { %>
+    </main>
+  </div>
+</div>
+<% } %>
