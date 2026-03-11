@@ -1,0 +1,185 @@
+/* Manage Blog Posts – Admin & SuperAdmin */
+
+.manage-blogs-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--spacing-6);
+}
+
+.mb-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: var(--spacing-6);
+}
+
+.mb-header h1 {
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  font-weight: 700;
+  color: #1a1a1a;
+  letter-spacing: -0.02em;
+}
+
+.mb-subtitle {
+  font-size: 0.9375rem;
+  color: #5c5c5c;
+  margin-top: 0.25rem;
+}
+
+.mb-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.mb-back {
+  font-size: 0.9375rem;
+  color: #5c5c5c;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.mb-back:hover {
+  color: #111;
+}
+
+.mb-content-wrap {
+  margin-top: 0;
+}
+
+.mb-container {
+  width: 100%;
+}
+
+.mb-empty {
+  text-align: center;
+  padding: var(--spacing-12);
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  border: 1px solid rgba(0,0,0,0.06);
+}
+
+.mb-empty-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.6;
+}
+
+.mb-empty-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 0.5rem;
+}
+
+.mb-empty-text {
+  color: #5c5c5c;
+  margin-bottom: 1.5rem;
+}
+
+/* Reuse mp-grid for SuperAdmin; add mb-grid for Admin layout */
+.mb-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--spacing-5);
+}
+
+.mb-card {
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  border: 1px solid rgba(0,0,0,0.06);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.mb-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.mb-card-image-wrap {
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  background: #f0f2f5;
+}
+
+.mb-card-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.mb-card-body {
+  padding: 1.25rem;
+}
+
+.mb-card-title {
+  font-size: 1.0625rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 0.5rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.mb-card-date {
+  font-size: 0.8125rem;
+  color: #888;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+.mb-card-excerpt {
+  font-size: 0.875rem;
+  color: #5c5c5c;
+  line-height: 1.5;
+  margin-bottom: 1rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.mb-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.mb-delete-form {
+  margin: 0;
+}
+
+.mb-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 2rem 0;
+}
+
+.mb-page-info {
+  font-size: 0.9375rem;
+  color: #5c5c5c;
+}
+
+.mb-page-link {
+  font-size: 0.9375rem;
+  color: #111;
+  text-decoration: none;
+  font-weight: 500;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+
+.mb-page-link:hover {
+  background: rgba(0,0,0,0.06);
+}

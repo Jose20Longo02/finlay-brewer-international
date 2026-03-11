@@ -31,7 +31,9 @@
         <% } %>
       </a>
     </li>
-
+    <li class="<%= activePage==='blogs' ? 'active' : '' %>">
+      <a href="/superadmin/dashboard/blogs">Blog</a>
+    </li>
 
     <li class="logout">
       <form action="/auth/logout" method="post">

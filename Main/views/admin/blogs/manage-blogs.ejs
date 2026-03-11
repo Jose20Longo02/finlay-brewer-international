@@ -1,0 +1,105 @@
+<% title = 'Manage Blog Posts' %>
+<link rel="stylesheet" href="/css/superadmin/manage-properties.css" />
+<link rel="stylesheet" href="/css/admin/manage-blogs.css" />
+
+<% 
+  const basePath = isSuperAdmin ? '/superadmin/dashboard/blogs' : '/admin/dashboard/blogs';
+  const backUrl = isSuperAdmin ? '/superadmin/dashboard' : '/admin/dashboard';
+%>
+
+<% if (isSuperAdmin) { %>
+<div class="admin-panel">
+  <div class="admin-body">
+    <%- include('../../partials/superadmin-sidebar', { activePage: 'blogs', pendingCount: pendingCount }) %>
+    <main class="admin-content mp-content">
+<% } else { %>
+<div class="page-wrap manage-blogs-page">
+  <header class="mb-header">
+    <div>
+      <h1>Blog posts</h1>
+      <p class="mb-subtitle">Create, edit, and manage your blog articles.</p>
+    </div>
+    <div class="mb-header-actions">
+      <a href="<%= backUrl %>" class="mb-back">← Back to dashboard</a>
+      <a href="<%= basePath %>/new" class="btn btn-primary">New blog post</a>
+    </div>
+  </header>
+  <div class="mb-content-wrap">
+<% } %>
+
+  <section class="<%= isSuperAdmin ? 'properties-container' : 'mb-container' %>">
+    <% if (isSuperAdmin) { %>
+    <header class="mp-header">
+      <div>
+        <h1>Blog posts</h1>
+        <p class="mp-subtitle">Create, edit, and manage your blog articles.</p>
+      </div>
+      <a href="<%= basePath %>/new" class="btn btn-primary">New blog post</a>
+    </header>
+    <% } %>
+
+    <% if (!posts || posts.length === 0) { %>
+      <div class="mb-empty">
+        <div class="mb-empty-icon">📝</div>
+        <p class="mb-empty-title">No blog posts yet</p>
+        <p class="mb-empty-text">Create your first article to share insights with your audience.</p>
+        <a href="<%= basePath %>/new" class="btn btn-primary">New blog post</a>
+      </div>
+    <% } else { %>
+      <div class="mb-grid">
+        <% posts.forEach((post, i) => { %>
+          <article class="mb-card" style="animation-delay: <%= (i % 8) * 0.04 %>s">
+            <div class="mb-card-image-wrap">
+              <img
+                src="<%= post.cover_image || '/img/property-placeholder.png' %>"
+                alt=""
+                class="mb-card-thumb"
+                loading="lazy"
+                decoding="async"
+              />
+            </div>
+            <div class="mb-card-body">
+              <h3 class="mb-card-title" title="<%= post.title %>"><%= post.title %></h3>
+              <time class="mb-card-date" datetime="<%= new Date(post.created_at).toISOString() %>">
+                <%= new Date(post.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) %>
+              </time>
+              <% if (post.excerpt) { %>
+                <p class="mb-card-excerpt"><%= post.excerpt.length > 100 ? post.excerpt.substring(0, 100) + '…' : post.excerpt %></p>
+              <% } %>
+              <div class="mb-actions">
+                <a href="/blog/<%= post.slug %>" class="btn btn-ghost" target="_blank">View</a>
+                <a href="<%= basePath %>/<%= post.id %>/edit" class="btn btn-secondary">Edit</a>
+                <form
+                  action="<%= basePath %>/<%= post.id %>/delete?page=<%= currentPage %>"
+                  method="post"
+                  onsubmit="return confirm('Delete “<%= post.title.replace(/"/g, '&quot;') %>”?');"
+                  class="mb-delete-form"
+                >
+                  <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+              </div>
+            </div>
+          </article>
+        <% }) %>
+      </div>
+
+      <nav class="mb-pagination">
+        <% if (currentPage > 1) { %>
+          <a href="?page=<%= currentPage - 1 %>" class="mb-page-link">← Previous</a>
+        <% } %>
+        <span class="mb-page-info">Page <%= currentPage %> of <%= totalPages %></span>
+        <% if (currentPage < totalPages) { %>
+          <a href="?page=<%= currentPage + 1 %>" class="mb-page-link">Next →</a>
+        <% } %>
+      </nav>
+    <% } %>
+  </section>
+
+<% if (isSuperAdmin) { %>
+    </main>
+  </div>
+</div>
+<% } else { %>
+  </div>
+</div>
+<% } %>

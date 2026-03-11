@@ -1,0 +1,74 @@
+<% title = 'Edit Blog Post' %>
+<link rel="stylesheet" href="/css/admin/new-property.css" />
+<link rel="stylesheet" href="/css/admin/blog-form.css" />
+
+<% 
+  const backUrl = currentUser && currentUser.role === 'SuperAdmin' 
+    ? '/superadmin/dashboard/blogs' 
+    : '/admin/dashboard/blogs';
+  const basePath = currentUser && currentUser.role === 'SuperAdmin' 
+    ? '/superadmin/dashboard/blogs' 
+    : '/admin/dashboard/blogs';
+%>
+
+<div class="new-prop-page blog-form-page">
+  <header class="np-header">
+    <div class="left">
+      <h1>Edit blog post</h1>
+      <p class="subtitle"><%= post.title %></p>
+    </div>
+    <a href="<%= backUrl %>" class="btn btn-light">Cancel</a>
+  </header>
+
+  <% if (error) { %>
+    <div class="alert alert-error"><%= error %></div>
+  <% } %>
+
+  <form class="np-form blog-form" method="post" action="<%= basePath %>/<%= post.id %>/edit" enctype="multipart/form-data">
+    <section class="np-card">
+      <h2 class="np-card-title">Basics</h2>
+      <div class="field">
+        <label for="title">Title<span class="req">*</span></label>
+        <input id="title" name="title" type="text" maxlength="255" required 
+               value="<%= post.title %>" />
+      </div>
+      <div class="field">
+        <label for="slug">URL slug</label>
+        <input id="slug" name="slug" type="text" maxlength="255" 
+               value="<%= post.slug %>" placeholder="e.g. my-article-title" />
+      </div>
+      <div class="field">
+        <label for="excerpt">Excerpt</label>
+        <textarea id="excerpt" name="excerpt" rows="3" maxlength="500"><%= post.excerpt || '' %></textarea>
+      </div>
+    </section>
+
+    <section class="np-card">
+      <h2 class="np-card-title">Cover image</h2>
+      <% if (post.cover_image) { %>
+        <div class="blog-cover-preview">
+          <img src="<%= post.cover_image %>" alt="Current cover" />
+          <p class="blog-cover-hint">Current cover. Upload a new file to replace.</p>
+        </div>
+      <% } %>
+      <div class="field">
+        <label for="cover_image">Cover image</label>
+        <input id="cover_image" name="cover_image" type="file" accept="image/*" />
+        <small>Upload a new image to replace. Leave empty to keep the current cover. Max 5MB.</small>
+      </div>
+    </section>
+
+    <section class="np-card">
+      <h2 class="np-card-title">Content</h2>
+      <div class="field">
+        <label for="content">Body<span class="req">*</span></label>
+        <textarea id="content" name="content" rows="16" required><%= post.content || '' %></textarea>
+      </div>
+    </section>
+
+    <div class="np-form-actions">
+      <a href="<%= backUrl %>" class="btn btn-light">Cancel</a>
+      <button type="submit" class="btn btn-primary">Save changes</button>
+    </div>
+  </form>
+</div>

@@ -1,0 +1,70 @@
+<% title = 'New Blog Post' %>
+<link rel="stylesheet" href="/css/admin/new-property.css" />
+<link rel="stylesheet" href="/css/admin/blog-form.css" />
+
+<% 
+  const backUrl = currentUser && currentUser.role === 'SuperAdmin' 
+    ? '/superadmin/dashboard/blogs' 
+    : '/admin/dashboard/blogs';
+%>
+
+<div class="new-prop-page blog-form-page">
+  <header class="np-header">
+    <h1>Create new blog post</h1>
+    <p class="np-subtitle">Write an article to share insights, tips, and news with your audience.</p>
+    <a href="<%= backUrl %>" class="btn btn-light">Cancel</a>
+  </header>
+
+  <% if (error) { %>
+    <div class="alert alert-error"><%= error %></div>
+  <% } %>
+
+  <form class="np-form blog-form" method="post" enctype="multipart/form-data">
+    <section class="np-card">
+      <h2 class="np-card-title">Basics</h2>
+      <div class="field">
+        <label for="title">Title<span class="req">*</span></label>
+        <input id="title" name="title" type="text" maxlength="255" required 
+               placeholder="Enter a compelling headline" 
+               value="<%= (form && form.title) || '' %>" />
+      </div>
+      <div class="field">
+        <label for="slug">URL slug</label>
+        <input id="slug" name="slug" type="text" maxlength="255" 
+               placeholder="Leave empty to auto-generate from title (e.g. my-article-title)" 
+               value="<%= (form && form.slug) || '' %>" />
+        <small>Optional. Used in the URL: /blog/your-slug</small>
+      </div>
+      <div class="field">
+        <label for="excerpt">Excerpt</label>
+        <textarea id="excerpt" name="excerpt" rows="3" maxlength="500"
+                  placeholder="Short summary for cards and SEO (recommended 120–160 characters)"><%= (form && form.excerpt) || '' %></textarea>
+        <small>Shown on the blog listing and search results.</small>
+      </div>
+    </section>
+
+    <section class="np-card">
+      <h2 class="np-card-title">Cover image</h2>
+      <div class="field">
+        <label for="cover_image">Cover image</label>
+        <input id="cover_image" name="cover_image" type="file" accept="image/*" />
+        <small>Recommended: 1200×630px, max 5MB. JPG, PNG, or WebP.</small>
+      </div>
+    </section>
+
+    <section class="np-card">
+      <h2 class="np-card-title">Content</h2>
+      <div class="field">
+        <label for="content">Body<span class="req">*</span></label>
+        <textarea id="content" name="content" rows="16" required
+                  placeholder="Write your article. Line breaks are preserved."><%= (form && form.content) || '' %></textarea>
+        <small>Use plain text. Line breaks will be preserved. For rich text, consider adding Markdown support later.</small>
+      </div>
+    </section>
+
+    <div class="np-form-actions">
+      <a href="<%= backUrl %>" class="btn btn-light">Cancel</a>
+      <button type="submit" class="btn btn-primary">Publish post</button>
+    </div>
+  </form>
+</div>
