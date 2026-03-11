@@ -149,8 +149,10 @@ function getBuyerInterestSchema() {
     { key: 'max_price', label: 'Max budget (€)', type: 'number', propertyField: 'price', matchOp: 'lte' },
     { key: 'min_bedrooms', label: 'Min bedrooms', type: 'number', propertyField: 'bedrooms', matchOp: 'gte' },
     { key: 'min_bathrooms', label: 'Min bathrooms', type: 'number', propertyField: 'bathrooms', matchOp: 'gte' },
-    { key: 'min_size', label: 'Min size (sqm)', type: 'number', propertyField: 'size', matchOp: 'gte' },
-    { key: 'max_size', label: 'Max size (sqm)', type: 'number', propertyField: 'size', matchOp: 'lte' },
+    { key: 'min_size', label: 'Min living space (sqm)', type: 'number', propertyField: 'living_space', matchOp: 'gte' },
+    { key: 'max_size', label: 'Max living space (sqm)', type: 'number', propertyField: 'living_space', matchOp: 'lte' },
+    { key: 'min_land_size', label: 'Min land (sqm)', type: 'number', propertyField: 'land_size', matchOp: 'gte' },
+    { key: 'max_land_size', label: 'Max land (sqm)', type: 'number', propertyField: 'land_size', matchOp: 'lte' },
     { key: 'characteristics', label: 'Must have', type: 'multi-select', options: PROPERTY_CHARACTERISTICS.map(c => ({ value: c.slug, label: c.label })), propertyField: 'characteristics', matchOp: 'contains_all' },
     { key: 'energy_classes', label: 'Min energy class', type: 'multi-select', options: ENERGY_CLASSES.map(ec => ({ value: ec, label: ec })), propertyField: 'energy_class', matchOp: 'energy_min' }
   ];

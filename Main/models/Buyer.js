@@ -46,16 +46,30 @@ function propertyMatchesInterests(property, interests) {
     }
   }
 
-  const propSize = property.type === 'Apartment' ? property.apartment_size
-    : (property.type === 'House' || property.type === 'Villa') ? property.living_space
-    : property.type === 'Land' ? property.land_size : null;
-  if (i.min_size != null && i.min_size !== '') {
-    const min = parseFloat(i.min_size);
-    if (!isNaN(min) && (propSize == null || propSize < min)) return false;
+  // Living space (min_size, max_size): Apartment=apartment_size, House/Villa=living_space. Skip for Land.
+  if (property.type !== 'Land') {
+    const propLivingSpace = property.type === 'Apartment' ? property.apartment_size : property.living_space;
+    if (i.min_size != null && i.min_size !== '') {
+      const min = parseFloat(i.min_size);
+      if (!isNaN(min) && (propLivingSpace == null || propLivingSpace < min)) return false;
+    }
+    if (i.max_size != null && i.max_size !== '') {
+      const max = parseFloat(i.max_size);
+      if (!isNaN(max) && (propLivingSpace == null || propLivingSpace > max)) return false;
+    }
   }
-  if (i.max_size != null && i.max_size !== '') {
-    const max = parseFloat(i.max_size);
-    if (!isNaN(max) && (propSize == null || propSize > max)) return false;
+
+  // Land size (min_land_size, max_land_size): Land, House, Villa. Skip for Apartment.
+  if (property.type !== 'Apartment') {
+    const propLandSize = property.land_size;
+    if (i.min_land_size != null && i.min_land_size !== '') {
+      const min = parseFloat(i.min_land_size);
+      if (!isNaN(min) && (propLandSize == null || propLandSize < min)) return false;
+    }
+    if (i.max_land_size != null && i.max_land_size !== '') {
+      const max = parseFloat(i.max_land_size);
+      if (!isNaN(max) && (propLandSize == null || propLandSize > max)) return false;
+    }
   }
 
   if (i.characteristics && Array.isArray(i.characteristics) && i.characteristics.length > 0) {

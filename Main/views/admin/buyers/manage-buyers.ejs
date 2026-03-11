@@ -65,6 +65,8 @@
               if (int.types && int.types.length) parts.push(int.types.join(', '));
               if (int.min_price || int.max_price) parts.push('€' + (int.min_price || 0).toLocaleString() + '–' + (int.max_price || '∞'));
               if (int.min_bedrooms) parts.push(int.min_bedrooms + '+ beds');
+              if (int.min_size || int.max_size) parts.push('Living: ' + (int.min_size || 0) + '–' + (int.max_size || '∞') + ' sqm');
+              if (int.min_land_size || int.max_land_size) parts.push('Land: ' + (int.min_land_size || 0) + '–' + (int.max_land_size || '∞') + ' sqm');
               if (int.characteristics && int.characteristics.length) parts.push(int.characteristics.join(', '));
               const summary = parts.length ? parts.join(' · ') : 'No criteria';
             %>

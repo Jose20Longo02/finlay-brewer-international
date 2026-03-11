@@ -55,6 +55,8 @@
             }
           }
           const buildingOnlyKeys = ['min_bedrooms', 'min_bathrooms'];
+          const livingSpaceKeys = ['min_size', 'max_size'];
+          const landSizeKeys = ['min_land_size', 'max_land_size'];
         %>
         <% (schema || []).forEach(function(field) { %>
           <% if (field.type === 'multi-select') { %>
@@ -78,7 +80,7 @@
               </div>
             </div>
           <% } else if (field.type === 'number') { %>
-            <div class="field" data-buyer-field="<%= field.key %>" <%= buildingOnlyKeys.includes(field.key) ? 'data-buyer-building-only' : '' %>>
+            <div class="field" data-buyer-field="<%= field.key %>"<%= buildingOnlyKeys.includes(field.key) ? ' data-buyer-building-only' : '' %><%= livingSpaceKeys.includes(field.key) ? ' data-buyer-living-space' : '' %><%= landSizeKeys.includes(field.key) ? ' data-buyer-land-size' : '' %>>
               <label for="int-<%= field.key %>"><%= field.label %></label>
               <input id="int-<%= field.key %>" name="<%= field.key %>" type="number" min="0" step="<%= field.key.includes('price') ? '1000' : '1' %>" 
                      placeholder="" value="<%= (form && form.interests && form.interests[field.key]) || '' %>" />
@@ -107,6 +109,8 @@
   const countryInputs = () => document.querySelectorAll('[data-buyer-field="countries"] input[name="countries"]');
   const typeInputs = () => document.querySelectorAll('[data-buyer-field="types"] input[name="types"]');
   const buildingOnlyFields = () => document.querySelectorAll('[data-buyer-building-only]');
+  const livingSpaceFields = () => document.querySelectorAll('[data-buyer-living-space]');
+  const landSizeFields = () => document.querySelectorAll('[data-buyer-land-size]');
 
   function filterCities() {
     const selected = Array.from(countryInputs()).filter(i => i.checked).map(i => i.value);
@@ -127,23 +131,29 @@
     });
   }
 
-  function updateBuildingFields() {
+  function updateSizeFields() {
     const selected = Array.from(typeInputs()).filter(i => i.checked).map(i => i.value);
     const onlyLand = selected.length > 0 && selected.every(t => t === 'Land');
+    const onlyApartment = selected.length > 0 && selected.every(t => t === 'Apartment');
     buildingOnlyFields().forEach(el => {
       el.style.display = onlyLand ? 'none' : '';
-      if (onlyLand) {
-        const inp = el.querySelector('input');
-        if (inp) inp.value = '';
-      }
+      if (onlyLand) { const inp = el.querySelector('input'); if (inp) inp.value = ''; }
+    });
+    livingSpaceFields().forEach(el => {
+      el.style.display = onlyLand ? 'none' : '';
+      if (onlyLand) { const inp = el.querySelector('input'); if (inp) inp.value = ''; }
+    });
+    landSizeFields().forEach(el => {
+      el.style.display = onlyApartment ? 'none' : '';
+      if (onlyApartment) { const inp = el.querySelector('input'); if (inp) inp.value = ''; }
     });
   }
 
   function init() {
     countryInputs().forEach(i => i.addEventListener('change', filterCities));
-    typeInputs().forEach(i => i.addEventListener('change', updateBuildingFields));
+    typeInputs().forEach(i => i.addEventListener('change', updateSizeFields));
     filterCities();
-    updateBuildingFields();
+    updateSizeFields();
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();
