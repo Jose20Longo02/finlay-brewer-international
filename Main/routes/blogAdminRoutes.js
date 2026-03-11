@@ -2,6 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const uploadBlogCover = require('../middleware/uploadBlogCover');
+const uploadBlogInlineImage = require('../middleware/uploadBlogInlineImage');
 const blogController = require('../controllers/blogController');
 
 const allowStaff = (req, res, next) => {
@@ -12,6 +13,9 @@ const allowStaff = (req, res, next) => {
 
 // List blogs (both Admin and SuperAdmin)
 router.get('/', allowStaff, blogController.listBlogsAdmin);
+
+// Inline image upload for TinyMCE (must be before :id routes)
+router.post('/upload-image', allowStaff, uploadBlogInlineImage);
 
 // New blog form & create (must be before :id routes)
 router.get('/new', allowStaff, blogController.newBlogForm);

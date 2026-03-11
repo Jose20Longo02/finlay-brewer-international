@@ -1,6 +1,7 @@
 <% title = 'Edit Blog Post' %>
 <link rel="stylesheet" href="/css/admin/new-property.css" />
 <link rel="stylesheet" href="/css/admin/blog-form.css" />
+<script src="https://cdn.tiny.cloud/1/<%= tinymceKey %>/tinymce/7/tinymce.min.js" referrerpolicy="origin"></script>
 
 <% 
   const backUrl = currentUser && currentUser.role === 'SuperAdmin' 
@@ -9,6 +10,7 @@
   const basePath = currentUser && currentUser.role === 'SuperAdmin' 
     ? '/superadmin/dashboard/blogs' 
     : '/admin/dashboard/blogs';
+  const uploadPath = basePath + '/upload-image';
 %>
 
 <div class="new-prop-page blog-form-page">
@@ -72,3 +74,24 @@
     </div>
   </form>
 </div>
+
+<script>
+  tinymce.init({
+    selector: '#content',
+    height: 420,
+    menubar: true,
+    plugins: 'anchor autolink charmap codesample emoticons image link lists media searchreplace table visualblocks wordcount',
+    toolbar: 'undo redo | blocks fontsize | bold italic underline strikethrough | forecolor backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image media table | removeformat',
+    block_formats: 'Paragraph=p; Heading 1=h1; Heading 2=h2; Heading 3=h3; Heading 4=h4',
+    fontsize_formats: '12px 14px 16px 18px 24px 32px',
+    content_style: 'body { font-family: inherit; font-size: 16px; }',
+    images_upload_url: '<%= uploadPath %>',
+    automatic_uploads: true,
+    images_upload_credentials: false,
+    file_picker_types: 'image',
+    relative_urls: false,
+    remove_script_host: false,
+    promotion: false,
+    branding: false
+  });
+</script>

@@ -222,6 +222,7 @@ app.use(session({
 // 1) Set up EJS **first**
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
+app.locals.tinymceKey = process.env.TINYMCE_API_KEY || 'no-api-key';
 
 // 2) Then register the layouts middleware
 app.use(expressLayouts);

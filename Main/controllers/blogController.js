@@ -1,9 +1,38 @@
 // controllers/blogController.js
 const { query } = require('../config/db');
+const sanitizeHtml = require('sanitize-html');
 
 const PLACEHOLDER_IMAGES = ['/img/France.jpg', '/img/Monaco.jpg', '/img/Montenegro.jpg', '/img/Costa%20Del%20Sol.jpg', '/img/London.jpg'];
 
 /** Generate URL-safe slug from title */
+/** Sanitize blog body HTML for safe display */
+function sanitizeBlogContent(html) {
+  let raw = html || '';
+  if (raw && !/<[a-z][\s\S]*>/i.test(raw)) {
+    raw = raw.replace(/\n/g, '<br>');
+  }
+  return sanitizeHtml(raw, {
+    allowedTags: [
+      'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'br', 'hr',
+      'strong', 'b', 'em', 'i', 'u', 's', 'sub', 'sup',
+      'ul', 'ol', 'li', 'blockquote', 'pre', 'code',
+      'a', 'img', 'figure', 'figcaption',
+      'table', 'thead', 'tbody', 'tr', 'th', 'td',
+      'div', 'span', 'section', 'article'
+    ],
+    allowedAttributes: {
+      '*': ['class', 'id'],
+      a: ['href', 'target', 'rel'],
+      img: ['src', 'alt', 'title', 'width', 'height', 'style'],
+      span: ['style'],
+      div: ['style'],
+      p: ['style'],
+      h1: ['style'], h2: ['style'], h3: ['style'],
+      h4: ['style'], h5: ['style'], h6: ['style']
+    }
+  });
+}
+
 function slugify(text) {
   return String(text || '')
     .trim()
@@ -129,6 +158,7 @@ exports.showPost = async (req, res, next) => {
 
     const post = rows[0];
     post.cover_image = post.cover_image || '/img/property-placeholder.jpg';
+    post.content = post.content ? sanitizeBlogContent(post.content) : '';
 
     res.render('blog/post', {
       title: post.title,
