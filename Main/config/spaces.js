@@ -102,11 +102,68 @@ async function deletePropertyFolder(propertyId) {
   } while (continuationToken);
 }
 
+function isSpacesUrl(url) {
+  if (!url || typeof url !== 'string') return false;
+  const u = url.trim();
+  if (u.startsWith('/')) return false;
+  try {
+    const parsed = new URL(u);
+    return parsed.hostname.endsWith('.digitaloceanspaces.com') ||
+      parsed.hostname === `${process.env.SPACES_BUCKET}.${(process.env.SPACES_ENDPOINT || '').replace(/^https?:\/\//, '')}`;
+  } catch (_) {
+    return false;
+  }
+}
+
+function urlToKey(url) {
+  if (!url || typeof url !== 'string') return null;
+  try {
+    const u = new URL(url.trim(), 'https://example.com');
+    const path = u.pathname.replace(/^\/+/, '');
+    return path || null;
+  } catch (_) {
+    return null;
+  }
+}
+
+async function deleteObjectByUrl(url) {
+  if (!isSpacesEnabled() || !isSpacesUrl(url)) return;
+  const key = urlToKey(url);
+  if (!key) return;
+  try {
+    const client = getSpacesClient();
+    await client.send(new DeleteObjectCommand({
+      Bucket: process.env.SPACES_BUCKET,
+      Key: key
+    }));
+  } catch (err) {
+    console.warn('Spaces delete failed for', url, err.message);
+  }
+}
+
+async function deleteBlogMedia(coverImage, content) {
+  if (!isSpacesEnabled()) return;
+  const urls = [];
+  if (coverImage && isSpacesUrl(coverImage)) urls.push(coverImage);
+  if (content && typeof content === 'string') {
+    const imgRegex = /<img[^>]+src=["']([^"']+)["']/gi;
+    let m;
+    while ((m = imgRegex.exec(content)) !== null) {
+      const src = m[1];
+      if (isSpacesUrl(src)) urls.push(src);
+    }
+  }
+  for (const url of urls) {
+    await deleteObjectByUrl(url);
+  }
+}
+
 module.exports = {
   isSpacesEnabled,
   getSpacesClient,
   buildSpacesUrl,
   moveObject,
   normalizeSpacesUrl,
-  deletePropertyFolder
+  deletePropertyFolder,
+  deleteBlogMedia
 };

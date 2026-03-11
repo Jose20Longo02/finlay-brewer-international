@@ -1,6 +1,7 @@
 // controllers/blogController.js
 const { query } = require('../config/db');
 const sanitizeHtml = require('sanitize-html');
+const { deleteBlogMedia } = require('../config/spaces');
 
 const PLACEHOLDER_IMAGES = ['/img/France.jpg', '/img/Monaco.jpg', '/img/Montenegro.jpg', '/img/Costa%20Del%20Sol.jpg', '/img/London.jpg'];
 
@@ -369,6 +370,17 @@ exports.deleteBlog = async (req, res, next) => {
   try {
     if (!allowStaff(req)) return res.status(403).send('Forbidden');
     const { id } = req.params;
+    const { rows } = await query(
+      'SELECT cover_image, content FROM blog_posts WHERE id = $1',
+      [id]
+    );
+    if (rows.length > 0) {
+      try {
+        await deleteBlogMedia(rows[0].cover_image, rows[0].content);
+      } catch (err) {
+        console.warn('Blog media cleanup failed:', err.message);
+      }
+    }
     await query('DELETE FROM blog_posts WHERE id = $1', [id]);
     const returnUrl = req.session?.user?.role === 'SuperAdmin'
       ? '/superadmin/dashboard/blogs'
