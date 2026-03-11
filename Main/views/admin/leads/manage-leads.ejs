@@ -1,41 +1,102 @@
-<% title = 'Leads'; %>
+<% title = 'My Leads' %>
 <link rel="stylesheet" href="/css/admin/leads.css" />
 
-<div class="admin-page">
-  <header class="np-header">
-    <div class="left">
+<% 
+  const exportPath = '/admin/dashboard/leads/export';
+  const basePath = '/admin/dashboard/leads';
+  const buildQuery = (overrides) => {
+    const q = { ...filters, ...overrides };
+    return '?' + Object.entries(q).filter(([,v]) => v).map(([k,v]) => k + '=' + encodeURIComponent(v)).join('&');
+  };
+%>
+
+<div class="admin-leads-page">
+  <header class="leads-header">
+    <div>
       <h1>My Leads</h1>
-      <p class="subtitle">All inquiries for your assigned properties</p>
+      <p class="subtitle">Inquiries for your assigned properties</p>
     </div>
-    <div class="right">
-      <a href="/admin/dashboard" class="btn btn-light">← Return to dashboard</a>
+    <div class="leads-header-actions">
+      <a href="/admin/dashboard" class="btn btn-light">← Dashboard</a>
+      <a href="<%= exportPath %><%= buildQuery({}) %>" class="btn btn-primary">Export CSV</a>
     </div>
   </header>
 
-  <section class="card" style="margin-top: 1rem;">
-    <form method="get" class="filters-grid">
-      <input type="text" name="q" placeholder="Search name/email/phone/message" value="<%= filters.q || '' %>" />
-      <select name="status">
-        <option value="">All Statuses</option>
-        <% ['New','Contacted','Interested','Not Interested','Closed'].forEach(s => { %>
-          <option value="<%= s %>" <%= filters.status === s ? 'selected' : '' %>><%= s %></option>
-        <% }) %>
-      </select>
-      <input type="date" name="from" value="<%= filters.from || '' %>" />
-      <input type="date" name="to" value="<%= filters.to || '' %>" />
-      <input type="number" name="propertyId" placeholder="Property ID" value="<%= filters.propertyId || '' %>" />
-      <button class="btn btn-primary" type="submit">Filter</button>
+  <% if (stats) { %>
+  <div class="leads-stats">
+    <div class="leads-stat leads-stat--new">
+      <div class="leads-stat-value"><%= stats.new_today || 0 %></div>
+      <div class="leads-stat-label">New today</div>
+    </div>
+    <div class="leads-stat">
+      <div class="leads-stat-value"><%= stats.new_count || 0 %></div>
+      <div class="leads-stat-label">New</div>
+    </div>
+    <div class="leads-stat">
+      <div class="leads-stat-value"><%= stats.contacted_count || 0 %></div>
+      <div class="leads-stat-label">Contacted</div>
+    </div>
+    <div class="leads-stat leads-stat--interested">
+      <div class="leads-stat-value"><%= stats.interested_count || 0 %></div>
+      <div class="leads-stat-label">Interested</div>
+    </div>
+    <div class="leads-stat">
+      <div class="leads-stat-value"><%= stats.total || 0 %></div>
+      <div class="leads-stat-label">Total</div>
+    </div>
+  </div>
+  <% } %>
+
+  <section class="leads-filters-card">
+    <form method="get" class="leads-filters" id="leadsFilterForm">
+      <input type="hidden" name="page" value="1" />
+      <div>
+        <label>Search</label>
+        <input type="text" name="q" placeholder="Name, email, phone, message" value="<%= filters.q || '' %>" />
+      </div>
+      <div>
+        <label>Status</label>
+        <select name="status" onchange="this.form.submit()">
+          <option value="">All</option>
+          <% ['New','Contacted','Interested','Not Interested','Closed'].forEach(s => { %>
+            <option value="<%= s %>" <%= filters.status === s ? 'selected' : '' %>><%= s %></option>
+          <% }) %>
+        </select>
+      </div>
+      <div>
+        <label>Source</label>
+        <select name="source" onchange="this.form.submit()">
+          <option value="">All</option>
+          <option value="property_form" <%= filters.source === 'property_form' ? 'selected' : '' %>>Property</option>
+          <option value="contact_form" <%= filters.source === 'contact_form' ? 'selected' : '' %>>Contact</option>
+          <option value="for_sellers" <%= filters.source === 'for_sellers' ? 'selected' : '' %>>For Sellers</option>
+        </select>
+      </div>
+      <div>
+        <label>From</label>
+        <input type="date" name="from" value="<%= filters.from || '' %>" onchange="this.form.submit()" />
+      </div>
+      <div>
+        <label>To</label>
+        <input type="date" name="to" value="<%= filters.to || '' %>" onchange="this.form.submit()" />
+      </div>
+      <div>
+        <label>&nbsp;</label>
+        <button type="submit" class="btn btn-primary">Filter</button>
+      </div>
     </form>
   </section>
 
-  <section class="card" style="margin-top: 1rem;">
-    <div class="table-responsive">
-      <table class="table">
+  <section class="leads-table-card">
+    <div class="leads-table-wrap">
+      <table class="leads-table">
         <thead>
           <tr>
-            <th>Created</th>
+            <th><a href="<%= basePath %><%= buildQuery({ sort: 'created_desc', page: 1 }) %>">Created</a></th>
             <th>Property</th>
             <th>Lead</th>
+            <th>Source</th>
+            <th>Message</th>
             <th>Status</th>
             <th>Last Contact</th>
             <th>Actions</th>
@@ -43,88 +104,157 @@
         </thead>
         <tbody>
           <% if (!leads || leads.length === 0) { %>
-            <tr><td colspan="6" style="text-align:center;">No leads found</td></tr>
+            <tr><td colspan="8" style="text-align:center; padding: 3rem;">No leads found</td></tr>
+          <% } else { %>
+            <% leads.forEach(lead => { %>
+              <tr data-lead-id="<%= lead.id %>">
+                <td data-label="Created"><%= new Date(lead.created_at).toLocaleDateString() %></td>
+                <td data-label="Property">
+                  <% if (lead.property_slug) { %>
+                    <a href="/properties/<%= lead.property_slug %>" class="lead-property-link" target="_blank"><%= lead.property_title || 'Property #' + lead.property_id %></a>
+                  <% } else { %>
+                    <span><%= lead.property_title || (lead.property_id ? '#' + lead.property_id : '-') %></span>
+                  <% } %>
+                </td>
+                <td data-label="Lead">
+                  <div class="lead-name"><%= lead.name %></div>
+                  <a href="mailto:<%= lead.email %>" class="lead-email"><%= lead.email %></a>
+                  <% if (lead.phone) { %><a href="tel:<%= lead.phone %>" class="lead-phone"><%= lead.phone %></a><% } %>
+                </td>
+                <td data-label="Source"><span class="lead-source"><%= (lead.source || '').replace(/_/g, ' ') %></span></td>
+                <td data-label="Message"><span class="lead-msg" title="<%= (lead.message || '').replace(/"/g, '&quot;') %>"><%= (lead.message || '-').substring(0, 60) %><%= (lead.message || '').length > 60 ? '…' : '' %></span></td>
+                <td data-label="Status">
+                  <select class="lead-status-select lead-status--<%= (lead.status || '').replace(/\s/g, '') %>" data-lead-id="<%= lead.id %>" data-field="status">
+                    <% ['New','Contacted','Interested','Not Interested','Closed'].forEach(s => { %>
+                      <option value="<%= s %>" <%= lead.status === s ? 'selected' : '' %>><%= s %></option>
+                    <% }) %>
+                  </select>
+                </td>
+                <td data-label="Last Contact">
+                  <input type="datetime-local" class="lead-last-contact" data-lead-id="<%= lead.id %>" data-field="last_contact_at" value="<%= lead.last_contact_at ? new Date(lead.last_contact_at).toISOString().slice(0,16) : '' %>" style="padding: 0.35rem; font-size: 0.8125rem; border: 1px solid #e2e4e8; border-radius: 6px;" />
+                </td>
+                <td data-label="Actions">
+                  <div class="lead-actions">
+                    <a href="mailto:<%= lead.email %>" class="btn-icon">✉ Email</a>
+                    <% if (lead.phone) { %><a href="tel:<%= lead.phone %>" class="btn-icon">📞 Call</a><% } %>
+                    <button type="button" class="btn-icon" data-detail="<%= lead.id %>">View</button>
+                    <button type="button" class="btn-icon" data-toggle-notes="<%= lead.id %>">Notes</button>
+                  </div>
+                </td>
+              </tr>
+              <tr class="notes-row" id="notes-<%= lead.id %>">
+                <td colspan="8">
+                  <textarea class="lead-notes-ta" data-lead-id="<%= lead.id %>" placeholder="Internal notes…"><%= lead.internal_notes || '' %></textarea>
+                  <div style="margin-top: 0.5rem; text-align: right;">
+                    <button type="button" class="btn btn-primary" data-save="<%= lead.id %>">Save notes</button>
+                  </div>
+                </td>
+              </tr>
+            <% }) %>
           <% } %>
-          <% leads.forEach(lead => { %>
-            <tr>
-              <td data-label="Created"><%= new Date(lead.created_at).toLocaleString() %></td>
-              <td data-label="Property">
-                <div><strong>#<%= lead.property_id %></strong> <%= lead.property_title || '' %></div>
-              </td>
-              <td data-label="Lead">
-                <div><strong><%= lead.name %></strong></div>
-                <div><a href="mailto:<%= lead.email %>"><%= lead.email %></a></div>
-                <% if (lead.phone) { %><div><a href="tel:<%= lead.phone %>"><%= lead.phone %></a></div><% } %>
-              </td>
-              <td data-label="Status">
-                <select data-lead-id="<%= lead.id %>" class="lead-status">
-                  <% ['New','Contacted','Interested','Not Interested','Closed'].forEach(s => { %>
-                    <option value="<%= s %>" <%= lead.status === s ? 'selected' : '' %>><%= s %></option>
-                  <% }) %>
-                </select>
-              </td>
-              <td data-label="Last Contact">
-                <input type="datetime-local" data-lead-id="<%= lead.id %>" class="lead-last-contact" value="<%= lead.last_contact_at ? new Date(lead.last_contact_at).toISOString().slice(0,16) : '' %>" />
-              </td>
-              <td data-label="Actions">
-                <button class="btn btn-light" data-toggle-notes="<%= lead.id %>">Notes</button>
-              </td>
-            </tr>
-            <tr id="notes-<%= lead.id %>" class="notes-row" style="display:none;">
-              <td colspan="6">
-                <textarea rows="3" style="width:100%;" data-lead-id="<%= lead.id %>" class="lead-notes"><%= lead.internal_notes || '' %></textarea>
-                <div style="margin-top: .5rem; text-align: right;">
-                  <button class="btn btn-primary" data-save="<%= lead.id %>">Save</button>
-                </div>
-              </td>
-            </tr>
-          <% }) %>
         </tbody>
       </table>
     </div>
+
+    <% if (totalPages > 1) { %>
+    <div class="leads-pagination">
+      <span class="leads-pagination-info"><%= total %> leads · Page <%= filters.page %> of <%= totalPages %></span>
+      <div class="leads-pagination-links">
+        <% if (filters.page > 1) { %>
+          <a href="<%= basePath %><%= buildQuery({ page: filters.page - 1 }) %>">← Prev</a>
+        <% } %>
+        <% for (let i = 1; i <= Math.min(totalPages, 7); i++) { %>
+          <% if (i === parseInt(filters.page)) { %>
+            <span class="current"><%= i %></span>
+          <% } else { %>
+            <a href="<%= basePath %><%= buildQuery({ page: i }) %>"><%= i %></a>
+          <% } %>
+        <% } %>
+        <% if (filters.page < totalPages) { %>
+          <a href="<%= basePath %><%= buildQuery({ page: parseInt(filters.page) + 1 }) %>">Next →</a>
+        <% } %>
+      </div>
+    </div>
+    <% } %>
   </section>
 </div>
 
+<!-- Detail slideout -->
+<div class="lead-detail-overlay" id="leadDetailOverlay">
+  <div class="lead-detail-panel" id="leadDetailPanel">
+    <div class="lead-detail-header">
+      <h2 id="leadDetailTitle">Lead details</h2>
+      <button type="button" class="lead-detail-close" id="leadDetailClose" aria-label="Close">×</button>
+    </div>
+    <div class="lead-detail-body" id="leadDetailBody">Loading…</div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="leads-toast" id="leadsToast"></div>
+
 <script>
-document.addEventListener('click', function(e) {
-  const toggleId = e.target.getAttribute('data-toggle-notes');
-  if (toggleId) {
-    const row = document.getElementById('notes-' + toggleId);
-    if (row) row.style.display = row.style.display === 'none' ? '' : 'none';
+(function() {
+  const toast = document.getElementById('leadsToast');
+  function showToast(msg) {
+    toast.textContent = msg;
+    toast.classList.add('is-visible');
+    setTimeout(() => toast.classList.remove('is-visible'), 2500);
   }
-  const saveId = e.target.getAttribute('data-save');
-  if (saveId) {
-    const notes = document.querySelector('.lead-notes[data-lead-id="' + saveId + '"]').value;
-    const last = document.querySelector('.lead-last-contact[data-lead-id="' + saveId + '"]').value;
-    const status = document.querySelector('.lead-status[data-lead-id="' + saveId + '"]').value;
-    fetch('/api/leads/' + saveId, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ internal_notes: notes, last_contact_at: last, status })
-    }).then(r => r.json()).then(() => {
-      alert('Saved');
-    }).catch(() => alert('Failed'));
-  }
-});
 
-document.addEventListener('change', function(e) {
-  if (e.target.matches('.lead-status')) {
+  document.addEventListener('click', function(e) {
+    const toggleId = e.target.getAttribute('data-toggle-notes');
+    if (toggleId) {
+      const row = document.getElementById('notes-' + toggleId);
+      if (row) row.style.display = row.style.display === 'none' ? 'table-row' : 'none';
+    }
+    const saveId = e.target.getAttribute('data-save');
+    if (saveId) {
+      const notesEl = document.querySelector('.lead-notes-ta[data-lead-id="' + saveId + '"]');
+      const lastEl = document.querySelector('.lead-last-contact[data-lead-id="' + saveId + '"]');
+      const statusEl = document.querySelector('.lead-status-select[data-lead-id="' + saveId + '"]');
+      fetch('/api/leads/' + saveId, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          internal_notes: notesEl ? notesEl.value : '',
+          last_contact_at: lastEl ? lastEl.value : null,
+          status: statusEl ? statusEl.value : null
+        })
+      }).then(r => r.json()).then(d => { if (d.success) showToast('Saved'); }).catch(() => showToast('Failed to save'));
+    }
+    const detailId = e.target.getAttribute('data-detail');
+    if (detailId) {
+      const overlay = document.getElementById('leadDetailOverlay');
+      const body = document.getElementById('leadDetailBody');
+      overlay.classList.add('is-open');
+      body.innerHTML = 'Loading…';
+      fetch('/api/leads/' + detailId).then(r => r.json()).then(d => {
+        if (!d.success || !d.lead) { body.innerHTML = 'Error loading lead'; return; }
+        const L = d.lead;
+        body.innerHTML = '<div class="lead-detail-section"><h3>Contact</h3><p><strong>' + (L.name || '') + '</strong></p><p><a href="mailto:' + (L.email || '') + '">' + (L.email || '') + '</a></p>' + (L.phone ? '<p><a href="tel:' + L.phone + '">' + L.phone + '</a></p>' : '') + '</div>' +
+          (L.property_title ? '<div class="lead-detail-section"><h3>Property</h3><p><a href="/properties/' + (L.property_slug || L.property_id) + '" target="_blank">' + L.property_title + '</a></p></div>' : '') +
+          (L.message ? '<div class="lead-detail-section"><h3>Message</h3><div class="message">' + (L.message || '').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div></div>' : '') +
+          (L.internal_notes ? '<div class="lead-detail-section"><h3>Notes</h3><div class="message">' + (L.internal_notes || '').replace(/</g, '&lt;') + '</div></div>' : '');
+      });
+    }
+  });
+
+  document.getElementById('leadDetailClose').onclick = function() {
+    document.getElementById('leadDetailOverlay').classList.remove('is-open');
+  };
+  document.getElementById('leadDetailOverlay').onclick = function(ev) {
+    if (ev.target === this) this.classList.remove('is-open');
+  };
+
+  document.addEventListener('change', function(e) {
     const id = e.target.getAttribute('data-lead-id');
-    fetch('/api/leads/' + id, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: e.target.value })
-    });
-  }
-  if (e.target.matches('.lead-last-contact')) {
-    const id = e.target.getAttribute('data-lead-id');
-    fetch('/api/leads/' + id, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ last_contact_at: e.target.value })
-    });
-  }
-});
+    const field = e.target.getAttribute('data-field');
+    if (!id || !field) return;
+    const payload = {};
+    payload[field] = e.target.value;
+    fetch('/api/leads/' + id, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+      .then(r => r.json()).then(d => { if (d.success) showToast('Updated'); });
+  });
+})();
 </script>
-
-

@@ -156,19 +156,30 @@ exports.listForAdmin = async (req, res, next) => {
     const filters = {
       q: req.query.q || '',
       status: req.query.status || '',
+      source: req.query.source || '',
       from: req.query.from || '',
       to: req.query.to || '',
       propertyId: req.query.propertyId || '',
       page: req.query.page || 1,
-      pageSize: req.query.pageSize || 20
+      pageSize: req.query.pageSize || 20,
+      sort: req.query.sort || 'created_desc'
     };
-    const { rows, total } = await Lead.listForAgent(agentId, filters);
+    const [listResult, stats] = await Promise.all([
+      Lead.listForAgent(agentId, filters),
+      Lead.getStats(agentId)
+    ]);
+    const { rows, total } = listResult;
+    const totalPages = Math.ceil(total / filters.pageSize) || 1;
     res.render('admin/leads/manage-leads', {
       leads: rows,
       total,
+      totalPages,
+      stats,
+      agents: [],
       filters,
       currentUser: req.session.user,
-      activePage: 'leads'
+      activePage: 'leads',
+      isSuperAdmin: false
     });
   } catch (err) { next(err); }
 };
@@ -179,37 +190,46 @@ exports.listAll = async (req, res, next) => {
     const filters = {
       q: req.query.q || '',
       status: req.query.status || '',
+      source: req.query.source || '',
       from: req.query.from || '',
       to: req.query.to || '',
       agentId: req.query.agentId || '',
       propertyId: req.query.propertyId || '',
       page: req.query.page || 1,
-      pageSize: req.query.pageSize || 20
+      pageSize: req.query.pageSize || 20,
+      sort: req.query.sort || 'created_desc'
     };
-    const { rows, total } = await Lead.listAll(filters);
-    // Pending requests count for sidebar badge
-    const pendingCountRes = await query(
-      "SELECT COUNT(*) AS count FROM users WHERE approved = false AND role IN ('Admin','SuperAdmin')"
-    );
-    const pendingCount = parseInt(pendingCountRes.rows[0].count, 10) || 0;
+    const [listResult, stats, agentsRes, pendingCountRes] = await Promise.all([
+      Lead.listAll(filters),
+      Lead.getStats(),
+      query("SELECT id, name FROM users WHERE role IN ('Admin','SuperAdmin') AND approved = true ORDER BY name"),
+      query("SELECT COUNT(*) AS count FROM users WHERE approved = false AND role IN ('Admin','SuperAdmin')")
+    ]);
+    const { rows, total } = listResult;
+    const totalPages = Math.ceil(total / filters.pageSize) || 1;
+    const agents = (agentsRes.rows || []).map(a => ({ id: a.id, name: a.name }));
+    const pendingCount = parseInt((pendingCountRes.rows || [{}])[0].count, 10) || 0;
     res.render('superadmin/leads/manage-leads', {
       leads: rows,
       total,
+      totalPages,
+      stats,
+      agents,
       filters,
       currentUser: req.session.user,
       activePage: 'leads',
-      pendingCount
+      pendingCount,
+      isSuperAdmin: true
     });
   } catch (err) { next(err); }
 };
 
-// Update lead (status, notes, last_contact_at)
+// Update lead (status, notes, last_contact_at, agent_id for reassign)
 exports.updateLead = async (req, res, next) => {
   try {
     const id = parseInt(req.params.id, 10);
-    const { status, internal_notes, last_contact_at } = req.body;
+    const { status, internal_notes, last_contact_at, agent_id } = req.body;
 
-    // Security: ensure admin can only update their leads
     const { rows } = await query('SELECT agent_id FROM leads WHERE id = $1', [id]);
     if (!rows.length) return res.status(404).json({ success: false, message: 'Lead not found' });
     const ownerId = rows[0].agent_id;
@@ -218,13 +238,78 @@ exports.updateLead = async (req, res, next) => {
     if (!(role === 'SuperAdmin' || ownerId === currentId)) {
       return res.status(403).json({ success: false, message: 'Forbidden' });
     }
+    if (agent_id !== undefined && role !== 'SuperAdmin') {
+      return res.status(403).json({ success: false, message: 'Only SuperAdmin can reassign' });
+    }
 
-    const updated = await Lead.update(id, {
-      ...(status ? { status } : {}),
-      ...(typeof internal_notes === 'string' ? { internal_notes } : {}),
-      ...(last_contact_at ? { last_contact_at } : {})
-    });
+    const fields = {};
+    if (status) fields.status = status;
+    if (typeof internal_notes === 'string') fields.internal_notes = internal_notes;
+    if (last_contact_at) fields.last_contact_at = last_contact_at;
+    if (agent_id !== undefined && role === 'SuperAdmin') fields.agent_id = agent_id || null;
+
+    const updated = await Lead.update(id, fields);
     res.json({ success: true, lead: updated });
+  } catch (err) { next(err); }
+};
+
+// Get single lead (for detail panel)
+exports.getLeadDetail = async (req, res, next) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    const lead = await Lead.findByIdWithJoins(id);
+    if (!lead) return res.status(404).json({ success: false });
+    const { rows } = await query('SELECT agent_id FROM leads WHERE id = $1', [id]);
+    const ownerId = rows[0]?.agent_id;
+    const role = req.session.user?.role;
+    const currentId = req.session.user?.id;
+    if (!(role === 'SuperAdmin' || ownerId === currentId)) {
+      return res.status(403).json({ success: false });
+    }
+    res.json({ success: true, lead });
+  } catch (err) { next(err); }
+};
+
+// Export leads as CSV
+exports.exportLeadsCSV = async (req, res, next) => {
+  try {
+    const role = req.session.user?.role;
+    const agentId = role === 'SuperAdmin' ? null : req.session.user?.id;
+    const filters = {
+      q: req.query.q || '',
+      status: req.query.status || '',
+      source: req.query.source || '',
+      from: req.query.from || '',
+      to: req.query.to || '',
+      agentId: role === 'SuperAdmin' ? req.query.agentId || '' : null
+    };
+    const { rows } = role === 'SuperAdmin'
+      ? await Lead.listAll({ ...filters, page: 1, pageSize: 10000 })
+      : await Lead.listForAgent(agentId, { ...filters, page: 1, pageSize: 10000 });
+    const headers = ['ID', 'Created', 'Name', 'Email', 'Phone', 'Message', 'Source', 'Status', 'Property', 'Agent', 'Last Contact'];
+    const escape = (v) => {
+      const s = String(v ?? '').replace(/"/g, '""');
+      return s.includes(',') || s.includes('"') || s.includes('\n') ? `"${s}"` : s;
+    };
+    const lines = [headers.join(',')];
+    rows.forEach(l => {
+      lines.push([
+        l.id,
+        new Date(l.created_at).toISOString(),
+        escape(l.name),
+        escape(l.email),
+        escape(l.phone),
+        escape((l.message || '').substring(0, 500)),
+        escape(l.source),
+        escape(l.status),
+        escape(l.property_title),
+        escape(l.agent_name),
+        l.last_contact_at ? new Date(l.last_contact_at).toISOString() : ''
+      ].join(','));
+    });
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename="leads-${new Date().toISOString().slice(0, 10)}.csv"`);
+    res.send(lines.join('\n'));
   } catch (err) { next(err); }
 };
 
