@@ -675,12 +675,14 @@ function showComparisonModal() {
 
   modalContent.innerHTML = createComparisonTable();
   modal.style.display = 'block';
+  document.body.classList.add('comparison-modal-open');
 }
 
 // Function to close comparison modal
 function closeComparisonModal() {
   const modal = document.getElementById('comparisonModal');
   if (modal) modal.style.display = 'none';
+  document.body.classList.remove('comparison-modal-open');
 }
 
 // Function to show notification

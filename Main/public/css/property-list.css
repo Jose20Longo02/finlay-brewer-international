@@ -39,6 +39,14 @@ body.header-dark .header-hamburger-bar {
   background: #fff;
 }
 
+/* Hide global header while comparison modal is open */
+body.comparison-modal-open .site-header {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(-100%);
+}
+
 @media (max-width: 1024px) {
   body.header-dark .site-header {
     min-height: auto;
