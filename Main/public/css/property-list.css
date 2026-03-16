@@ -1880,12 +1880,12 @@ body.header-dark .search-results-page {
 
 /* Property Comparison Styles */
 .comparison-container {
-  background: var(--white);
+  background: linear-gradient(180deg, #ffffff 0%, #fafafa 100%);
   border-radius: var(--radius-xl);
   padding: var(--spacing-6);
   margin-bottom: var(--spacing-6);
-  box-shadow: var(--shadow-md);
-  border: 2px solid var(--primary-color);
+  box-shadow: 0 12px 28px rgba(17, 17, 17, 0.08);
+  border: 1px solid var(--gray-200);
 }
 
 .comparison-header {
@@ -1903,8 +1903,9 @@ body.header-dark .search-results-page {
 
 .comparison-header h3 {
   margin: 0;
-  color: var(--gray-900);
+  color: #111;
   font-size: var(--font-size-lg);
+  letter-spacing: 0.01em;
 }
 
 .comparison-list {
@@ -1918,9 +1919,17 @@ body.header-dark .search-results-page {
   align-items: center;
   gap: var(--spacing-3);
   padding: var(--spacing-3);
-  background: var(--gray-50);
+  background: #fff;
+  border: 1px solid var(--gray-200);
   border-radius: var(--radius-md);
   position: relative;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast);
+}
+
+.comparison-item:hover {
+  border-color: #d1d5db;
+  box-shadow: 0 8px 20px rgba(17, 17, 17, 0.08);
+  transform: translateY(-1px);
 }
 
 .comparison-image {
@@ -1950,15 +1959,15 @@ body.header-dark .search-results-page {
 
 .comparison-price {
   font-weight: 600;
-  color: var(--primary-color) !important;
+  color: #111 !important;
 }
 
 .comparison-remove {
-  background: var(--red-500);
-  color: var(--white);
+  background: #111;
+  color: #fff;
   border: none;
-  width: 24px;
-  height: 24px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
   cursor: pointer;
   display: flex;
@@ -1966,22 +1975,23 @@ body.header-dark .search-results-page {
   justify-content: center;
   font-size: var(--font-size-lg);
   line-height: 1;
-  transition: background-color var(--transition-fast);
+  transition: background-color var(--transition-fast), transform var(--transition-fast);
 }
 
 .comparison-remove:hover {
-  background: var(--red-600);
+  background: #333;
+  transform: scale(1.05);
 }
 
 /* Property card comparison state */
 .property-card.in-comparison {
-  border: 2px solid var(--primary-color);
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+  border: 2px solid #111;
+  box-shadow: 0 0 0 4px rgba(17, 17, 17, 0.12);
 }
 
 .property-card.in-comparison .property-footer .btn {
-  background: var(--primary-color);
-  color: var(--white);
+  background: #111;
+  color: #fff;
 }
 
 .property-card .btn-compare.is-selected {
@@ -1991,15 +2001,23 @@ body.header-dark .search-results-page {
 }
 
 /* Comparison Modal Styles */
+#comparisonModal .modal-content {
+  max-width: min(1120px, 96vw);
+}
+
 .comparison-table-container {
   overflow-x: auto;
   max-width: 100%;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  background: #fff;
 }
 
 .comparison-table {
   width: 100%;
-  border-collapse: collapse;
-  margin-top: var(--spacing-4);
+  border-collapse: separate;
+  border-spacing: 0;
+  margin-top: 0;
 }
 
 .comparison-table th,
@@ -2011,22 +2029,26 @@ body.header-dark .search-results-page {
 }
 
 .comparison-table th {
-  background: var(--gray-50);
+  background: #111;
   font-weight: 600;
-  color: var(--gray-900);
+  color: #fff;
   position: sticky;
   top: 0;
+  z-index: 2;
 }
 
 .comparison-table td.feature-label {
   font-weight: 600;
-  color: var(--gray-700);
-  background: var(--gray-50);
-  width: 120px;
+  color: #111;
+  background: #f8f8f8;
+  width: 150px;
+  position: sticky;
+  left: 0;
+  z-index: 1;
 }
 
 .comparison-table td.cell-diff {
-  background: #f8fafc;
+  background: #fcf8ef;
 }
 
 .comparison-modal-image {
@@ -2039,7 +2061,13 @@ body.header-dark .search-results-page {
 .comparison-open-link {
   color: #111;
   font-weight: 600;
-  text-decoration: underline;
+  text-decoration: none;
+  border-bottom: 1px solid #111;
+}
+
+.comparison-open-link:hover {
+  color: #333;
+  border-bottom-color: #333;
 }
 
 /* Notification Styles */
