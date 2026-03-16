@@ -321,9 +321,14 @@
             <div id="comparisonContainer" class="comparison-container" style="display: none;">
               <div class="comparison-header">
                 <h3>Properties to Compare</h3>
-                <button id="compareBtn" class="btn btn-primary" onclick="showComparisonModal()" disabled>
-                  Compare (0)
-                </button>
+                <div class="comparison-actions">
+                  <button id="clearCompareBtn" class="btn btn-secondary" type="button" onclick="clearComparison()" style="display:none;">
+                    Clear
+                  </button>
+                  <button id="compareBtn" class="btn btn-primary" type="button" onclick="showComparisonModal()" disabled>
+                    Compare (0)
+                  </button>
+                </div>
               </div>
               <div id="comparisonList" class="comparison-list">
                 <!-- Comparison items will be added here -->
@@ -334,8 +339,23 @@
               <% properties.forEach(property => { %>
                 <a href="/properties/<%= property.slug %>" 
                    class="property-card country-<%= property.country.toLowerCase() %>" 
-                   data-country="<%= property.country %>"
                    data-property-id="<%= property.id %>"
+                   data-slug="<%= property.slug %>"
+                   data-url="/properties/<%= property.slug %>"
+                   data-title="<%= property.title %>"
+                   data-country="<%= property.country %>"
+                   data-city="<%= property.city %>"
+                   data-neighborhood="<%= property.neighborhood || '' %>"
+                   data-location="<%= [property.city, property.country].filter(Boolean).join(', ') %>"
+                   data-type="<%= property.type || '' %>"
+                   data-price-display="€<%= Number(property.price || 0).toLocaleString('en-US') %>"
+                   data-bedrooms="<%= property.bedrooms || 0 %>"
+                   data-bathrooms="<%= property.bathrooms || 0 %>"
+                   data-size="<%= property.size || 0 %>"
+                   data-year-built="<%= property.year_built || '' %>"
+                   data-featured="<%= property.featured ? 'true' : 'false' %>"
+                   data-status-tags="<%= (Array.isArray(property.status_tags) ? property.status_tags.join(', ') : (property.status_tags || '')) %>"
+                   data-image="<%= (property.photos && property.photos.length > 0) ? property.photos[0] : '/img/property-placeholder.jpg' %>"
                    aria-label="View property: <%= property.title %>">
                   
                   <!-- Property Image -->
@@ -418,7 +438,7 @@
                     </div>
                     
                     <div class="property-footer property-footer--actions">
-                      <button type="button" class="btn-compare" onclick="event.preventDefault(); event.stopPropagation(); compareProperty('<%= property.id %>')">Compare</button>
+                      <button type="button" class="btn-compare" aria-pressed="false" onclick="event.preventDefault(); event.stopPropagation(); compareProperty('<%= property.id %>')">Compare</button>
                       <span class="btn-view-property">View Property</span>
                     </div>
                   </div>

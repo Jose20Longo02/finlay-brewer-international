@@ -447,79 +447,219 @@ function updateSort() {
 // No favorites system
 
 // Property comparison functionality
+const COMPARISON_STORAGE_KEY = 'propertyComparisonListV1';
+const COMPARISON_MAX_ITEMS = 3;
 let comparisonList = [];
+
+function sanitizeHTML(value) {
+  return String(value == null ? '' : value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function readComparisonStorage() {
+  try {
+    const raw = localStorage.getItem(COMPARISON_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (_) {
+    return [];
+  }
+}
+
+function writeComparisonStorage() {
+  try {
+    localStorage.setItem(COMPARISON_STORAGE_KEY, JSON.stringify(comparisonList));
+  } catch (_) {
+    // Ignore storage errors (private mode, quota, etc.)
+  }
+}
+
+function getCardText(card, selector) {
+  const node = card.querySelector(selector);
+  return node ? node.textContent.trim().replace(/\s+/g, ' ') : '';
+}
+
+function getCardImage(card) {
+  const img = card.querySelector('.property-image img');
+  return img ? img.src : '/img/property-placeholder.jpg';
+}
+
+function buildPropertyFromCard(propertyCard, propertyId) {
+  const dataset = propertyCard.dataset || {};
+  const locationText = getCardText(propertyCard, '.property-location');
+  const location = dataset.location || locationText || [dataset.city, dataset.country].filter(Boolean).join(', ');
+
+  return {
+    id: String(propertyId),
+    slug: dataset.slug || '',
+    url: dataset.url || (dataset.slug ? `/properties/${dataset.slug}` : '/properties'),
+    title: dataset.title || getCardText(propertyCard, '.property-title') || 'Property',
+    location,
+    neighborhood: dataset.neighborhood || '',
+    country: dataset.country || '',
+    city: dataset.city || '',
+    price: dataset.priceDisplay || getCardText(propertyCard, '.price-amount') || '€0',
+    type: dataset.type || '',
+    bedrooms: dataset.bedrooms != null ? String(dataset.bedrooms) : '',
+    bathrooms: dataset.bathrooms != null ? String(dataset.bathrooms) : '',
+    size: dataset.size != null ? String(dataset.size) : '',
+    yearBuilt: dataset.yearBuilt != null ? String(dataset.yearBuilt) : '',
+    featured: String(dataset.featured || '').toLowerCase() === 'true' ? 'Yes' : 'No',
+    statusTags: dataset.statusTags || '',
+    image: dataset.image || getCardImage(propertyCard)
+  };
+}
+
+function syncComparisonCardState() {
+  const selectedIds = new Set(comparisonList.map(p => String(p.id)));
+  const cards = document.querySelectorAll('.property-card[data-property-id]');
+
+  cards.forEach(card => {
+    const id = String(card.dataset.propertyId || '');
+    const isSelected = selectedIds.has(id);
+    card.classList.toggle('in-comparison', isSelected);
+    const btn = card.querySelector('.btn-compare');
+    if (btn) {
+      btn.classList.toggle('is-selected', isSelected);
+      btn.textContent = isSelected ? 'Added' : 'Compare';
+      btn.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
+    }
+  });
+}
+
+function clearComparison() {
+  comparisonList = [];
+  writeComparisonStorage();
+  updateComparisonUI();
+  showNotification('Comparison list cleared', 'info');
+}
 
 // Function to compare property
 function compareProperty(propertyId) {
   const propertyCard = document.querySelector(`[data-property-id="${propertyId}"]`);
   if (!propertyCard) return;
-  
-  const property = {
-    id: propertyId,
-    title: propertyCard.querySelector('.property-title').textContent,
-    location: propertyCard.querySelector('.property-location').textContent,
-    price: propertyCard.querySelector('.price-amount').textContent,
-    type: propertyCard.querySelector('.badge-type').textContent,
-    bedrooms: propertyCard.querySelector('.detail-item:first-child').textContent,
-    bathrooms: propertyCard.querySelector('.detail-item:nth-child(2)').textContent,
-    size: propertyCard.querySelector('.detail-item:last-child').textContent,
-    image: propertyCard.querySelector('.property-image img').src
-  };
-  
-  // Check if property is already in comparison
-  const existingIndex = comparisonList.findIndex(p => p.id === propertyId);
-  
+
+  const existingIndex = comparisonList.findIndex(p => String(p.id) === String(propertyId));
   if (existingIndex !== -1) {
-    // Remove from comparison
     comparisonList.splice(existingIndex, 1);
-    propertyCard.classList.remove('in-comparison');
+    writeComparisonStorage();
+    updateComparisonUI();
     showNotification('Property removed from comparison', 'info');
-  } else {
-    // Add to comparison (max 3 properties)
-    if (comparisonList.length >= 3) {
-      showNotification('You can only compare up to 3 properties at a time', 'warning');
-      return;
-    }
-    
-    comparisonList.push(property);
-    propertyCard.classList.add('in-comparison');
-    showNotification('Property added to comparison', 'success');
+    return;
   }
-  
+
+  if (comparisonList.length >= COMPARISON_MAX_ITEMS) {
+    showNotification('You can only compare up to 3 properties at a time', 'warning');
+    return;
+  }
+
+  const property = buildPropertyFromCard(propertyCard, propertyId);
+  comparisonList.push(property);
+  writeComparisonStorage();
   updateComparisonUI();
+  showNotification('Property added to comparison', 'success');
 }
 
 // Function to update comparison UI
 function updateComparisonUI() {
   const comparisonContainer = document.getElementById('comparisonContainer');
-  if (!comparisonContainer) return;
-  
+  const comparisonListEl = document.getElementById('comparisonList');
+  const compareBtn = document.getElementById('compareBtn');
+  const clearBtn = document.getElementById('clearCompareBtn');
+  if (!comparisonContainer || !comparisonListEl) return;
+
+  syncComparisonCardState();
+
   if (comparisonList.length === 0) {
     comparisonContainer.style.display = 'none';
+    if (compareBtn) {
+      compareBtn.textContent = 'Compare (0)';
+      compareBtn.disabled = true;
+    }
+    if (clearBtn) clearBtn.style.display = 'none';
     return;
   }
-  
+
   comparisonContainer.style.display = 'block';
-  
-  const comparisonListEl = document.getElementById('comparisonList');
+  if (clearBtn) clearBtn.style.display = 'inline-flex';
+
   comparisonListEl.innerHTML = comparisonList.map(property => `
     <div class="comparison-item">
-      <img src="${property.image}" alt="${property.title}" class="comparison-image">
+      <img src="${sanitizeHTML(property.image)}" alt="${sanitizeHTML(property.title)}" class="comparison-image">
       <div class="comparison-details">
-        <h4>${property.title}</h4>
-        <p>${property.location}</p>
-        <p class="comparison-price">${property.price}</p>
+        <h4>${sanitizeHTML(property.title)}</h4>
+        <p>${sanitizeHTML(property.location || '-')}</p>
+        <p class="comparison-price">${sanitizeHTML(property.price || '-')}</p>
       </div>
-      <button class="comparison-remove" onclick="compareProperty('${property.id}')">&times;</button>
+      <button type="button" class="comparison-remove" onclick="compareProperty('${sanitizeHTML(property.id)}')" aria-label="Remove ${sanitizeHTML(property.title)} from comparison">&times;</button>
     </div>
   `).join('');
-  
-  // Update compare button text
-  const compareBtn = document.getElementById('compareBtn');
+
   if (compareBtn) {
     compareBtn.textContent = `Compare (${comparisonList.length})`;
-    compareBtn.disabled = false;
+    compareBtn.disabled = comparisonList.length < 2;
   }
+}
+
+function createComparisonRow(label, values, options = {}) {
+  const { renderAsImage = false, renderAsLink = false } = options;
+  const normalized = values.map(v => (v == null || v === '' ? '-' : String(v)));
+  const uniqueValues = new Set(normalized);
+  const hasDifference = normalized.length > 1 && uniqueValues.size > 1;
+
+  let cells = '';
+  normalized.forEach(v => {
+    if (renderAsImage) {
+      cells += `<td class="${hasDifference ? 'cell-diff' : ''}"><img src="${sanitizeHTML(v)}" alt="" class="comparison-modal-image"></td>`;
+    } else if (renderAsLink) {
+      const safeUrl = sanitizeHTML(v);
+      cells += `<td class="${hasDifference ? 'cell-diff' : ''}"><a class="comparison-open-link" href="${safeUrl}" target="_blank" rel="noopener">Open property</a></td>`;
+    } else {
+      cells += `<td class="${hasDifference ? 'cell-diff' : ''}">${sanitizeHTML(v)}</td>`;
+    }
+  });
+
+  return `<tr><td class="feature-label">${sanitizeHTML(label)}</td>${cells}</tr>`;
+}
+
+// Function to create comparison table
+function createComparisonTable() {
+  const headers = ['Feature', ...comparisonList.map(p => p.title || 'Property')];
+  const rows = [
+    createComparisonRow('Image', comparisonList.map(p => p.image), { renderAsImage: true }),
+    createComparisonRow('Price', comparisonList.map(p => p.price)),
+    createComparisonRow('Type', comparisonList.map(p => p.type)),
+    createComparisonRow('Bedrooms', comparisonList.map(p => p.bedrooms)),
+    createComparisonRow('Bathrooms', comparisonList.map(p => p.bathrooms)),
+    createComparisonRow('Size (m²)', comparisonList.map(p => p.size)),
+    createComparisonRow('Country', comparisonList.map(p => p.country)),
+    createComparisonRow('City', comparisonList.map(p => p.city)),
+    createComparisonRow('Neighborhood', comparisonList.map(p => p.neighborhood)),
+    createComparisonRow('Year Built', comparisonList.map(p => p.yearBuilt)),
+    createComparisonRow('Featured', comparisonList.map(p => p.featured)),
+    createComparisonRow('Status Tags', comparisonList.map(p => p.statusTags || '-')),
+    createComparisonRow('Open', comparisonList.map(p => p.url), { renderAsLink: true })
+  ];
+
+  return `
+    <div class="comparison-table-container">
+      <table class="comparison-table">
+        <thead>
+          <tr>
+            ${headers.map(header => `<th>${sanitizeHTML(header)}</th>`).join('')}
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
 }
 
 // Function to show comparison modal
@@ -528,71 +668,19 @@ function showComparisonModal() {
     showNotification('Please select at least 2 properties to compare', 'warning');
     return;
   }
-  
+
   const modal = document.getElementById('comparisonModal');
   const modalContent = document.getElementById('comparisonContent');
-  
   if (!modal || !modalContent) return;
-  
-  // Create comparison table
-  const comparisonTable = createComparisonTable();
-  modalContent.innerHTML = comparisonTable;
-  
-  modal.style.display = 'block';
-}
 
-// Function to create comparison table
-function createComparisonTable() {
-  const headers = ['Feature', ...comparisonList.map(p => p.title)];
-  
-  const rows = [
-    ['Image', ...comparisonList.map(p => `<img src="${p.image}" alt="${p.title}" class="comparison-modal-image">`)],
-    ['Location', ...comparisonList.map(p => p.location)],
-    ['Price', ...comparisonList.map(p => p.price)],
-    ['Type', ...comparisonList.map(p => p.type)],
-    ['Bedrooms', ...comparisonList.map(p => p.bedrooms)],
-    ['Bathrooms', ...comparisonList.map(p => p.bathrooms)],
-    ['Size', ...comparisonList.map(p => p.size)]
-  ];
-  
-  let tableHTML = `
-    <div class="comparison-table-container">
-      <table class="comparison-table">
-        <thead>
-          <tr>
-            ${headers.map(header => `<th>${header}</th>`).join('')}
-          </tr>
-        </thead>
-        <tbody>
-  `;
-  
-  rows.forEach(row => {
-    tableHTML += '<tr>';
-    row.forEach((cell, index) => {
-      if (index === 0) {
-        tableHTML += `<td class="feature-label">${cell}</td>`;
-      } else {
-        tableHTML += `<td>${cell}</td>`;
-      }
-    });
-    tableHTML += '</tr>';
-  });
-  
-  tableHTML += `
-        </tbody>
-      </table>
-    </div>
-  `;
-  
-  return tableHTML;
+  modalContent.innerHTML = createComparisonTable();
+  modal.style.display = 'block';
 }
 
 // Function to close comparison modal
 function closeComparisonModal() {
   const modal = document.getElementById('comparisonModal');
-  if (modal) {
-    modal.style.display = 'none';
-  }
+  if (modal) modal.style.display = 'none';
 }
 
 // Function to show notification
@@ -932,6 +1020,23 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Load saved searches
   loadSavedSearches();
+
+  // Restore comparison state from previous page visits
+  comparisonList = readComparisonStorage()
+    .filter(item => item && item.id)
+    .slice(0, COMPARISON_MAX_ITEMS);
+  updateComparisonUI();
+
+  // Comparison modal interactions
+  const comparisonModal = document.getElementById('comparisonModal');
+  if (comparisonModal) {
+    comparisonModal.addEventListener('click', function(e) {
+      if (e.target === comparisonModal) closeComparisonModal();
+    });
+  }
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeComparisonModal();
+  });
 
   // Initialize euro formatting for price inputs
   initializeEuroPriceInputs();

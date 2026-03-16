@@ -1895,6 +1895,12 @@ body.header-dark .search-results-page {
   margin-bottom: var(--spacing-4);
 }
 
+.comparison-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
 .comparison-header h3 {
   margin: 0;
   color: var(--gray-900);
@@ -1978,6 +1984,12 @@ body.header-dark .search-results-page {
   color: var(--white);
 }
 
+.property-card .btn-compare.is-selected {
+  background: #111;
+  color: #fff;
+  border-color: #111;
+}
+
 /* Comparison Modal Styles */
 .comparison-table-container {
   overflow-x: auto;
@@ -2013,11 +2025,21 @@ body.header-dark .search-results-page {
   width: 120px;
 }
 
+.comparison-table td.cell-diff {
+  background: #f8fafc;
+}
+
 .comparison-modal-image {
   width: 80px;
   height: 60px;
   object-fit: cover;
   border-radius: var(--radius-md);
+}
+
+.comparison-open-link {
+  color: #111;
+  font-weight: 600;
+  text-decoration: underline;
 }
 
 /* Notification Styles */
