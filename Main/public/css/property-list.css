@@ -2066,15 +2066,17 @@ body.header-dark .search-results-page {
 
 /* Comparison Modal Styles */
 #comparisonModal .modal-content {
-  max-width: min(1120px, 96vw);
-  max-height: 90vh;
+  width: min(920px, 88vw);
+  max-width: min(920px, 88vw);
+  margin: 6vh auto;
+  max-height: 84vh;
   display: flex;
   flex-direction: column;
 }
 
 #comparisonModal .modal-body {
   overflow-y: auto;
-  max-height: calc(90vh - 110px);
+  max-height: calc(84vh - 110px);
 }
 
 .comparison-table-container {
@@ -2478,11 +2480,14 @@ body.header-dark .search-results-page {
   }
 
   #comparisonModal .modal-content {
-    max-height: 92vh;
+    width: min(92vw, 760px);
+    max-width: min(92vw, 760px);
+    margin: 8vh auto;
+    max-height: 82vh;
   }
 
   #comparisonModal .modal-body {
-    max-height: calc(92vh - 96px);
+    max-height: calc(82vh - 96px);
   }
   
   .form-actions {
