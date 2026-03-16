@@ -201,15 +201,16 @@ function initFavoritePropertiesGallery() {
     rafId = requestAnimationFrame(galleryLoop);
   }
 
-  const strip = galleryTrack.closest('.gallery-strip');
-  if (strip) {
-    strip.addEventListener('mouseenter', function() {
+  // Pause only when hovering over a card, not the strip/lines
+  const allFrames = galleryTrack.querySelectorAll('.gallery-frame--property');
+  allFrames.forEach(function(frame) {
+    frame.addEventListener('mouseenter', function() {
       isPaused = true;
     });
-    strip.addEventListener('mouseleave', function() {
+    frame.addEventListener('mouseleave', function() {
       isPaused = false;
     });
-  }
+  });
 
   galleryLoop();
   window.addEventListener('resize', recalcThreshold);
