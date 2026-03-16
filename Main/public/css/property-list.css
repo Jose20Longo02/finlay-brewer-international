@@ -1554,6 +1554,8 @@ body.header-dark .search-results-page {
   height: 100%;
   background-color: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(4px);
+  overflow-y: auto;
+  padding: var(--spacing-4) 0;
 }
 
 .modal-content {
@@ -2003,6 +2005,14 @@ body.header-dark .search-results-page {
 /* Comparison Modal Styles */
 #comparisonModal .modal-content {
   max-width: min(1120px, 96vw);
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+#comparisonModal .modal-body {
+  overflow-y: auto;
+  max-height: calc(90vh - 110px);
 }
 
 .comparison-table-container {
@@ -2403,6 +2413,14 @@ body.header-dark .search-results-page {
   .modal-header,
   .modal-body {
     padding: var(--spacing-4);
+  }
+
+  #comparisonModal .modal-content {
+    max-height: 92vh;
+  }
+
+  #comparisonModal .modal-body {
+    max-height: calc(92vh - 96px);
   }
   
   .form-actions {
