@@ -7,12 +7,13 @@ const slugify     = require('slugify');
 const fs          = require('fs');
 const path        = require('path');
 const crypto      = require('crypto');
+const { GetObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
 const sendMail    = require('../config/mailer');
 const Buyer       = require('../models/Buyer');
 const Owner       = require('../models/Owner');
 const PropertyConfidentialDocument = require('../models/PropertyConfidentialDocument');
 const { generateVariants, SIZES } = require('../middleware/imageVariants');
-const { isSpacesEnabled, moveObject, normalizeSpacesUrl, deletePropertyFolder } = require('../config/spaces');
+const { isSpacesEnabled, moveObject, normalizeSpacesUrl, deletePropertyFolder, getSpacesClient } = require('../config/spaces');
 
 const PROPERTY_CHARACTERISTICS = PROPERTY_CHARACTERISTICS_IMPORT;
 const CHARACTERISTIC_SLUGS = new Set(PROPERTY_CHARACTERISTICS.map(c => c.slug));
@@ -51,29 +52,50 @@ async function getOwnersForForms() {
 
 async function attachConfidentialDocsToProperty(propertyId, docFiles, docNames, uploadedBy) {
   if (!Array.isArray(docFiles) || docFiles.length === 0) return [];
-  const finalDir = path.join(PRIVATE_CONF_BASE, 'properties', String(propertyId));
-  ensureDir(finalDir);
   const docsToInsert = [];
 
   for (let i = 0; i < docFiles.length; i += 1) {
     const file = docFiles[i];
-    if (!file || !file.path) continue;
-    const storedFilename = secureStoredFilename(file.originalname);
-    const finalAbsPath = path.join(finalDir, storedFilename);
-    try {
-      if (path.resolve(file.path) !== path.resolve(finalAbsPath)) {
-        fs.renameSync(file.path, finalAbsPath);
+    if (!file) continue;
+
+    let storagePath = null;
+    if (file.key && isSpacesEnabled()) {
+      const originalKey = String(file.key);
+      // For new property create flow, confidential uploads land in temporary folder first.
+      if (originalKey.startsWith('Properties/__temp__/')) {
+        const fileName = originalKey.split('/').pop();
+        const newKey = `Properties/${propertyId}/Confidential Info/${fileName}`;
+        try {
+          await moveObject(originalKey, newKey, 'private');
+          storagePath = newKey;
+        } catch (_) {
+          continue;
+        }
+      } else {
+        storagePath = originalKey;
       }
-    } catch (_) {
-      continue;
+    } else if (file.path) {
+      const finalDir = path.join(PRIVATE_CONF_BASE, 'properties', String(propertyId));
+      ensureDir(finalDir);
+      const storedFilename = secureStoredFilename(file.originalname);
+      const finalAbsPath = path.join(finalDir, storedFilename);
+      try {
+        if (path.resolve(file.path) !== path.resolve(finalAbsPath)) {
+          fs.renameSync(file.path, finalAbsPath);
+        }
+      } catch (_) {
+        continue;
+      }
+      storagePath = path.join('properties', String(propertyId), storedFilename).replace(/\\/g, '/');
     }
-    const relPath = path.join('properties', String(propertyId), storedFilename).replace(/\\/g, '/');
+
+    if (!storagePath) continue;
     docsToInsert.push({
       display_name: buildDocumentDisplayName(docNames[i], file.originalname),
       original_filename: String(file.originalname || 'document'),
       mime_type: file.mimetype || null,
       file_size: file.size || null,
-      storage_path: relPath,
+      storage_path: storagePath,
       uploaded_by: uploadedBy || null
     });
   }
@@ -82,11 +104,19 @@ async function attachConfidentialDocsToProperty(propertyId, docFiles, docNames, 
   return PropertyConfidentialDocument.createMany(propertyId, docsToInsert);
 }
 
-function cleanupConfidentialUploadFiles(files = []) {
+async function cleanupConfidentialUploadFiles(files = []) {
   if (!Array.isArray(files) || !files.length) return;
+  const spacesClient = isSpacesEnabled() ? getSpacesClient() : null;
   for (const file of files) {
     try {
-      if (file && file.path && fs.existsSync(file.path)) fs.unlinkSync(file.path);
+      if (file && file.key && spacesClient) {
+        await spacesClient.send(new DeleteObjectCommand({
+          Bucket: process.env.SPACES_BUCKET,
+          Key: String(file.key)
+        }));
+      } else if (file && file.path && fs.existsSync(file.path)) {
+        fs.unlinkSync(file.path);
+      }
     } catch (_) {
       // Non-fatal
     }
@@ -740,7 +770,7 @@ exports.createProperty = async (req, res, next) => {
 
     if (errors.length) {
       const uploadedConfidentialDocs = (req.files && Array.isArray(req.files.confidential_docs)) ? req.files.confidential_docs : [];
-      cleanupConfidentialUploadFiles(uploadedConfidentialDocs);
+      await cleanupConfidentialUploadFiles(uploadedConfidentialDocs);
       const { rows: teamMembers } = await query(`
         SELECT id, name
           FROM users
@@ -933,7 +963,7 @@ exports.createProperty = async (req, res, next) => {
       }
     } else {
       const uploadedConfidentialDocs = (req.files && Array.isArray(req.files.confidential_docs)) ? req.files.confidential_docs : [];
-      cleanupConfidentialUploadFiles(uploadedConfidentialDocs);
+      await cleanupConfidentialUploadFiles(uploadedConfidentialDocs);
     }
 
     setImmediate(async () => {
@@ -1174,7 +1204,7 @@ exports.updateProperty = async (req, res, next) => {
 
     if (errors.length) {
       const uploadedConfidentialDocs = (req.files && Array.isArray(req.files.confidential_docs)) ? req.files.confidential_docs : [];
-      cleanupConfidentialUploadFiles(uploadedConfidentialDocs);
+      await cleanupConfidentialUploadFiles(uploadedConfidentialDocs);
       const { rows: teamMembers } = await query(`SELECT id, name FROM users WHERE role IN ('Admin','SuperAdmin') AND approved = true ORDER BY name`);
       const owners = await getOwnersForForms();
       const existingConfidentialDocs = req.session.user?.role === 'SuperAdmin'
@@ -1231,7 +1261,7 @@ exports.updateProperty = async (req, res, next) => {
       }
     } else {
       const uploadedConfidentialDocs = (req.files && Array.isArray(req.files.confidential_docs)) ? req.files.confidential_docs : [];
-      cleanupConfidentialUploadFiles(uploadedConfidentialDocs);
+      await cleanupConfidentialUploadFiles(uploadedConfidentialDocs);
     }
 
     const role = req.session.user?.role;
@@ -1540,13 +1570,34 @@ exports.downloadPropertyConfidentialDocument = async (req, res, next) => {
     const doc = await PropertyConfidentialDocument.findById(docId);
     if (!doc || Number(doc.property_id) !== propertyId) return res.status(404).render('errors/404');
 
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('Cache-Control', 'private, no-store');
+
+    if (isSpacesEnabled() && String(doc.storage_path || '').startsWith('Properties/')) {
+      try {
+        const client = getSpacesClient();
+        const obj = await client.send(new GetObjectCommand({
+          Bucket: process.env.SPACES_BUCKET,
+          Key: doc.storage_path
+        }));
+        if (doc.mime_type) res.setHeader('Content-Type', doc.mime_type);
+        const filename = doc.original_filename || 'document';
+        res.setHeader('Content-Disposition', `attachment; filename="${filename.replace(/"/g, '')}"`);
+        if (obj.ContentLength != null) res.setHeader('Content-Length', String(obj.ContentLength));
+        if (obj.Body && typeof obj.Body.pipe === 'function') {
+          obj.Body.pipe(res);
+          return;
+        }
+      } catch (_) {
+        return res.status(404).send('File not found');
+      }
+      return res.status(404).send('File not found');
+    }
+
     const base = path.resolve(PRIVATE_CONF_BASE);
     const absolutePath = path.resolve(path.join(PRIVATE_CONF_BASE, doc.storage_path || ''));
     if (!absolutePath.startsWith(base)) return res.status(403).send('Forbidden');
     if (!fs.existsSync(absolutePath)) return res.status(404).send('File not found');
-
-    res.setHeader('X-Content-Type-Options', 'nosniff');
-    res.setHeader('Cache-Control', 'private, no-store');
     return res.download(absolutePath, doc.original_filename || path.basename(absolutePath));
   } catch (err) {
     next(err);
@@ -1560,11 +1611,23 @@ exports.deletePropertyConfidentialDocument = async (req, res, next) => {
     const doc = await PropertyConfidentialDocument.findById(docId);
     if (!doc || Number(doc.property_id) !== propertyId) return res.status(404).render('errors/404');
 
-    const absolutePath = path.resolve(path.join(PRIVATE_CONF_BASE, doc.storage_path || ''));
-    try {
-      if (fs.existsSync(absolutePath)) fs.unlinkSync(absolutePath);
-    } catch (_) {
-      // Non-fatal
+    if (isSpacesEnabled() && String(doc.storage_path || '').startsWith('Properties/')) {
+      try {
+        const client = getSpacesClient();
+        await client.send(new DeleteObjectCommand({
+          Bucket: process.env.SPACES_BUCKET,
+          Key: doc.storage_path
+        }));
+      } catch (_) {
+        // Non-fatal
+      }
+    } else {
+      const absolutePath = path.resolve(path.join(PRIVATE_CONF_BASE, doc.storage_path || ''));
+      try {
+        if (fs.existsSync(absolutePath)) fs.unlinkSync(absolutePath);
+      } catch (_) {
+        // Non-fatal
+      }
     }
     await PropertyConfidentialDocument.delete(docId);
     return res.redirect(`/superadmin/dashboard/properties/${propertyId}/confidential?success=${encodeURIComponent('Document deleted.')}`);

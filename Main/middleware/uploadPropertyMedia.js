@@ -41,7 +41,7 @@ const confidentialDiskStorage = multer.diskStorage({
 let storage;
 if (hasSpaces) {
   const s3 = getSpacesClient();
-  const spacesStorage = multerS3({
+  const publicSpacesStorage = multerS3({
     s3,
     bucket: process.env.SPACES_BUCKET,
     acl: 'public-read',
@@ -56,14 +56,29 @@ if (hasSpaces) {
       cb(null, `${folder}/${file.fieldname}-${Date.now()}-${safe}`);
     }
   });
+  const confidentialSpacesStorage = multerS3({
+    s3,
+    bucket: process.env.SPACES_BUCKET,
+    acl: 'private',
+    contentType: multerS3.AUTO_CONTENT_TYPE,
+    key: (req, file, cb) => {
+      const safe = safeName(file.originalname);
+      const propertyId = req.params && req.params.id ? String(req.params.id) : null;
+      const ownerPart = (req.session && req.session.user && req.session.user.id) ? `user-${req.session.user.id}` : 'anonymous';
+      const folder = propertyId
+        ? `Properties/${propertyId}/Confidential Info`
+        : `Properties/__temp__/${ownerPart}/Confidential Info`;
+      cb(null, `${folder}/confidential-${Date.now()}-${safe}`);
+    }
+  });
   storage = {
     _handleFile(req, file, cb) {
-      if (file.fieldname === 'confidential_docs') return confidentialDiskStorage._handleFile(req, file, cb);
-      return spacesStorage._handleFile(req, file, cb);
+      if (file.fieldname === 'confidential_docs') return confidentialSpacesStorage._handleFile(req, file, cb);
+      return publicSpacesStorage._handleFile(req, file, cb);
     },
     _removeFile(req, file, cb) {
-      if (file.fieldname === 'confidential_docs') return confidentialDiskStorage._removeFile(req, file, cb);
-      return spacesStorage._removeFile(req, file, cb);
+      if (file.fieldname === 'confidential_docs') return confidentialSpacesStorage._removeFile(req, file, cb);
+      return publicSpacesStorage._removeFile(req, file, cb);
     }
   };
 } else {

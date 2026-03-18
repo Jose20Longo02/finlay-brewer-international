@@ -62,7 +62,7 @@ function normalizeSpacesUrl(url) {
   return url;
 }
 
-async function moveObject(oldKey, newKey) {
+async function moveObject(oldKey, newKey, acl = 'public-read') {
   if (!isSpacesEnabled()) return null;
   const client = getSpacesClient();
   const bucket = process.env.SPACES_BUCKET;
@@ -70,7 +70,7 @@ async function moveObject(oldKey, newKey) {
     Bucket: bucket,
     CopySource: `${bucket}/${oldKey}`,
     Key: newKey,
-    ACL: 'public-read'
+    ACL: acl
   }));
   await client.send(new DeleteObjectCommand({
     Bucket: bucket,
