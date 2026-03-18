@@ -1,0 +1,60 @@
+<% title = 'Owner Properties' %>
+<link rel="stylesheet" href="/css/superadmin/leads.css" />
+
+<div class="admin-panel">
+  <div class="admin-body">
+    <%- include('../../partials/superadmin-sidebar', { activePage: 'owners', pendingCount: pendingCount || 0 }) %>
+    <main class="admin-content">
+      <div class="admin-leads-page">
+        <header class="leads-header">
+          <div>
+            <h1>Properties for <%= owner.name %></h1>
+            <p class="subtitle"><%= properties.length %> assigned propert<%= properties.length === 1 ? 'y' : 'ies' %>.</p>
+          </div>
+          <div class="leads-header-actions">
+            <a href="/superadmin/dashboard/owners" class="btn btn-light">← Back to owners</a>
+          </div>
+        </header>
+
+        <section class="leads-table-card">
+          <div class="leads-table-wrap">
+            <table class="leads-table">
+              <thead>
+                <tr>
+                  <th>Property</th>
+                  <th>Location</th>
+                  <th>Type</th>
+                  <th>Price</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% if (!properties || properties.length === 0) { %>
+                  <tr>
+                    <td colspan="5" style="text-align:center; padding: 2rem;">No properties assigned to this owner yet.</td>
+                  </tr>
+                <% } else { %>
+                  <% properties.forEach((p) => { %>
+                    <tr>
+                      <td>
+                        <strong><%= p.title %></strong>
+                      </td>
+                      <td><%= p.city %><%= p.neighborhood ? ', ' + p.neighborhood : '' %><%= p.country ? ', ' + p.country : '' %></td>
+                      <td><%= p.type || '—' %></td>
+                      <td><%= p.price ? ('€' + Number(p.price).toLocaleString()) : '—' %></td>
+                      <td>
+                        <a class="btn-icon" href="/properties/<%= p.slug %>">View</a>
+                        <a class="btn-icon" href="/properties/<%= p.id %>/edit">Edit</a>
+                        <a class="btn-icon" href="/superadmin/dashboard/properties/<%= p.id %>/confidential">Confidential info</a>
+                      </td>
+                    </tr>
+                  <% }) %>
+                <% } %>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+</div>

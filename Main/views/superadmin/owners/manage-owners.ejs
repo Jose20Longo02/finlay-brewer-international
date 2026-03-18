@@ -48,6 +48,7 @@
                     <td><%= o.email || '—' %></td>
                     <td><%= o.phone || '—' %></td>
                     <td>
+                      <a class="btn-icon" href="/superadmin/dashboard/owners/<%= o.id %>/properties">See properties</a>
                       <a class="btn-icon" href="/superadmin/dashboard/owners/<%= o.id %>/edit">Edit</a>
                       <form method="post" action="/superadmin/dashboard/owners/<%= o.id %>/delete" style="display:inline;" onsubmit="return confirm('Delete this owner?');">
                         <button type="submit" class="btn-icon" style="color:#b91c1c;">Delete</button>

@@ -1,5 +1,6 @@
 const { query } = require('../config/db');
 const Owner = require('../models/Owner');
+const { normalizeSpacesUrl } = require('../config/spaces');
 
 async function getPendingCount() {
   const pc = await query("SELECT COUNT(*) AS count FROM users WHERE approved = false AND role IN ('Admin','SuperAdmin')");
@@ -99,6 +100,36 @@ exports.deleteOwner = async (req, res, next) => {
     const id = parseInt(req.params.id, 10);
     await Owner.delete(id);
     return res.redirect('/superadmin/dashboard/owners');
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.listOwnerProperties = async (req, res, next) => {
+  try {
+    const ownerId = parseInt(req.params.id, 10);
+    const owner = await Owner.findById(ownerId);
+    if (!owner) return res.status(404).send('Owner not found');
+
+    const { rows } = await query(
+      `SELECT p.id, p.title, p.slug, p.country, p.city, p.neighborhood, p.type, p.price, p.photos
+         FROM properties p
+        WHERE p.owner_id = $1
+        ORDER BY p.created_at DESC`,
+      [ownerId]
+    );
+
+    const properties = rows.map((p) => ({
+      ...p,
+      photos: (Array.isArray(p.photos) ? p.photos : (p.photos ? [p.photos] : [])).map((u) => normalizeSpacesUrl(u))
+    }));
+
+    return res.render('superadmin/owners/owner-properties', {
+      owner,
+      properties,
+      pendingCount: await getPendingCount(),
+      activePage: 'owners'
+    });
   } catch (err) {
     next(err);
   }
