@@ -12,6 +12,7 @@ const { publicRouter: propertyRoutes, adminRouter: adminPropertyRoutes } = requi
 const leadRoutes     = require('./routes/leadRoutes');
 const blogRoutes     = require('./routes/blogRoutes');
 const blogAdminRoutes = require('./routes/blogAdminRoutes');
+const ownerRoutes = require('./routes/ownerRoutes');
 const blogController = require('./controllers/blogController');
 const { connectDB, query } = require('./config/db');
 const locations      = require('./config/locations');
@@ -277,6 +278,7 @@ app.use('/admin/dashboard/blogs', blogAdminRoutes);
 app.use('/superadmin/dashboard', superAdminRoutes); // SuperAdmin landing
 app.use('/superadmin/dashboard/blogs', blogAdminRoutes);
 app.use('/', require('./routes/buyerRoutes'));
+app.use('/', ownerRoutes);
 app.use('/', leadRoutes); // mount lead routes (public API + pages)
 
 app.use('/', blogRoutes); // blog/:slug

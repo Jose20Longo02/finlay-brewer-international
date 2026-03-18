@@ -6,13 +6,92 @@ const { PROPERTY_CHARACTERISTICS: PROPERTY_CHARACTERISTICS_IMPORT } = require('.
 const slugify     = require('slugify');
 const fs          = require('fs');
 const path        = require('path');
+const crypto      = require('crypto');
 const sendMail    = require('../config/mailer');
 const Buyer       = require('../models/Buyer');
+const Owner       = require('../models/Owner');
+const PropertyConfidentialDocument = require('../models/PropertyConfidentialDocument');
 const { generateVariants, SIZES } = require('../middleware/imageVariants');
 const { isSpacesEnabled, moveObject, normalizeSpacesUrl, deletePropertyFolder } = require('../config/spaces');
 
 const PROPERTY_CHARACTERISTICS = PROPERTY_CHARACTERISTICS_IMPORT;
 const CHARACTERISTIC_SLUGS = new Set(PROPERTY_CHARACTERISTICS.map(c => c.slug));
+const PRIVATE_CONF_BASE = path.join(__dirname, '../private/uploads/confidential');
+
+function ensureDir(dir) {
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+}
+
+function parseStringArray(value) {
+  if (Array.isArray(value)) return value.map(v => String(v || '').trim());
+  if (value == null) return [];
+  return [String(value).trim()];
+}
+
+function buildDocumentDisplayName(rawName, originalFilename) {
+  const clean = String(rawName || '').trim();
+  if (clean) return clean.slice(0, 255);
+  const base = path.basename(String(originalFilename || 'Document'), path.extname(String(originalFilename || '')));
+  return (base || 'Document').slice(0, 255);
+}
+
+function secureStoredFilename(originalFilename) {
+  const ext = path.extname(String(originalFilename || '')).toLowerCase();
+  const suffix = crypto.randomBytes(8).toString('hex');
+  return `${Date.now()}-${suffix}${ext}`;
+}
+
+async function getOwnersForForms() {
+  try {
+    return await Owner.listForSelect();
+  } catch (_) {
+    return [];
+  }
+}
+
+async function attachConfidentialDocsToProperty(propertyId, docFiles, docNames, uploadedBy) {
+  if (!Array.isArray(docFiles) || docFiles.length === 0) return [];
+  const finalDir = path.join(PRIVATE_CONF_BASE, 'properties', String(propertyId));
+  ensureDir(finalDir);
+  const docsToInsert = [];
+
+  for (let i = 0; i < docFiles.length; i += 1) {
+    const file = docFiles[i];
+    if (!file || !file.path) continue;
+    const storedFilename = secureStoredFilename(file.originalname);
+    const finalAbsPath = path.join(finalDir, storedFilename);
+    try {
+      if (path.resolve(file.path) !== path.resolve(finalAbsPath)) {
+        fs.renameSync(file.path, finalAbsPath);
+      }
+    } catch (_) {
+      continue;
+    }
+    const relPath = path.join('properties', String(propertyId), storedFilename).replace(/\\/g, '/');
+    docsToInsert.push({
+      display_name: buildDocumentDisplayName(docNames[i], file.originalname),
+      original_filename: String(file.originalname || 'document'),
+      mime_type: file.mimetype || null,
+      file_size: file.size || null,
+      storage_path: relPath,
+      uploaded_by: uploadedBy || null
+    });
+  }
+
+  if (!docsToInsert.length) return [];
+  return PropertyConfidentialDocument.createMany(propertyId, docsToInsert);
+}
+
+function cleanupConfidentialUploadFiles(files = []) {
+  if (!Array.isArray(files) || !files.length) return;
+  for (const file of files) {
+    try {
+      if (file && file.path && fs.existsSync(file.path)) fs.unlinkSync(file.path);
+    } catch (_) {
+      // Non-fatal
+    }
+  }
+}
 
 function parseCharacteristics(body) {
   const raw = body.characteristics;
@@ -507,9 +586,12 @@ exports.newPropertyForm = async (req, res, next) => {
          AND approved = true
        ORDER BY name
     `);
+    const owners = await getOwnersForForms();
     res.render('properties/new-property', {
       locations,
       teamMembers,
+      owners,
+      existingConfidentialDocs: [],
       propertyCharacteristics: PROPERTY_CHARACTERISTICS,
       error: null,
       form: {},
@@ -553,6 +635,14 @@ exports.createProperty = async (req, res, next) => {
     const price        = parseNumberField(body.price);
     // Assignment (agent)
     let assignedAgentId = parseNumberField(body.agent_id) || req.session.user.id;
+    let ownerId = null;
+    if (req.session.user?.role === 'SuperAdmin') {
+      const candidateOwnerId = parseNumberField(body.owner_id);
+      if (candidateOwnerId) {
+        const ownerExists = await Owner.findById(candidateOwnerId);
+        ownerId = ownerExists ? candidateOwnerId : null;
+      }
+    }
     // Validate the chosen agent belongs to staff and is approved; fallback to current user
     try {
       const { rows: validAgent } = await query(
@@ -649,6 +739,8 @@ exports.createProperty = async (req, res, next) => {
     }
 
     if (errors.length) {
+      const uploadedConfidentialDocs = (req.files && Array.isArray(req.files.confidential_docs)) ? req.files.confidential_docs : [];
+      cleanupConfidentialUploadFiles(uploadedConfidentialDocs);
       const { rows: teamMembers } = await query(`
         SELECT id, name
           FROM users
@@ -656,9 +748,12 @@ exports.createProperty = async (req, res, next) => {
            AND approved = true
          ORDER BY name
       `);
+      const owners = await getOwnersForForms();
       return res.status(400).render('properties/new-property', {
         locations,
         teamMembers,
+        owners,
+        existingConfidentialDocs: [],
         propertyCharacteristics: PROPERTY_CHARACTERISTICS,
         error: errors.join('. '),
         form,
@@ -692,6 +787,7 @@ exports.createProperty = async (req, res, next) => {
          apartment_size, bedrooms, bathrooms,
          total_size, living_space, land_size, plan_photo_url,
          is_in_project, project_id,
+         owner_id,
          map_link, property_tax, year_built, energy_class, parking, characteristics, status,
          latitude, longitude,
          created_at
@@ -701,8 +797,9 @@ exports.createProperty = async (req, res, next) => {
          $12,$13,$14,
          $15,$16,$17,$18,
          $19,$20,$21,$22,
-         $23,$24,$25,$26,$27,$28,$29,$30,
-         $31,$32,
+         $23,$24,$25,
+         $26,$27,$28,$29,$30,$31,$32,
+         $33,$34,
          NOW()
        ) RETURNING id`,
       [
@@ -712,6 +809,7 @@ exports.createProperty = async (req, res, next) => {
         apartmentSize, bedrooms, bathrooms,
         totalSize, livingSpace, landSize, planPhotoUrl,
         false, null,
+        ownerId,
         mapLink, propertyTax, yearBuilt, energyClass, parking, characteristics, listingStatus,
         (Number.isFinite(latitude) ? latitude : null),
         (Number.isFinite(longitude) ? longitude : null)
@@ -827,6 +925,17 @@ exports.createProperty = async (req, res, next) => {
       }
     }
 
+    if (req.session.user?.role === 'SuperAdmin') {
+      const confidentialDocs = (req.files && Array.isArray(req.files.confidential_docs)) ? req.files.confidential_docs : [];
+      const confidentialDocNames = parseStringArray(body.confidential_doc_names);
+      if (confidentialDocs.length) {
+        await attachConfidentialDocsToProperty(newId, confidentialDocs, confidentialDocNames, req.session.user?.id);
+      }
+    } else {
+      const uploadedConfidentialDocs = (req.files && Array.isArray(req.files.confidential_docs)) ? req.files.confidential_docs : [];
+      cleanupConfidentialUploadFiles(uploadedConfidentialDocs);
+    }
+
     setImmediate(async () => {
       try {
         const { rows } = await query(
@@ -893,11 +1002,17 @@ exports.editPropertyForm = async (req, res, next) => {
        WHERE role IN ('Admin','SuperAdmin') AND approved = true
        ORDER BY name
     `);
+    const owners = await getOwnersForForms();
+    const existingConfidentialDocs = req.session.user?.role === 'SuperAdmin'
+      ? await PropertyConfidentialDocument.listByPropertyId(propId)
+      : [];
 
     res.render('properties/edit-property', {
       property,
       locations,
       teamMembers,
+      owners,
+      existingConfidentialDocs,
       propertyCharacteristics: PROPERTY_CHARACTERISTICS,
       currentUser: req.session.user,
       error: null
@@ -951,6 +1066,16 @@ exports.updateProperty = async (req, res, next) => {
     // Reassignment (optional)
     let agentId = parseNumberField(body.agent_id);
     if (!agentId) agentId = existing.agent_id;
+    let ownerId = existing.owner_id || null;
+    if (req.session.user?.role === 'SuperAdmin') {
+      const candidateOwnerId = parseNumberField(body.owner_id);
+      if (candidateOwnerId) {
+        const ownerExists = await Owner.findById(candidateOwnerId);
+        ownerId = ownerExists ? candidateOwnerId : null;
+      } else if (body.owner_id === '' || body.owner_id == null) {
+        ownerId = null;
+      }
+    }
 
     // Type specific
     const apartmentSize = type === 'Apartment' ? parseNumberField(body.apartment_size) : null;
@@ -1048,11 +1173,19 @@ exports.updateProperty = async (req, res, next) => {
     }
 
     if (errors.length) {
+      const uploadedConfidentialDocs = (req.files && Array.isArray(req.files.confidential_docs)) ? req.files.confidential_docs : [];
+      cleanupConfidentialUploadFiles(uploadedConfidentialDocs);
       const { rows: teamMembers } = await query(`SELECT id, name FROM users WHERE role IN ('Admin','SuperAdmin') AND approved = true ORDER BY name`);
+      const owners = await getOwnersForForms();
+      const existingConfidentialDocs = req.session.user?.role === 'SuperAdmin'
+        ? await PropertyConfidentialDocument.listByPropertyId(propId)
+        : [];
       return res.status(400).render('properties/edit-property', {
-        property: existing,
+        property: { ...existing, owner_id: ownerId },
         locations,
         teamMembers,
+        owners,
+        existingConfidentialDocs,
         propertyCharacteristics: PROPERTY_CHARACTERISTICS,
         currentUser: req.session.user,
         error: errors.join('. ')
@@ -1070,10 +1203,10 @@ exports.updateProperty = async (req, res, next) => {
          total_size=$16, living_space=$17,
          land_size=$18, plan_photo_url=$19,
          is_in_project=$20, project_id=$21,
-         agent_id=$22,
-         map_link=$23, property_tax=$24, year_built=$25, energy_class=$26, parking=$27, characteristics=$28, status=$29,
+         agent_id=$22, owner_id=$23,
+         map_link=$24, property_tax=$25, year_built=$26, energy_class=$27, parking=$28, characteristics=$29, status=$30,
          updated_at=NOW()
-       WHERE id=$30`,
+       WHERE id=$31`,
       [
         country, city, neighborhood,
         title, slugify(title, { lower: true, strict: true }), description,
@@ -1084,10 +1217,22 @@ exports.updateProperty = async (req, res, next) => {
         landSize, planPhotoUrl,
         false, null,
         agentId,
+        ownerId,
         mapLinkRaw, propertyTax, yearBuilt, energyClass, parking, characteristics, listingStatus,
         propId
       ]
     );
+
+    if (req.session.user?.role === 'SuperAdmin') {
+      const confidentialDocs = (req.files && Array.isArray(req.files.confidential_docs)) ? req.files.confidential_docs : [];
+      const confidentialDocNames = parseStringArray(body.confidential_doc_names);
+      if (confidentialDocs.length) {
+        await attachConfidentialDocsToProperty(propId, confidentialDocs, confidentialDocNames, req.session.user?.id);
+      }
+    } else {
+      const uploadedConfidentialDocs = (req.files && Array.isArray(req.files.confidential_docs)) ? req.files.confidential_docs : [];
+      cleanupConfidentialUploadFiles(uploadedConfidentialDocs);
+    }
 
     const role = req.session.user?.role;
     if (role === 'SuperAdmin') {
@@ -1107,6 +1252,12 @@ exports.deleteProperty = async (req, res, next) => {
       await deletePropertyFolder(propertyId);
     } catch (e) {
       // Don't block delete if Spaces cleanup fails
+    }
+    try {
+      const privateDir = path.join(PRIVATE_CONF_BASE, 'properties', String(propertyId));
+      if (fs.existsSync(privateDir)) fs.rmSync(privateDir, { recursive: true, force: true });
+    } catch (_) {
+      // Non-fatal
     }
     await query(`DELETE FROM properties WHERE id = $1`, [propertyId]);
     res.redirect('/properties');
@@ -1177,6 +1328,7 @@ exports.listPropertiesAdmin = async (req, res, next) => {
         p.neighborhood,
         p.photos,
         p.agent_id,
+        p.owner_id,
         u.profile_picture AS uploader_pic
       FROM properties p
       LEFT JOIN users u
@@ -1317,8 +1469,105 @@ exports.deletePropertyAdmin = async (req, res, next) => {
     } catch (e) {
       // Don't block delete if Spaces cleanup fails
     }
+    try {
+      const privateDir = path.join(PRIVATE_CONF_BASE, 'properties', String(propertyId));
+      if (fs.existsSync(privateDir)) fs.rmSync(privateDir, { recursive: true, force: true });
+    } catch (_) {
+      // Don't block delete if private cleanup fails
+    }
     await query(`DELETE FROM properties WHERE id = $1`, [propertyId]);
     res.redirect('/superadmin/properties?page=' + (req.query.page||1));
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.showPropertyConfidentialInfo = async (req, res, next) => {
+  try {
+    const propertyId = parseInt(req.params.id, 10);
+    const { rows } = await query(
+      `SELECT p.id, p.title, p.slug, p.country, p.city, p.neighborhood, p.owner_id,
+              o.name AS owner_name, o.email AS owner_email, o.phone AS owner_phone
+         FROM properties p
+         LEFT JOIN owners o ON p.owner_id = o.id
+        WHERE p.id = $1
+        LIMIT 1`,
+      [propertyId]
+    );
+    if (!rows.length) return res.status(404).render('errors/404');
+    const docs = await PropertyConfidentialDocument.listByPropertyId(propertyId);
+    const pendingRes = await query(`
+      SELECT COUNT(*) AS count
+        FROM users
+       WHERE approved = false
+         AND role IN ('Admin','SuperAdmin')
+    `);
+    const pendingCount = parseInt(pendingRes.rows[0]?.count || '0', 10);
+    return res.render('superadmin/properties/confidential-info', {
+      property: rows[0],
+      docs,
+      error: req.query.error || null,
+      success: req.query.success || null,
+      pendingCount,
+      activePage: 'properties'
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.uploadPropertyConfidentialDocuments = async (req, res, next) => {
+  try {
+    const propertyId = parseInt(req.params.id, 10);
+    const { rows } = await query('SELECT id FROM properties WHERE id = $1 LIMIT 1', [propertyId]);
+    if (!rows.length) return res.status(404).render('errors/404');
+    const files = Array.isArray(req.files) ? req.files : [];
+    const names = parseStringArray(req.body.confidential_doc_names);
+    if (!files.length) {
+      return res.redirect(`/superadmin/dashboard/properties/${propertyId}/confidential?error=${encodeURIComponent('Please select at least one document.')}`);
+    }
+    await attachConfidentialDocsToProperty(propertyId, files, names, req.session.user?.id);
+    return res.redirect(`/superadmin/dashboard/properties/${propertyId}/confidential?success=${encodeURIComponent('Document(s) uploaded.')}`);
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.downloadPropertyConfidentialDocument = async (req, res, next) => {
+  try {
+    const propertyId = parseInt(req.params.id, 10);
+    const docId = parseInt(req.params.docId, 10);
+    const doc = await PropertyConfidentialDocument.findById(docId);
+    if (!doc || Number(doc.property_id) !== propertyId) return res.status(404).render('errors/404');
+
+    const base = path.resolve(PRIVATE_CONF_BASE);
+    const absolutePath = path.resolve(path.join(PRIVATE_CONF_BASE, doc.storage_path || ''));
+    if (!absolutePath.startsWith(base)) return res.status(403).send('Forbidden');
+    if (!fs.existsSync(absolutePath)) return res.status(404).send('File not found');
+
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('Cache-Control', 'private, no-store');
+    return res.download(absolutePath, doc.original_filename || path.basename(absolutePath));
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.deletePropertyConfidentialDocument = async (req, res, next) => {
+  try {
+    const propertyId = parseInt(req.params.id, 10);
+    const docId = parseInt(req.params.docId, 10);
+    const doc = await PropertyConfidentialDocument.findById(docId);
+    if (!doc || Number(doc.property_id) !== propertyId) return res.status(404).render('errors/404');
+
+    const absolutePath = path.resolve(path.join(PRIVATE_CONF_BASE, doc.storage_path || ''));
+    try {
+      if (fs.existsSync(absolutePath)) fs.unlinkSync(absolutePath);
+    } catch (_) {
+      // Non-fatal
+    }
+    await PropertyConfidentialDocument.delete(docId);
+    return res.redirect(`/superadmin/dashboard/properties/${propertyId}/confidential?success=${encodeURIComponent('Document deleted.')}`);
   } catch (err) {
     next(err);
   }

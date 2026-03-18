@@ -2,6 +2,7 @@
 const express                 = require('express');
 const { ensureAdmin, ensureSuperAdmin } = require('../middleware/authorize');
 const uploadPropertyMedia     = require('../middleware/uploadPropertyMedia');
+const uploadConfidentialDocs  = require('../middleware/uploadConfidentialDocs');
 const propertyController      = require('../controllers/propertyController');
 
 const {
@@ -15,7 +16,11 @@ const {
   listPropertiesAdmin,
   deletePropertyAdmin,
   reassignProperty,        // ← make sure this is exported from your controller
-  getFeaturedProperties
+  getFeaturedProperties,
+  showPropertyConfidentialInfo,
+  uploadPropertyConfidentialDocuments,
+  downloadPropertyConfidentialDocument,
+  deletePropertyConfidentialDocument
 } = propertyController;
 
 // ———————————————————————————————————————————————
@@ -61,6 +66,11 @@ adminRouter.post(
   ensureSuperAdmin,
   reassignProperty
 );
+
+adminRouter.get('/:id/confidential', ensureSuperAdmin, showPropertyConfidentialInfo);
+adminRouter.post('/:id/confidential/documents', ensureSuperAdmin, uploadConfidentialDocs, uploadPropertyConfidentialDocuments);
+adminRouter.get('/:id/confidential/documents/:docId/download', ensureSuperAdmin, downloadPropertyConfidentialDocument);
+adminRouter.post('/:id/confidential/documents/:docId/delete', ensureSuperAdmin, deletePropertyConfidentialDocument);
 
 module.exports = {
   publicRouter,

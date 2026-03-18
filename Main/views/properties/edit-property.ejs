@@ -336,6 +336,76 @@
       </div>
     </section>
 
+    <% if (currentUser && currentUser.role === 'SuperAdmin') { %>
+    <section class="card">
+      <h2>Confidential information</h2>
+      <p class="subtitle">Private data, accessible only from SuperAdmin confidential views.</p>
+      <div class="grid-2">
+        <div class="field">
+          <label for="owner_id">Owner</label>
+          <select id="owner_id" name="owner_id">
+            <option value="">No owner assigned</option>
+            <% (owners || []).forEach(function(owner) { %>
+              <option value="<%= owner.id %>" <%= String(property.owner_id || '') === String(owner.id) ? 'selected' : '' %>>
+                <%= owner.name %><%= owner.email ? ' · ' + owner.email : '' %>
+              </option>
+            <% }) %>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Current confidential documents</label>
+        <% if (existingConfidentialDocs && existingConfidentialDocs.length) { %>
+          <div class="leads-table-wrap">
+            <table class="leads-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Uploaded</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% existingConfidentialDocs.forEach(function(doc) { %>
+                  <tr>
+                    <td><strong><%= doc.display_name %></strong><br /><small><%= doc.original_filename %></small></td>
+                    <td><%= doc.created_at ? new Date(doc.created_at).toLocaleString() : '-' %></td>
+                    <td>
+                      <a class="btn btn-light" href="/superadmin/dashboard/properties/<%= property.id %>/confidential/documents/<%= doc.id %>/download">Download</a>
+                      <form method="post" action="/superadmin/dashboard/properties/<%= property.id %>/confidential/documents/<%= doc.id %>/delete" style="display:inline;" onsubmit="return confirm('Delete this confidential document?');">
+                        <button type="submit" class="btn btn-danger">Delete</button>
+                      </form>
+                    </td>
+                  </tr>
+                <% }) %>
+              </tbody>
+            </table>
+          </div>
+        <% } else { %>
+          <p><small>No confidential documents yet.</small></p>
+        <% } %>
+      </div>
+
+      <div class="field">
+        <label>Add confidential documents</label>
+        <div id="confDocsRows">
+          <div class="grid-2 conf-doc-row">
+            <div class="field">
+              <label>Document name</label>
+              <input type="text" name="confidential_doc_names" placeholder="e.g. Signed mandate, Owner ID, Contract draft" />
+            </div>
+            <div class="field">
+              <label>Document file</label>
+              <input type="file" name="confidential_docs" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png,.webp" />
+            </div>
+          </div>
+        </div>
+        <button type="button" id="addConfDocRow" class="btn btn-light" style="margin-top:.5rem;">+ Add another document</button>
+      </div>
+    </section>
+    <% } %>
+
     <!-- F. Submit -->
     <section class="card">
       <div class="actions">
@@ -709,6 +779,37 @@
       submitOverlay.setAttribute('aria-hidden', 'false');
       const btn = propertyForm.querySelector('button[type="submit"]');
       if (btn) btn.disabled = true;
+    });
+  }
+
+  // Confidential docs dynamic rows (SuperAdmin only)
+  const confRows = document.getElementById('confDocsRows');
+  const addConfDocRowBtn = document.getElementById('addConfDocRow');
+  function createConfDocRow() {
+    const row = document.createElement('div');
+    row.className = 'grid-2 conf-doc-row';
+    row.innerHTML = `
+      <div class="field">
+        <label>Document name</label>
+        <input type="text" name="confidential_doc_names" placeholder="e.g. Signed mandate, Owner ID, Contract draft" />
+      </div>
+      <div class="field">
+        <label>Document file</label>
+        <input type="file" name="confidential_docs" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png,.webp" />
+      </div>
+      <div class="field" style="grid-column:1 / -1;">
+        <button type="button" class="btn btn-light conf-doc-remove">Remove row</button>
+      </div>
+    `;
+    return row;
+  }
+  if (confRows && addConfDocRowBtn) {
+    addConfDocRowBtn.addEventListener('click', () => confRows.appendChild(createConfDocRow()));
+    confRows.addEventListener('click', (event) => {
+      const btn = event.target.closest('.conf-doc-remove');
+      if (!btn) return;
+      const row = btn.closest('.conf-doc-row');
+      if (row) row.remove();
     });
   }
 </script>

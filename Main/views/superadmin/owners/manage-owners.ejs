@@ -1,0 +1,75 @@
+<% title = 'Owners' %>
+<link rel="stylesheet" href="/css/superadmin/leads.css" />
+
+<div class="admin-panel">
+  <div class="admin-body">
+    <%- include('../../partials/superadmin-sidebar', { activePage: 'owners', pendingCount: pendingCount || 0 }) %>
+    <main class="admin-content">
+      <div class="admin-leads-page">
+        <header class="leads-header">
+          <div>
+            <h1>Owners</h1>
+            <p class="subtitle">Confidential owner records used for property assignment.</p>
+          </div>
+          <div class="leads-header-actions">
+            <a href="/superadmin/dashboard" class="btn btn-light">← Dashboard</a>
+            <a href="/superadmin/dashboard/owners/new" class="btn btn-primary">New owner</a>
+          </div>
+        </header>
+
+        <section class="leads-filters-card">
+          <form method="get" class="leads-filters">
+            <div>
+              <label>Search</label>
+              <input type="text" name="q" placeholder="Name, email, phone" value="<%= filters.q || '' %>" />
+            </div>
+            <div><button type="submit" class="btn btn-primary">Filter</button></div>
+          </form>
+        </section>
+
+        <section class="leads-table-card">
+          <div class="leads-table-wrap">
+            <table class="leads-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Phone</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+              <% if (!owners || owners.length === 0) { %>
+                <tr><td colspan="4" style="text-align:center; padding: 2rem;">No owners yet</td></tr>
+              <% } else { %>
+                <% owners.forEach(o => { %>
+                  <tr>
+                    <td><strong><%= o.name %></strong></td>
+                    <td><%= o.email || '—' %></td>
+                    <td><%= o.phone || '—' %></td>
+                    <td>
+                      <a class="btn-icon" href="/superadmin/dashboard/owners/<%= o.id %>/edit">Edit</a>
+                      <form method="post" action="/superadmin/dashboard/owners/<%= o.id %>/delete" style="display:inline;" onsubmit="return confirm('Delete this owner?');">
+                        <button type="submit" class="btn-icon" style="color:#b91c1c;">Delete</button>
+                      </form>
+                    </td>
+                  </tr>
+                <% }) %>
+              <% } %>
+              </tbody>
+            </table>
+          </div>
+          <% if (totalPages > 1) { %>
+          <div class="leads-pagination">
+            <span class="leads-pagination-info"><%= total %> owners · Page <%= currentPage %> of <%= totalPages %></span>
+            <div class="leads-pagination-links">
+              <% if (currentPage > 1) { %><a href="?page=<%= currentPage - 1 %>&q=<%= encodeURIComponent(filters.q || '') %>">← Prev</a><% } %>
+              <% if (currentPage < totalPages) { %><a href="?page=<%= currentPage + 1 %>&q=<%= encodeURIComponent(filters.q || '') %>">Next →</a><% } %>
+            </div>
+          </div>
+          <% } %>
+        </section>
+      </div>
+    </main>
+  </div>
+</div>

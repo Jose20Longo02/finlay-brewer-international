@@ -1,0 +1,42 @@
+<% title = 'Edit Owner' %>
+<link rel="stylesheet" href="/css/admin/new-property.css" />
+
+<div class="admin-panel">
+  <div class="admin-body">
+    <%- include('../../partials/superadmin-sidebar', { activePage: 'owners', pendingCount: pendingCount || 0 }) %>
+    <main class="admin-content">
+      <div class="new-prop-page">
+        <header class="np-header">
+          <h1>Edit owner</h1>
+          <p class="np-subtitle">Update owner contact information.</p>
+          <a href="/superadmin/dashboard/owners" class="btn btn-light">Cancel</a>
+        </header>
+
+        <% if (error) { %><div class="alert alert-error"><%= error %></div><% } %>
+
+        <form class="np-form" method="post" action="/superadmin/dashboard/owners/<%= owner.id %>">
+          <section class="np-card">
+            <h2 class="np-card-title">Contact</h2>
+            <div class="grid-3">
+              <div class="field">
+                <label for="name">Name<span class="req">*</span></label>
+                <input id="name" name="name" type="text" required value="<%= owner.name || '' %>" />
+              </div>
+              <div class="field">
+                <label for="email">Email</label>
+                <input id="email" name="email" type="email" value="<%= owner.email || '' %>" />
+              </div>
+              <div class="field">
+                <label for="phone">Phone</label>
+                <input id="phone" name="phone" type="tel" value="<%= owner.phone || '' %>" />
+              </div>
+            </div>
+          </section>
+          <div class="np-actions">
+            <button type="submit" class="btn btn-primary">Save changes</button>
+          </div>
+        </form>
+      </div>
+    </main>
+  </div>
+</div>

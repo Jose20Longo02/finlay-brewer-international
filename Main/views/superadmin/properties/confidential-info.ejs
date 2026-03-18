@@ -1,0 +1,130 @@
+<% title = 'Confidential Property Info' %>
+<link rel="stylesheet" href="/css/superadmin/leads.css" />
+<link rel="stylesheet" href="/css/admin/new-property.css" />
+
+<div class="admin-panel">
+  <div class="admin-body">
+    <%- include('../../partials/superadmin-sidebar', { activePage: 'properties', pendingCount: pendingCount || 0 }) %>
+    <main class="admin-content">
+      <div class="admin-leads-page">
+        <header class="leads-header">
+          <div>
+            <h1>Confidential info</h1>
+            <p class="subtitle"><strong><%= property.title %></strong> · <%= property.city %><%= property.country ? ', ' + property.country : '' %></p>
+          </div>
+          <div class="leads-header-actions">
+            <a href="/superadmin/dashboard/properties" class="btn btn-light">← Back to properties</a>
+            <a href="/properties/<%= property.id %>/edit" class="btn btn-primary">Edit property</a>
+          </div>
+        </header>
+
+        <% if (error) { %><div class="alert alert-error"><%= error %></div><% } %>
+        <% if (success) { %><div class="alert alert-success"><%= success %></div><% } %>
+
+        <section class="np-card" style="margin-bottom:1rem;">
+          <h2 class="np-card-title">Owner</h2>
+          <% if (property.owner_id) { %>
+            <div class="grid-3">
+              <div><strong>Name</strong><div><%= property.owner_name || '-' %></div></div>
+              <div><strong>Email</strong><div><%= property.owner_email || '-' %></div></div>
+              <div><strong>Phone</strong><div><%= property.owner_phone || '-' %></div></div>
+            </div>
+          <% } else { %>
+            <p>No owner assigned.</p>
+          <% } %>
+        </section>
+
+        <section class="np-card" style="margin-bottom:1rem;">
+          <h2 class="np-card-title">Upload documents</h2>
+          <form method="post" action="/superadmin/dashboard/properties/<%= property.id %>/confidential/documents" enctype="multipart/form-data">
+            <div id="confDocsRows">
+              <div class="grid-2 conf-doc-row">
+                <div class="field">
+                  <label>Document name</label>
+                  <input type="text" name="confidential_doc_names" placeholder="e.g. Signed mandate, Owner ID, Contract draft" />
+                </div>
+                <div class="field">
+                  <label>Document file</label>
+                  <input type="file" name="confidential_docs" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png,.webp" />
+                </div>
+              </div>
+            </div>
+            <div style="display:flex; gap:.5rem; margin-top:.5rem;">
+              <button type="button" id="addConfDocRow" class="btn btn-light">+ Add another document</button>
+              <button type="submit" class="btn btn-primary">Upload documents</button>
+            </div>
+          </form>
+        </section>
+
+        <section class="leads-table-card">
+          <h2 class="np-card-title">Stored confidential documents</h2>
+          <div class="leads-table-wrap">
+            <table class="leads-table">
+              <thead>
+                <tr>
+                  <th>Document</th>
+                  <th>Type</th>
+                  <th>Size</th>
+                  <th>Uploaded</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% if (!docs || docs.length === 0) { %>
+                  <tr><td colspan="5" style="text-align:center; padding: 2rem;">No documents uploaded yet.</td></tr>
+                <% } else { %>
+                  <% docs.forEach(function(doc) { %>
+                    <tr>
+                      <td><strong><%= doc.display_name %></strong><br/><small><%= doc.original_filename %></small></td>
+                      <td><%= doc.mime_type || '-' %></td>
+                      <td><%= doc.file_size ? Math.round(doc.file_size / 1024) + ' KB' : '-' %></td>
+                      <td><%= doc.created_at ? new Date(doc.created_at).toLocaleString() : '-' %></td>
+                      <td>
+                        <a class="btn-icon" href="/superadmin/dashboard/properties/<%= property.id %>/confidential/documents/<%= doc.id %>/download">Download</a>
+                        <form method="post" action="/superadmin/dashboard/properties/<%= property.id %>/confidential/documents/<%= doc.id %>/delete" style="display:inline;" onsubmit="return confirm('Delete this confidential document?');">
+                          <button type="submit" class="btn-icon" style="color:#b91c1c;">Delete</button>
+                        </form>
+                      </td>
+                    </tr>
+                  <% }) %>
+                <% } %>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+  const confRows = document.getElementById('confDocsRows');
+  const addConfDocRowBtn = document.getElementById('addConfDocRow');
+  function createConfDocRow() {
+    const row = document.createElement('div');
+    row.className = 'grid-2 conf-doc-row';
+    row.innerHTML = `
+      <div class="field">
+        <label>Document name</label>
+        <input type="text" name="confidential_doc_names" placeholder="e.g. Signed mandate, Owner ID, Contract draft" />
+      </div>
+      <div class="field">
+        <label>Document file</label>
+        <input type="file" name="confidential_docs" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png,.webp" />
+      </div>
+      <div class="field" style="grid-column:1 / -1;">
+        <button type="button" class="btn btn-light conf-doc-remove">Remove row</button>
+      </div>
+    `;
+    return row;
+  }
+  if (confRows && addConfDocRowBtn) {
+    addConfDocRowBtn.addEventListener('click', () => confRows.appendChild(createConfDocRow()));
+    confRows.addEventListener('click', (event) => {
+      const btn = event.target.closest('.conf-doc-remove');
+      if (!btn) return;
+      const row = btn.closest('.conf-doc-row');
+      if (row) row.remove();
+    });
+  }
+</script>

@@ -309,6 +309,44 @@
       </div>
     </section>
 
+    <% if (currentUser && currentUser.role === 'SuperAdmin') { %>
+    <section class="np-card">
+      <h2 class="np-card-title">Confidential information</h2>
+      <p class="np-subtitle">Visible to SuperAdmin only. Assign an owner and upload private documents.</p>
+      <div class="grid-2">
+        <div class="field">
+          <label for="owner_id">Owner</label>
+          <select id="owner_id" name="owner_id">
+            <option value="">No owner assigned</option>
+            <% (owners || []).forEach(function(owner) { %>
+              <option value="<%= owner.id %>" <%= String(form.owner_id || '') === String(owner.id) ? 'selected' : '' %>>
+                <%= owner.name %><%= owner.email ? ' · ' + owner.email : '' %>
+              </option>
+            <% }) %>
+          </select>
+          <small>Tip: create owners in the SuperAdmin Owners page.</small>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Confidential documents</label>
+        <div id="confDocsRows">
+          <div class="grid-2 conf-doc-row">
+            <div class="field">
+              <label>Document name</label>
+              <input type="text" name="confidential_doc_names" placeholder="e.g. Signed mandate, Owner ID, Contract draft" />
+            </div>
+            <div class="field">
+              <label>Document file</label>
+              <input type="file" name="confidential_docs" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png,.webp" />
+            </div>
+          </div>
+        </div>
+        <button type="button" id="addConfDocRow" class="btn btn-light" style="margin-top:.5rem;">+ Add another document</button>
+      </div>
+    </section>
+    <% } %>
+
     <div class="np-actions">
       <button type="submit" class="btn btn-primary">Save property</button>
     </div>
@@ -641,6 +679,37 @@
       submitOverlay.setAttribute('aria-hidden', 'false');
       const btn = propertyForm.querySelector('button[type="submit"]');
       if (btn) btn.disabled = true;
+    });
+  }
+
+  // Confidential docs dynamic rows (SuperAdmin only)
+  const confRows = document.getElementById('confDocsRows');
+  const addConfDocRowBtn = document.getElementById('addConfDocRow');
+  function createConfDocRow() {
+    const row = document.createElement('div');
+    row.className = 'grid-2 conf-doc-row';
+    row.innerHTML = `
+      <div class="field">
+        <label>Document name</label>
+        <input type="text" name="confidential_doc_names" placeholder="e.g. Signed mandate, Owner ID, Contract draft" />
+      </div>
+      <div class="field">
+        <label>Document file</label>
+        <input type="file" name="confidential_docs" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png,.webp" />
+      </div>
+      <div class="field" style="grid-column:1 / -1;">
+        <button type="button" class="btn btn-light conf-doc-remove">Remove row</button>
+      </div>
+    `;
+    return row;
+  }
+  if (confRows && addConfDocRowBtn) {
+    addConfDocRowBtn.addEventListener('click', () => confRows.appendChild(createConfDocRow()));
+    confRows.addEventListener('click', (event) => {
+      const btn = event.target.closest('.conf-doc-remove');
+      if (!btn) return;
+      const row = btn.closest('.conf-doc-row');
+      if (row) row.remove();
     });
   }
 </script>
