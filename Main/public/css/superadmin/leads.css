@@ -41,11 +41,17 @@
 .leads-table .lead-email, .leads-table .lead-phone { font-size: 0.875rem; color: #555; }
 .leads-table .lead-msg { font-size: 0.8125rem; color: #666; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .leads-table .lead-status-select { padding: 0.4rem 0.6rem; border: 1px solid #e2e4e8; border-radius: 6px; font-size: 0.8125rem; min-width: 120px; }
+.leads-table .lead-stage-select { padding: 0.4rem 0.6rem; border: 1px solid #e2e4e8; border-radius: 6px; font-size: 0.8125rem; min-width: 120px; }
 .leads-table .lead-status--New { color: #059669; }
 .leads-table .lead-status--Contacted { color: #2563eb; }
 .leads-table .lead-status--Interested { color: #7c3aed; }
 .leads-table .lead-status--Closed { color: #6b7280; }
 .leads-table .lead-status--Not Interested { color: #dc2626; }
+.leads-table .lead-status--new { color: #059669; }
+.leads-table .lead-status--contacted { color: #2563eb; }
+.leads-table .lead-status--visit { color: #7c3aed; }
+.leads-table .lead-status--offer { color: #b45309; }
+.leads-table .lead-status--closed { color: #6b7280; }
 .leads-table .lead-property-link { color: #111; text-decoration: none; font-weight: 500; }
 .leads-table .lead-property-link:hover { text-decoration: underline; }
 .leads-table .lead-source { font-size: 0.75rem; color: #888; text-transform: capitalize; }

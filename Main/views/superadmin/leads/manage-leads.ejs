@@ -42,8 +42,16 @@
           <div class="leads-stat-label">Contacted</div>
         </div>
         <div class="leads-stat leads-stat--interested">
-          <div class="leads-stat-value"><%= stats.interested_count || 0 %></div>
-          <div class="leads-stat-label">Interested</div>
+          <div class="leads-stat-value"><%= stats.visit_count || 0 %></div>
+          <div class="leads-stat-label">Visit</div>
+        </div>
+        <div class="leads-stat">
+          <div class="leads-stat-value"><%= stats.offer_count || 0 %></div>
+          <div class="leads-stat-label">Offer</div>
+        </div>
+        <div class="leads-stat leads-stat--new">
+          <div class="leads-stat-value"><%= stats.reminders_due || 0 %></div>
+          <div class="leads-stat-label">Reminders due</div>
         </div>
         <div class="leads-stat">
           <div class="leads-stat-value"><%= stats.total || 0 %></div>
@@ -60,13 +68,21 @@
             <input type="text" name="q" placeholder="Name, email, phone, message" value="<%= filters.q || '' %>" />
           </div>
           <div>
-            <label>Status</label>
-            <select name="status" onchange="this.form.submit()">
+            <label>Stage</label>
+            <select name="stage" onchange="this.form.submit()">
               <option value="">All</option>
-              <% ['New','Contacted','Interested','Not Interested','Closed'].forEach(s => { %>
-                <option value="<%= s %>" <%= filters.status === s ? 'selected' : '' %>><%= s %></option>
+              <% (pipelineStages || []).forEach(s => { %>
+                <option value="<%= s %>" <%= filters.stage === s ? 'selected' : '' %>><%= s.charAt(0).toUpperCase() + s.slice(1) %></option>
               <% }) %>
             </select>
+          </div>
+          <div>
+            <label>Min score</label>
+            <input type="number" min="0" max="100" name="minScore" value="<%= filters.minScore || '' %>" onchange="this.form.submit()" />
+          </div>
+          <div>
+            <label>Max score</label>
+            <input type="number" min="0" max="100" name="maxScore" value="<%= filters.maxScore || '' %>" onchange="this.form.submit()" />
           </div>
           <div>
             <label>Source</label>
@@ -95,6 +111,14 @@
             <input type="date" name="to" value="<%= filters.to || '' %>" onchange="this.form.submit()" />
           </div>
           <div>
+            <label>Reminder</label>
+            <select name="reminderDue" onchange="this.form.submit()">
+              <option value="">All</option>
+              <option value="due" <%= filters.reminderDue === 'due' ? 'selected' : '' %>>Due</option>
+              <option value="upcoming" <%= filters.reminderDue === 'upcoming' ? 'selected' : '' %>>Upcoming</option>
+            </select>
+          </div>
+          <div>
             <label>&nbsp;</label>
             <button type="submit" class="btn btn-primary">Filter</button>
           </div>
@@ -112,7 +136,9 @@
                 <th>Lead</th>
                 <th>Source</th>
                 <th>Message</th>
-                <th>Status</th>
+                <th>Stage</th>
+                <th>Score</th>
+                <th>Reminder</th>
                 <th>Last Contact</th>
                 <th>Assign</th>
                 <th>Actions</th>
@@ -120,7 +146,7 @@
             </thead>
             <tbody>
               <% if (!leads || leads.length === 0) { %>
-                <tr><td colspan="10" style="text-align:center; padding: 3rem;">No leads found</td></tr>
+                <tr><td colspan="12" style="text-align:center; padding: 3rem;">No leads found</td></tr>
               <% } else { %>
                 <% leads.forEach(lead => { %>
                   <tr data-lead-id="<%= lead.id %>">
@@ -140,12 +166,18 @@
                     </td>
                     <td data-label="Source"><span class="lead-source"><%= (lead.source || '').replace(/_/g, ' ') %></span></td>
                     <td data-label="Message"><span class="lead-msg" title="<%= (lead.message || '').replace(/"/g, '&quot;') %>"><%= (lead.message || '-').substring(0, 60) %><%= (lead.message || '').length > 60 ? '…' : '' %></span></td>
-                    <td data-label="Status">
-                      <select class="lead-status-select lead-status--<%= lead.status.replace(/\s/g, '') %>" data-lead-id="<%= lead.id %>" data-field="status">
-                        <% ['New','Contacted','Interested','Not Interested','Closed'].forEach(s => { %>
-                          <option value="<%= s %>" <%= lead.status === s ? 'selected' : '' %>><%= s %></option>
+                    <td data-label="Stage">
+                      <select class="lead-stage-select lead-status--<%= (lead.pipeline_stage || '').replace(/\s/g, '') %>" data-lead-id="<%= lead.id %>" data-field="pipeline_stage">
+                        <% (pipelineStages || []).forEach(s => { %>
+                          <option value="<%= s %>" <%= lead.pipeline_stage === s ? 'selected' : '' %>><%= s.charAt(0).toUpperCase() + s.slice(1) %></option>
                         <% }) %>
                       </select>
+                    </td>
+                    <td data-label="Score">
+                      <input type="number" min="0" max="100" class="lead-score-input" data-lead-id="<%= lead.id %>" data-field="lead_score" value="<%= lead.lead_score ?? 0 %>" style="width:84px; padding: 0.35rem; font-size: 0.8125rem; border: 1px solid #e2e4e8; border-radius: 6px;" />
+                    </td>
+                    <td data-label="Reminder">
+                      <input type="datetime-local" class="lead-reminder" data-lead-id="<%= lead.id %>" data-field="reminder_at" value="<%= lead.reminder_at ? new Date(lead.reminder_at).toISOString().slice(0,16) : '' %>" style="padding: 0.35rem; font-size: 0.8125rem; border: 1px solid #e2e4e8; border-radius: 6px;" />
                     </td>
                     <td data-label="Last Contact">
                       <input type="datetime-local" class="lead-last-contact" data-lead-id="<%= lead.id %>" data-field="last_contact_at" value="<%= lead.last_contact_at ? new Date(lead.last_contact_at).toISOString().slice(0,16) : '' %>" style="padding: 0.35rem; font-size: 0.8125rem; border: 1px solid #e2e4e8; border-radius: 6px;" />
@@ -163,14 +195,15 @@
                         <a href="mailto:<%= lead.email %>" class="btn-icon">✉ Email</a>
                         <% if (lead.phone) { %><a href="tel:<%= lead.phone %>" class="btn-icon">📞 Call</a><% } %>
                         <a href="<%= buyersPath %>/from-lead/<%= lead.id %>" class="btn-icon">👤 Add to Our Buyers</a>
-                        <button type="button" class="btn-icon" data-detail="<%= lead.id %>">View</button>
+                        <button type="button" class="btn-icon" data-detail="<%= lead.id %>">View/Timeline</button>
                         <button type="button" class="btn-icon" data-toggle-notes="<%= lead.id %>">Notes</button>
                       </div>
                     </td>
                   </tr>
                   <tr class="notes-row" id="notes-<%= lead.id %>">
-                    <td colspan="10">
+                    <td colspan="12">
                       <textarea class="lead-notes-ta" data-lead-id="<%= lead.id %>" placeholder="Internal notes…"><%= lead.internal_notes || '' %></textarea>
+                      <input type="text" class="lead-reminder-note" data-lead-id="<%= lead.id %>" placeholder="Reminder note (optional)" value="<%= lead.reminder_note || '' %>" style="width:100%; margin-top:0.5rem; padding:0.6rem; border:1px solid #e2e4e8; border-radius:8px;" />
                       <div style="margin-top: 0.5rem; text-align: right;">
                         <button type="button" class="btn btn-primary" data-save="<%= lead.id %>">Save notes</button>
                       </div>
@@ -240,14 +273,20 @@
     if (saveId) {
       const notesEl = document.querySelector('.lead-notes-ta[data-lead-id="' + saveId + '"]');
       const lastEl = document.querySelector('.lead-last-contact[data-lead-id="' + saveId + '"]');
-      const statusEl = document.querySelector('.lead-status-select[data-lead-id="' + saveId + '"]');
+      const stageEl = document.querySelector('.lead-stage-select[data-lead-id="' + saveId + '"]');
+      const scoreEl = document.querySelector('.lead-score-input[data-lead-id="' + saveId + '"]');
+      const reminderEl = document.querySelector('.lead-reminder[data-lead-id="' + saveId + '"]');
+      const reminderNoteEl = document.querySelector('.lead-reminder-note[data-lead-id="' + saveId + '"]');
       fetch('/api/leads/' + saveId, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           internal_notes: notesEl ? notesEl.value : '',
           last_contact_at: lastEl ? lastEl.value : null,
-          status: statusEl ? statusEl.value : null
+          pipeline_stage: stageEl ? stageEl.value : null,
+          lead_score: scoreEl ? scoreEl.value : null,
+          reminder_at: reminderEl ? reminderEl.value : null,
+          reminder_note: reminderNoteEl ? reminderNoteEl.value : ''
         })
       }).then(r => r.json()).then(d => { if (d.success) showToast('Saved'); }).catch(() => showToast('Failed to save'));
     }
@@ -260,10 +299,33 @@
       fetch('/api/leads/' + detailId).then(r => r.json()).then(d => {
         if (!d.success || !d.lead) { body.innerHTML = 'Error loading lead'; return; }
         const L = d.lead;
+        const esc = (v) => String(v || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const activityHtml = (Array.isArray(L.activities) ? L.activities : []).map(function(a) {
+          const at = a.created_at ? new Date(a.created_at).toLocaleString() : '';
+          const by = a.created_by_name ? ' · ' + esc(a.created_by_name) : '';
+          return '<div class="lead-detail-section"><p><strong>' + esc(a.activity_type || 'activity') + '</strong> <span style="color:#888;font-size:12px;">' + at + by + '</span></p><div class="message">' + esc(a.content || '') + '</div></div>';
+        }).join('') || '<p>No activity yet.</p>';
         body.innerHTML = '<div class="lead-detail-section"><h3>Contact</h3><p><strong>' + (L.name || '') + '</strong></p><p><a href="mailto:' + (L.email || '') + '">' + (L.email || '') + '</a></p>' + (L.phone ? '<p><a href="tel:' + L.phone + '">' + L.phone + '</a></p>' : '') + '</div>' +
+          '<div class="lead-detail-section"><h3>Pipeline</h3><p><strong>Stage:</strong> ' + esc((L.pipeline_stage || 'new')) + '</p><p><strong>Score:</strong> ' + esc(L.lead_score) + '</p>' + (L.reminder_at ? '<p><strong>Reminder:</strong> ' + new Date(L.reminder_at).toLocaleString() + '</p>' : '') + (L.reminder_note ? '<p><strong>Reminder note:</strong> ' + esc(L.reminder_note) + '</p>' : '') + '</div>' +
           (L.property_title ? '<div class="lead-detail-section"><h3>Property</h3><p><a href="/properties/' + (L.property_slug || L.property_id) + '" target="_blank">' + L.property_title + '</a></p></div>' : '') +
           (L.message ? '<div class="lead-detail-section"><h3>Message</h3><div class="message">' + (L.message || '').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div></div>' : '') +
-          (L.internal_notes ? '<div class="lead-detail-section"><h3>Notes</h3><div class="message">' + (L.internal_notes || '').replace(/</g, '&lt;') + '</div></div>' : '');
+          (L.internal_notes ? '<div class="lead-detail-section"><h3>Notes</h3><div class="message">' + (L.internal_notes || '').replace(/</g, '&lt;') + '</div></div>' : '') +
+          '<div class="lead-detail-section"><h3>Activity timeline</h3>' + activityHtml + '<textarea id="leadTimelineNote" placeholder="Add timeline note…" style="width:100%; min-height:70px; margin-top:0.75rem; padding:0.6rem; border:1px solid #e2e4e8; border-radius:8px;"></textarea><div style="text-align:right; margin-top:0.5rem;"><button class="btn btn-primary" id="leadTimelineSave">Add activity</button></div></div>';
+        const addBtn = document.getElementById('leadTimelineSave');
+        if (addBtn) addBtn.onclick = function() {
+          const noteEl = document.getElementById('leadTimelineNote');
+          const content = noteEl ? noteEl.value : '';
+          fetch('/api/leads/' + detailId + '/activities', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ content }) })
+            .then(r => r.json()).then(function(resp) {
+              if (resp && resp.success) {
+                showToast('Activity added');
+                const fakeBtn = document.querySelector('[data-detail="' + detailId + '"]');
+                if (fakeBtn) fakeBtn.click();
+              } else {
+                showToast('Could not add activity');
+              }
+            }).catch(() => showToast('Could not add activity'));
+        };
       });
     }
   });

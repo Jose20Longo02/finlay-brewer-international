@@ -1,6 +1,7 @@
 // controllers/leadController.js
 const { query } = require('../config/db');
 const Lead = require('../models/Lead');
+const { PIPELINE_STAGES } = require('../models/Lead');
 const sendMail = require('../config/mailer');
 
 // Render for-sellers page
@@ -156,9 +157,13 @@ exports.listForAdmin = async (req, res, next) => {
     const filters = {
       q: req.query.q || '',
       status: req.query.status || '',
+      stage: req.query.stage || '',
       source: req.query.source || '',
       from: req.query.from || '',
       to: req.query.to || '',
+      minScore: req.query.minScore || '',
+      maxScore: req.query.maxScore || '',
+      reminderDue: req.query.reminderDue || '',
       propertyId: req.query.propertyId || '',
       page: req.query.page || 1,
       pageSize: req.query.pageSize || 20,
@@ -176,6 +181,7 @@ exports.listForAdmin = async (req, res, next) => {
       totalPages,
       stats,
       agents: [],
+      pipelineStages: PIPELINE_STAGES,
       filters,
       currentUser: req.session.user,
       activePage: 'leads',
@@ -190,10 +196,14 @@ exports.listAll = async (req, res, next) => {
     const filters = {
       q: req.query.q || '',
       status: req.query.status || '',
+      stage: req.query.stage || '',
       source: req.query.source || '',
       from: req.query.from || '',
       to: req.query.to || '',
       agentId: req.query.agentId || '',
+      minScore: req.query.minScore || '',
+      maxScore: req.query.maxScore || '',
+      reminderDue: req.query.reminderDue || '',
       propertyId: req.query.propertyId || '',
       page: req.query.page || 1,
       pageSize: req.query.pageSize || 20,
@@ -215,6 +225,7 @@ exports.listAll = async (req, res, next) => {
       totalPages,
       stats,
       agents,
+      pipelineStages: PIPELINE_STAGES,
       filters,
       currentUser: req.session.user,
       activePage: 'leads',
@@ -228,11 +239,12 @@ exports.listAll = async (req, res, next) => {
 exports.updateLead = async (req, res, next) => {
   try {
     const id = parseInt(req.params.id, 10);
-    const { status, internal_notes, last_contact_at, agent_id } = req.body;
+    const { status, pipeline_stage, lead_score, internal_notes, last_contact_at, reminder_at, reminder_note, agent_id } = req.body;
 
-    const { rows } = await query('SELECT agent_id FROM leads WHERE id = $1', [id]);
+    const { rows } = await query('SELECT agent_id, pipeline_stage, lead_score, reminder_at FROM leads WHERE id = $1', [id]);
     if (!rows.length) return res.status(404).json({ success: false, message: 'Lead not found' });
-    const ownerId = rows[0].agent_id;
+    const before = rows[0];
+    const ownerId = before.agent_id;
     const role = req.session.user?.role;
     const currentId = req.session.user?.id;
     if (!(role === 'SuperAdmin' || ownerId === currentId)) {
@@ -244,11 +256,26 @@ exports.updateLead = async (req, res, next) => {
 
     const fields = {};
     if (status) fields.status = status;
+    if (pipeline_stage) fields.pipeline_stage = PIPELINE_STAGES.includes(String(pipeline_stage).toLowerCase()) ? String(pipeline_stage).toLowerCase() : 'new';
+    if (lead_score !== undefined && lead_score !== null && lead_score !== '') {
+      const score = Math.max(0, Math.min(100, parseInt(lead_score, 10) || 0));
+      fields.lead_score = score;
+    }
     if (typeof internal_notes === 'string') fields.internal_notes = internal_notes;
     if (last_contact_at) fields.last_contact_at = last_contact_at;
+    if (reminder_at !== undefined) fields.reminder_at = reminder_at || null;
+    if (typeof reminder_note === 'string') fields.reminder_note = reminder_note;
     if (agent_id !== undefined && role === 'SuperAdmin') fields.agent_id = agent_id || null;
 
     const updated = await Lead.update(id, fields);
+    const activityEvents = [];
+    if (fields.pipeline_stage && fields.pipeline_stage !== before.pipeline_stage) activityEvents.push(`Stage changed to ${fields.pipeline_stage}`);
+    if (fields.lead_score !== undefined && Number(fields.lead_score) !== Number(before.lead_score)) activityEvents.push(`Lead score set to ${fields.lead_score}`);
+    if (fields.reminder_at !== undefined) activityEvents.push(fields.reminder_at ? `Reminder set for ${new Date(fields.reminder_at).toLocaleString()}` : 'Reminder cleared');
+    if (fields.last_contact_at) activityEvents.push(`Last contact updated`);
+    for (const content of activityEvents) {
+      await Lead.addActivity(id, { activity_type: 'update', content, created_by: currentId, metadata: { by: role } });
+    }
     res.json({ success: true, lead: updated });
   } catch (err) { next(err); }
 };
@@ -259,14 +286,47 @@ exports.getLeadDetail = async (req, res, next) => {
     const id = parseInt(req.params.id, 10);
     const lead = await Lead.findByIdWithJoins(id);
     if (!lead) return res.status(404).json({ success: false });
-    const { rows } = await query('SELECT agent_id FROM leads WHERE id = $1', [id]);
-    const ownerId = rows[0]?.agent_id;
+    const ownerId = lead.agent_id;
     const role = req.session.user?.role;
     const currentId = req.session.user?.id;
     if (!(role === 'SuperAdmin' || ownerId === currentId)) {
       return res.status(403).json({ success: false });
     }
-    res.json({ success: true, lead });
+    const activities = await Lead.listActivities(id, 200);
+    res.json({ success: true, lead: { ...lead, activities } });
+  } catch (err) { next(err); }
+};
+
+exports.listLeadActivities = async (req, res, next) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    const lead = await Lead.findById(id);
+    if (!lead) return res.status(404).json({ success: false, message: 'Lead not found' });
+    const role = req.session.user?.role;
+    const currentId = req.session.user?.id;
+    if (!(role === 'SuperAdmin' || lead.agent_id === currentId)) return res.status(403).json({ success: false });
+    const activities = await Lead.listActivities(id, 200);
+    return res.json({ success: true, activities });
+  } catch (err) { next(err); }
+};
+
+exports.addLeadActivity = async (req, res, next) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    const lead = await Lead.findById(id);
+    if (!lead) return res.status(404).json({ success: false, message: 'Lead not found' });
+    const role = req.session.user?.role;
+    const currentId = req.session.user?.id;
+    if (!(role === 'SuperAdmin' || lead.agent_id === currentId)) return res.status(403).json({ success: false });
+    const content = String((req.body && req.body.content) || '').trim();
+    if (!content) return res.status(400).json({ success: false, message: 'Activity content is required' });
+    const activity = await Lead.addActivity(id, {
+      activity_type: 'manual_note',
+      content: content.slice(0, 2000),
+      created_by: currentId,
+      metadata: { source: 'timeline_manual' }
+    });
+    return res.json({ success: true, activity });
   } catch (err) { next(err); }
 };
 

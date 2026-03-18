@@ -33,6 +33,18 @@ router.get('/api/leads/:id', (req, res, next) => {
   res.status(403).json({ success: false });
 }, leadController.getLeadDetail);
 
+router.get('/api/leads/:id/activities', (req, res, next) => {
+  const r = req.session?.user?.role;
+  if (r === 'Admin' || r === 'SuperAdmin') return next();
+  res.status(403).json({ success: false });
+}, leadController.listLeadActivities);
+
+router.post('/api/leads/:id/activities', (req, res, next) => {
+  const r = req.session?.user?.role;
+  if (r === 'Admin' || r === 'SuperAdmin') return next();
+  res.status(403).json({ success: false });
+}, leadController.addLeadActivity);
+
 // Update lead (status/notes/reassign)
 router.post('/api/leads/:id', (req, res, next) => {
   const r = req.session?.user?.role;

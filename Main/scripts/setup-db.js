@@ -40,7 +40,8 @@ const migrations = [
   'add_characteristics_to_properties.sql',
   'create_blog_posts.sql',
   'create_buyers.sql',
-  'create_owners_and_confidential_docs.sql'
+  'create_owners_and_confidential_docs.sql',
+  'add_lead_pipeline_and_activities.sql'
 ];
 
 const mitigationsDir = path.join(__dirname, '..', 'mitigations');
